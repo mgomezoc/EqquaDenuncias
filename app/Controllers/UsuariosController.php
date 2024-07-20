@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\UsuarioModel;
 use App\Models\RolModel;
+use App\Models\ClienteModel;
 use CodeIgniter\Controller;
 
 class UsuariosController extends Controller
@@ -13,11 +14,15 @@ class UsuariosController extends Controller
         $rolModel = new RolModel();
         $roles = $rolModel->findAll();
 
+        $clienteModel = new ClienteModel();
+        $clientes = $clienteModel->findAll();
+
         $data = [
             'title' => 'Administración de Usuarios',
             'controlador' => 'Usuarios',
             'vista' => 'Usuarios',
-            'roles' => $roles
+            'roles' => $roles,
+            'clientes' => $clientes
         ];
 
         return view('usuarios/index', $data);
@@ -26,12 +31,14 @@ class UsuariosController extends Controller
     public function listar()
     {
         $usuarioModel = new UsuarioModel();
-        $usuarios = $usuarioModel->select('usuarios.*, roles.nombre AS rol_nombre')
-            ->join('roles', 'roles.id = usuarios.rol_id')
+        $usuarios = $usuarioModel->select('usuarios.*, roles.nombre AS rol_nombre, clientes.nombre_empresa AS cliente_nombre')
+            ->join('roles', 'roles.id = usuarios.rol_id', 'left')
+            ->join('clientes', 'clientes.id = usuarios.id_cliente', 'left')
             ->findAll();
 
         return $this->response->setJSON($usuarios);
     }
+
 
     public function guardar()
     {
@@ -41,7 +48,8 @@ class UsuariosController extends Controller
         $data = [
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
-            'rol_id' => $this->request->getVar('rol_id')
+            'rol_id' => $this->request->getVar('rol_id'),
+            'id_cliente' => $this->request->getVar('id_cliente')
         ];
 
         if ($contrasena = $this->request->getVar('contrasena')) {

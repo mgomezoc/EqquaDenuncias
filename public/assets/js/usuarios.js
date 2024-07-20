@@ -8,6 +8,7 @@ let tplDetalleTabla;
 let $tablaUsuarios;
 let $modalCrearUsuario;
 let optionsRoles;
+let optionsClientes;
 
 $(function () {
     optionsRoles = roles.map(rol => ({
@@ -15,9 +16,31 @@ $(function () {
         name: rol.nombre
     }));
 
+    optionsClientes = clientes.map(cliente => ({
+        id: cliente.id,
+        name: cliente.nombre_empresa
+    }));
+
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearUsuario = $('#modalCrearUsuario');
+
+    $('.select2ModalCrearUsuario').select2({
+        placeholder: 'Seleccione una opción',
+        allowClear: true,
+        dropdownParent: $('#modalCrearUsuario')
+    });
+
+    $('#rol_id').on('change', function () {
+        const selectedRole = $(this).val();
+        if (selectedRole == 4) {
+            $('#clienteContainer').show();
+            $('#id_cliente').prop('required', true);
+        } else {
+            $('#clienteContainer').hide();
+            $('#id_cliente').prop('required', false);
+        }
+    });
 
     $tablaUsuarios = $('#tablaUsuarios').bootstrapTable({
         url: `${Server}usuarios/listar`,
@@ -43,6 +66,10 @@ $(function () {
                 title: 'Rol'
             },
             {
+                field: 'cliente_nombre', // Nueva columna para el cliente
+                title: 'Cliente'
+            },
+            {
                 field: 'operate',
                 title: 'Acciones',
                 align: 'center',
@@ -55,11 +82,25 @@ $(function () {
         detailView: true,
         onExpandRow: function (index, row, $detail) {
             row.roles = optionsRoles;
+            row.clientes = optionsClientes;
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
 
             // Inicializar select2 y validación para el formulario de edición
             $detail.find('select').select2();
+            const rolSelect = $detail.find('[name="rol_id"]');
+            rolSelect.on('change', function () {
+                const selectedRole = $(this).val();
+                const clienteContainer = $detail.find('#clienteContainer-' + row.id);
+                if (selectedRole == 4) {
+                    clienteContainer.show();
+                    $detail.find('[name="id_cliente"]').prop('required', true);
+                } else {
+                    clienteContainer.hide();
+                    $detail.find('[name="id_cliente"]').prop('required', false);
+                }
+            });
+            rolSelect.trigger('change');
             $detail.find('.formEditarUsuario').validate({
                 rules: {
                     nombre_usuario: {
@@ -99,6 +140,11 @@ $(function () {
                     },
                     rol_id: {
                         required: true
+                    },
+                    id_cliente: {
+                        required: function () {
+                            return $detail.find('[name="rol_id"]').val() == 4;
+                        }
                     }
                 },
                 messages: {
@@ -117,6 +163,9 @@ $(function () {
                     },
                     rol_id: {
                         required: 'Por favor seleccione un rol'
+                    },
+                    id_cliente: {
+                        required: 'Por favor seleccione un cliente'
                     }
                 }
             });
@@ -157,6 +206,11 @@ $(function () {
             },
             rol_id: {
                 required: true
+            },
+            id_cliente: {
+                required: function () {
+                    return $('#formCrearUsuario [name="rol_id"]').val() == 4;
+                }
             }
         },
         messages: {
@@ -176,6 +230,9 @@ $(function () {
             },
             rol_id: {
                 required: 'Por favor seleccione un rol'
+            },
+            id_cliente: {
+                required: 'Por favor seleccione un cliente'
             }
         },
         errorPlacement: function (error, element) {
@@ -251,6 +308,13 @@ $(function () {
             }
         });
     });
+
+    $modalCrearUsuario.on('hidden.bs.modal', function () {
+        const $form = $('#formCrearUsuario');
+        $form[0].reset();
+        $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
+        $form.validate().resetForm();
+    });
 });
 
 window.operateEvents = {
@@ -280,10 +344,3 @@ async function eliminarUsuario(id) {
         });
     }
 }
-
-$modalCrearUsuario.on('hidden.bs.modal', function () {
-    const $form = $('#formCrearUsuario');
-    $form[0].reset();
-    $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
-    $form.validate().resetForm();
-});

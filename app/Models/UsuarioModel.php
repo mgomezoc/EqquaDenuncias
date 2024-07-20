@@ -8,7 +8,7 @@ class UsuarioModel extends Model
 {
     protected $table = 'usuarios';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['nombre_usuario', 'correo_electronico', 'contrasena', 'rol_id', 'ultima_conexion'];
+    protected $allowedFields = ['nombre_usuario', 'correo_electronico', 'contrasena', 'rol_id', 'ultima_conexion', 'id_cliente'];
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
 

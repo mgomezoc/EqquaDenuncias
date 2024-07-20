@@ -15,9 +15,27 @@
             <ul class="main-menu">
                 <li class="slide__category"><span class="category-name">General</span></li>
                 <li class="slide">
+                    <a href="<?= base_url('dashboard') ?>" class="side-menu__item">
+                        <i class="fa-solid fa-tachometer-alt side-menu__icon"></i>
+                        <span class="side-menu__label">Dashboard</span>
+                    </a>
+                </li>
+                <li class="slide">
                     <a href="<?= base_url('usuarios') ?>" class="side-menu__item">
                         <i class="fa-solid fa-users side-menu__icon"></i>
                         <span class="side-menu__label">Usuarios</span>
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= base_url('clientes') ?>" class="side-menu__item">
+                        <i class="fa-solid fa-building side-menu__icon"></i>
+                        <span class="side-menu__label">Clientes</span>
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= base_url('denuncias') ?>" class="side-menu__item">
+                        <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
+                        <span class="side-menu__label">Denuncias</span>
                     </a>
                 </li>
                 <li class="slide__category"><span class="category-name">Reportes</span></li>

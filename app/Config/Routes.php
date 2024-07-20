@@ -27,14 +27,24 @@ $routes->get('/admin', 'Admin::index', ['filter' => 'authFilter:1']);
 $routes->get('/noautorizado', 'Error::noautorizado');
 
 
-// Rutas para la administración de usuarios
-$routes->group('usuarios', ['namespace' => 'App\Controllers'], function ($routes) {
+// USUARIOS
+$routes->group('usuarios', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'UsuariosController::index');
     $routes->get('listar', 'UsuariosController::listar');
     $routes->post('guardar', 'UsuariosController::guardar');
     $routes->get('obtener/(:num)', 'UsuariosController::obtener/$1');
     $routes->post('eliminar/(:num)', 'UsuariosController::eliminar/$1');
     $routes->post('validarUnico', 'UsuariosController::validarUnico');
+});
+
+// CLIENTES
+$routes->group('clientes', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
+    $routes->get('/', 'ClientesController::index');
+    $routes->get('listar', 'ClientesController::listar');
+    $routes->post('guardar', 'ClientesController::guardar');
+    $routes->get('obtener/(:num)', 'ClientesController::obtener/$1');
+    $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1');
+    $routes->post('validarUnico', 'ClientesController::validarUnico');
 });
 
 // Cargar rutas adicionales basadas en el entorno

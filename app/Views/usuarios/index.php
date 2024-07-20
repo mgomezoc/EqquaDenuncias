@@ -22,12 +22,14 @@
                         <th>Correo</th>
                         <th>Última Conexión</th>
                         <th>Rol</th>
+                        <th>Cliente</th> <!-- Nueva columna -->
                         <th>Acciones</th>
                     </tr>
                 </thead>
             </table>
         </div>
     </div>
+
 </div>
 <template id="tplAccionesTabla">
     <button class="btn btn-sm btn-danger remove">
@@ -41,20 +43,27 @@
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label for="nombre_usuario" class="form-label">Nombre de Usuario</label>
-                    <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" value="{{nombre_usuario}}" required autocomplete="username">
+                    <label for="nombre_usuario-{{id}}" class="form-label">Nombre de Usuario</label>
+                    <input type="text" class="form-control" id="nombre_usuario-{{id}}" name="nombre_usuario" value="{{nombre_usuario}}" required autocomplete="username">
                 </div>
                 <div class="col-md-4">
-                    <label for="correo_electronico" class="form-label">Correo Electrónico</label>
-                    <input type="email" class="form-control" id="correo_electronico" name="correo_electronico" value="{{correo_electronico}}" required autocomplete="email">
+                    <label for="correo_electronico-{{id}}" class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="correo_electronico-{{id}}" name="correo_electronico" value="{{correo_electronico}}" required autocomplete="email">
                 </div>
                 <div class="col-md-4">
-                    <label for="rol_id" class="form-label">Rol</label>
-                    <select class="form-select" id="rol_id" name="rol_id" required>
+                    <label for="rol_id-{{id}}" class="form-label">Rol</label>
+                    <select class="form-select" id="rol_id-{{id}}" name="rol_id" required>
                         {{{selectOptions roles rol_id}}}
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" id="clienteContainer-{{id}}" style="display: none;">
+                    <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
+                    <select class="form-select" id="id_cliente-{{id}}" name="id_cliente">
+                        <option value="">Seleccionar Cliente</option>
+                        {{{selectOptions clientes id_cliente}}}
+                    </select>
+                </div>
+                <div class="col-md-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
                     </button>
@@ -63,6 +72,7 @@
         </form>
     </div>
 </template>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
@@ -90,9 +100,18 @@
                     </div>
                     <div class="mb-3">
                         <label for="rol_id" class="form-label">Rol</label>
-                        <select class="form-select" id="rol_id" name="rol_id" required>
+                        <select class="form-select select2ModalCrearUsuario" id="rol_id" name="rol_id" required>
                             <?php foreach ($roles as $rol) : ?>
                                 <option value="<?= $rol['id'] ?>"><?= $rol['nombre'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="clienteContainer" style="display: none;">
+                        <label for="id_cliente" class="form-label">Cliente</label>
+                        <select class="form-select select2ModalCrearUsuario" id="id_cliente" name="id_cliente">
+                            <option value="">Seleccionar Cliente</option>
+                            <?php foreach ($clientes as $cliente) : ?>
+                                <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -105,6 +124,7 @@
         </div>
     </div>
 </div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -121,8 +141,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script>
     let roles = '<?= json_encode($roles) ?>';
+    let clientes = '<?= json_encode($clientes) ?>';
 
     roles = JSON.parse(roles);
+    clientes = JSON.parse(clientes);
 </script>
 <script src="<?= base_url('assets/js/usuarios.js') ?>"></script>
 <?= $this->endSection() ?>

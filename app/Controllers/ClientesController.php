@@ -1,0 +1,139 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\ClienteModel;
+use CodeIgniter\Controller;
+
+class ClientesController extends Controller
+{
+    public function index()
+    {
+        $data = [
+            'title' => 'Administración de Clientes',
+            'controlador' => 'Clientes',
+            'vista' => 'Clientes',
+        ];
+
+        return view('clientes/index', $data);
+    }
+
+    public function listar()
+    {
+        $clienteModel = new ClienteModel();
+        $clientes = $clienteModel->findAll();
+
+        return $this->response->setJSON($clientes);
+    }
+
+    public function guardar()
+    {
+        $clienteModel = new ClienteModel();
+        $id = $this->request->getVar('id');
+
+        $data = [
+            'nombre_empresa' => $this->request->getVar('nombre_empresa'),
+            'numero_identificacion' => $this->request->getVar('numero_identificacion'),
+            'correo_contacto' => $this->request->getVar('correo_contacto'),
+            'telefono_contacto' => $this->request->getVar('telefono_contacto'),
+            'direccion' => $this->request->getVar('direccion'),
+            'slug' => $this->request->getVar('slug'),
+            'logo' => $this->request->getVar('logo'),
+            'banner' => $this->request->getVar('banner')
+        ];
+
+        if ($id) {
+            $clienteExistente = $clienteModel->where('id !=', $id)
+                ->groupStart()
+                ->where('nombre_empresa', $this->request->getVar('nombre_empresa'))
+                ->orWhere('correo_contacto', $this->request->getVar('correo_contacto'))
+                ->groupEnd()
+                ->first();
+        } else {
+            $clienteExistente = $clienteModel->groupStart()
+                ->where('nombre_empresa', $this->request->getVar('nombre_empresa'))
+                ->orWhere('correo_contacto', $this->request->getVar('correo_contacto'))
+                ->groupEnd()
+                ->first();
+        }
+
+        if ($clienteExistente) {
+            $message = [];
+            if ($clienteExistente['nombre_empresa'] == $this->request->getVar('nombre_empresa')) {
+                $message[] = 'El nombre de la empresa ya está en uso';
+            }
+            if ($clienteExistente['correo_contacto'] == $this->request->getVar('correo_contacto')) {
+                $message[] = 'El correo de contacto ya está en uso';
+            }
+            return $this->response->setStatusCode(409)->setJSON(['message' => implode(', ', $message)]);
+        }
+
+        if ($id) {
+            $clienteModel->update($id, $data);
+        } else {
+            $clienteModel->save($data);
+        }
+
+        return $this->response->setJSON(['message' => 'Cliente guardado correctamente']);
+    }
+
+    public function obtener($id)
+    {
+        $clienteModel = new ClienteModel();
+        $cliente = $clienteModel->find($id);
+
+        return $this->response->setJSON($cliente);
+    }
+
+    public function eliminar($id)
+    {
+        $clienteModel = new ClienteModel();
+        $clienteModel->delete($id);
+
+        return $this->response->setJSON(['message' => 'Cliente eliminado correctamente']);
+    }
+
+    public function validarUnico()
+    {
+        $clienteModel = new ClienteModel();
+        $id = $this->request->getVar('id');
+        $nombre_empresa = $this->request->getVar('nombre_empresa');
+        $correo_contacto = $this->request->getVar('correo_contacto');
+
+        $conditions = [];
+        if ($nombre_empresa) {
+            $conditions['nombre_empresa'] = $nombre_empresa;
+        }
+        if ($correo_contacto) {
+            $conditions['correo_contacto'] = $correo_contacto;
+        }
+
+        if (!empty($conditions)) {
+            $clienteModel->groupStart();
+            foreach ($conditions as $field => $value) {
+                $clienteModel->orWhere($field, $value);
+            }
+            $clienteModel->groupEnd();
+
+            if ($id) {
+                $clienteModel->where('id !=', $id);
+            }
+
+            $cliente = $clienteModel->first();
+
+            if ($cliente) {
+                $messages = [];
+                if ($cliente['nombre_empresa'] == $nombre_empresa) {
+                    $messages[] = 'El nombre de la empresa ya está en uso';
+                }
+                if ($cliente['correo_contacto'] == $correo_contacto) {
+                    $messages[] = 'El correo de contacto ya está en uso';
+                }
+
+                return $this->response->setJSON(false);
+            }
+        }
+
+        return $this->response->setJSON(true);
+    }
+}
