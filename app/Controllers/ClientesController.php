@@ -43,6 +43,9 @@ class ClientesController extends Controller
         ];
 
         if ($id) {
+            $existingClient = $clienteModel->find($id);
+
+            // Validar unicidad del nombre de empresa y correo de contacto
             $clienteExistente = $clienteModel->where('id !=', $id)
                 ->groupStart()
                 ->where('nombre_empresa', $this->request->getVar('nombre_empresa'))
@@ -69,6 +72,13 @@ class ClientesController extends Controller
         }
 
         if ($id) {
+            // Filtrar los campos no enviados
+            foreach ($data as $key => $value) {
+                if (empty($value) && $value !== '0') {
+                    unset($data[$key]);
+                }
+            }
+
             $clienteModel->update($id, $data);
         } else {
             $clienteModel->save($data);
@@ -93,16 +103,33 @@ class ClientesController extends Controller
         return $this->response->setJSON(['message' => 'Cliente eliminado correctamente']);
     }
 
+    public function subirImagen()
+    {
+        $file = $this->request->getFile('file');
+
+        if ($file->isValid() && !$file->hasMoved()) {
+            $newName = $file->getRandomName();
+            $file->move(WRITEPATH . '../public/assets/images/clientes', $newName);
+            return $this->response->setJSON(['filename' => $newName]);
+        }
+
+        return $this->response->setStatusCode(400)->setJSON(['error' => 'No se pudo subir la imagen.']);
+    }
+
     public function validarUnico()
     {
         $clienteModel = new ClienteModel();
         $id = $this->request->getVar('id');
         $nombre_empresa = $this->request->getVar('nombre_empresa');
+        $numero_identificacion = $this->request->getVar('numero_identificacion');
         $correo_contacto = $this->request->getVar('correo_contacto');
 
         $conditions = [];
         if ($nombre_empresa) {
             $conditions['nombre_empresa'] = $nombre_empresa;
+        }
+        if ($numero_identificacion) {
+            $conditions['numero_identificacion'] = $numero_identificacion;
         }
         if ($correo_contacto) {
             $conditions['correo_contacto'] = $correo_contacto;
@@ -125,6 +152,9 @@ class ClientesController extends Controller
                 $messages = [];
                 if ($cliente['nombre_empresa'] == $nombre_empresa) {
                     $messages[] = 'El nombre de la empresa ya está en uso';
+                }
+                if ($cliente['numero_identificacion'] == $numero_identificacion) {
+                    $messages[] = 'El número de identificación ya está en uso';
                 }
                 if ($cliente['correo_contacto'] == $correo_contacto) {
                     $messages[] = 'El correo de contacto ya está en uso';

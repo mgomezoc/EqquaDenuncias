@@ -7,6 +7,9 @@ let tplAccionesTabla;
 let tplDetalleTabla;
 let $tablaClientes;
 let $modalCrearCliente;
+let dropzones = {};
+
+Dropzone.autoDiscover = false; // Desactivar la autodetección de Dropzone
 
 $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
@@ -47,8 +50,24 @@ $(function () {
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
 
+            initializeDropzone(`dropzoneLogo-${row.id}`, 'logo', row.id);
+            initializeDropzone(`dropzoneBanner-${row.id}`, 'banner', row.id);
+
             // Inicializar select2 y validación para el formulario de edición
             $detail.find('select').select2();
+            const rolSelect = $detail.find('[name="rol_id"]');
+            rolSelect.on('change', function () {
+                const selectedRole = $(this).val();
+                const clienteContainer = $detail.find('#clienteContainer-' + row.id);
+                if (selectedRole == 4) {
+                    clienteContainer.show();
+                    $detail.find('[name="id_cliente"]').prop('required', true);
+                } else {
+                    clienteContainer.hide();
+                    $detail.find('[name="id_cliente"]').prop('required', false);
+                }
+            });
+            rolSelect.trigger('change');
             $detail.find('.formEditarCliente').validate({
                 rules: {
                     nombre_empresa: {
@@ -66,9 +85,6 @@ $(function () {
                                 }
                             }
                         }
-                    },
-                    numero_identificacion: {
-                        required: true
                     },
                     correo_contacto: {
                         required: true,
@@ -101,9 +117,6 @@ $(function () {
                         required: 'Por favor ingrese el nombre de la empresa',
                         minlength: 'El nombre de la empresa debe tener al menos 3 caracteres',
                         remote: 'El nombre de la empresa ya está en uso'
-                    },
-                    numero_identificacion: {
-                        required: 'Por favor ingrese el número de identificación'
                     },
                     correo_contacto: {
                         required: 'Por favor ingrese el correo de contacto',
@@ -140,7 +153,16 @@ $(function () {
                 }
             },
             numero_identificacion: {
-                required: true
+                required: true,
+                remote: {
+                    url: `${Server}clientes/validarUnico`,
+                    type: 'post',
+                    data: {
+                        numero_identificacion: function () {
+                            return $('#formCrearCliente [name="numero_identificacion"]').val();
+                        }
+                    }
+                }
             },
             correo_contacto: {
                 required: true,
@@ -172,7 +194,8 @@ $(function () {
                 remote: 'El nombre de la empresa ya está en uso'
             },
             numero_identificacion: {
-                required: 'Por favor ingrese el número de identificación'
+                required: 'Por favor ingrese el número de identificación',
+                remote: 'El número de identificación ya está en uso'
             },
             correo_contacto: {
                 required: 'Por favor ingrese el correo de contacto',
@@ -263,13 +286,93 @@ $(function () {
         });
     });
 
+    $(document).on('submit', '.formActualizarImagenes', function (e) {
+        e.preventDefault();
+
+        const $frm = $(this);
+        const formData = $frm.serializeObject();
+        const clienteId = $frm.find('[name="id"]').val();
+
+        if ((!dropzones[clienteId] || !dropzones[clienteId]['logo'].files.length) && (!dropzones[clienteId] || !dropzones[clienteId]['banner'].files.length)) {
+            showToast('Por favor, suba una imagen antes de enviar el formulario.', 'error');
+            return false;
+        }
+
+        loadingFormXHR($frm, true);
+
+        ajaxCall({
+            url: `${Server}clientes/guardar`,
+            method: 'POST',
+            data: formData,
+            success: function (data) {
+                loadingFormXHR($frm, false);
+                $tablaClientes.bootstrapTable('refresh');
+                showToast('¡Listo!, se actualizó correctamente el cliente.', 'success');
+            },
+            error: function (xhr) {
+                loadingFormXHR($frm, false);
+                if (xhr.status === 409) {
+                    const response = JSON.parse(xhr.responseText);
+                    showToast(response.message, 'error');
+                }
+            }
+        });
+    });
+
     $modalCrearCliente.on('hidden.bs.modal', function () {
         const $form = $('#formCrearCliente');
         $form[0].reset();
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
     });
+
+    initializeDropzone('dropzoneLogo', 'logo');
+    initializeDropzone('dropzoneBanner', 'banner');
 });
+
+function initializeDropzone(elementId, fieldName, clienteId = null) {
+    if (!dropzones[clienteId]) {
+        dropzones[clienteId] = {};
+    }
+
+    dropzones[clienteId][fieldName] = new Dropzone(`#${elementId}`, {
+        url: `${Server}clientes/subirImagen`,
+        maxFiles: 1,
+        acceptedFiles: 'image/*',
+        addRemoveLinks: true,
+        dictDefaultMessage: 'Arrastra una imagen aquí para subirla',
+        dictRemoveFile: 'Eliminar imagen',
+        init: function () {
+            this.on('success', function (file, response) {
+                $(`#formCrearCliente, #formActualizarImagenes-${clienteId}`).append(`<input type="hidden" name="${fieldName}" value="assets/images/clientes/${response.filename}">`);
+            });
+            this.on('removedfile', function (file) {
+                $(`input[name="${fieldName}"]`).remove();
+            });
+        }
+    });
+}
+
+function processDropzones(callback) {
+    const dropzoneInstances = Object.values(dropzones).flatMap(clienteDropzones => Object.values(clienteDropzones));
+
+    if (!dropzoneInstances.length) {
+        callback();
+        return;
+    }
+
+    let pendingUploads = dropzoneInstances.length;
+
+    dropzoneInstances.forEach(dropzone => {
+        dropzone.on('queuecomplete', () => {
+            pendingUploads -= 1;
+            if (pendingUploads === 0) {
+                callback();
+            }
+        });
+        dropzone.processQueue();
+    });
+}
 
 window.operateEvents = {
     'click .edit': function (e, value, row, index) {

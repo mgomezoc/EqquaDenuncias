@@ -52,3 +52,14 @@ label.error {
   background: #0f9d58;
   color: #fff;
 }
+.img-thumbnail {
+  max-width: 100%;
+  height: auto;
+}
+.dropzone {
+  min-height: 150px;
+  border: 2px dashed #0087f7;
+  border-radius: 5px;
+  background: white;
+  padding: 20px;
+}

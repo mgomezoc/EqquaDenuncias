@@ -14,7 +14,6 @@ $routes->setTranslateURIDashes(false);
 $routes->set404Override('App\Controllers\Errors::show404');
 $routes->setAutoRoute(false);
 
-
 $routes->get('/', 'Home::index');
 $routes->get('/login', 'Auth::login');
 $routes->get('logout', 'Auth::logout');
@@ -25,7 +24,6 @@ $routes->get('/logout', 'Auth::logout');
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']);
 $routes->get('/admin', 'Admin::index', ['filter' => 'authFilter:1']);
 $routes->get('/noautorizado', 'Error::noautorizado');
-
 
 // USUARIOS
 $routes->group('usuarios', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
@@ -45,6 +43,7 @@ $routes->group('clientes', ['namespace' => 'App\Controllers', 'filter' => 'authF
     $routes->get('obtener/(:num)', 'ClientesController::obtener/$1');
     $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1');
     $routes->post('validarUnico', 'ClientesController::validarUnico');
+    $routes->post('subirImagen', 'ClientesController::subirImagen'); // Ruta para subir imágenes
 });
 
 // Cargar rutas adicionales basadas en el entorno
