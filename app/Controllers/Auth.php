@@ -38,11 +38,13 @@ class Auth extends BaseController
         $data = [
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
-            'contrasena' => $this->request->getVar('contrasena'),
+            'contrasena' => password_hash($this->request->getVar('contrasena'), PASSWORD_DEFAULT),
             'rol_id' => $rol_id,
         ];
 
         if ($usuarioModel->save($data)) {
+            // Registrar la acción en la auditoría
+            registrarAccion(session()->get('id'), 'Registro de usuario', 'Nombre de usuario: ' . $this->request->getVar('nombre_usuario'));
             return redirect()->to('/login')->with('msg', 'Usuario registrado exitosamente');
         } else {
             return redirect()->back()->withInput()->with('msg', 'Error al registrar el usuario');
@@ -76,6 +78,9 @@ class Auth extends BaseController
                     'isLoggedIn' => TRUE
                 ];
                 $session->set($ses_data);
+
+                // Registrar la acción en la auditoría
+                registrarAccion($data['id'], 'Inicio de sesión', 'Usuario: ' . $data['nombre_usuario']);
                 return redirect()->to('/');
             } else {
                 $session->setFlashdata('msg', 'Contraseña incorrecta');
@@ -89,6 +94,9 @@ class Auth extends BaseController
 
     public function logout()
     {
+        // Registrar la acción en la auditoría
+        registrarAccion(session()->get('id'), 'Cierre de sesión', 'Usuario: ' . session()->get('nombre_usuario'));
+
         session()->destroy();
         return redirect()->to('/login');
     }

@@ -394,9 +394,19 @@ async function eliminarCliente(id) {
         ajaxCall({
             url: `${Server}clientes/eliminar/${id}`,
             method: 'POST',
-            success: function () {
+            success: function (response) {
                 $tablaClientes.bootstrapTable('refresh');
                 showToast('¡Cliente eliminado correctamente!', 'success');
+            },
+            error: function (xhr, status, error) {
+                let errorMessage = 'Ocurrió un error al eliminar el cliente.';
+                if (xhr.status === 409) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMessage = response.message;
+                    }
+                }
+                showToast(errorMessage, 'error');
             }
         });
     }

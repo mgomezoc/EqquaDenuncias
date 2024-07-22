@@ -25,6 +25,9 @@ $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']);
 $routes->get('/admin', 'Admin::index', ['filter' => 'authFilter:1']);
 $routes->get('/noautorizado', 'Error::noautorizado');
 
+$routes->get('cliente/(:segment)', 'Publico::verCliente/$1');
+
+
 // USUARIOS
 $routes->group('usuarios', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'UsuariosController::index');

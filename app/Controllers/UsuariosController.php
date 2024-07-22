@@ -39,17 +39,24 @@ class UsuariosController extends Controller
         return $this->response->setJSON($usuarios);
     }
 
-
     public function guardar()
     {
         $usuarioModel = new UsuarioModel();
+        $clienteModel = new ClienteModel();
         $id = $this->request->getVar('id');
+
+        $id_cliente = $this->request->getVar('id_cliente');
+
+        // Verificar si el id_cliente existe en la tabla clientes si se proporciona
+        if ($id_cliente && !$clienteModel->find($id_cliente)) {
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Cliente no válido']);
+        }
 
         $data = [
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
             'rol_id' => $this->request->getVar('rol_id'),
-            'id_cliente' => $this->request->getVar('id_cliente')
+            'id_cliente' => $id_cliente ?: null  // Si id_cliente no está presente, asignar null
         ];
 
         if ($contrasena = $this->request->getVar('contrasena')) {
@@ -85,8 +92,10 @@ class UsuariosController extends Controller
 
         if ($id) {
             $usuarioModel->update($id, $data);
+            registrarAccion(session()->get('id'), 'Actualización de usuario', 'ID: ' . $id);
         } else {
             $usuarioModel->save($data);
+            registrarAccion(session()->get('id'), 'Creación de usuario', 'Nombre de usuario: ' . $this->request->getVar('nombre_usuario'));
         }
 
         return $this->response->setJSON(['message' => 'Usuario guardado correctamente']);
@@ -97,6 +106,8 @@ class UsuariosController extends Controller
         $usuarioModel = new UsuarioModel();
         $usuario = $usuarioModel->find($id);
 
+        registrarAccion(session()->get('id'), 'Visualización de usuario', 'ID: ' . $id);
+
         return $this->response->setJSON($usuario);
     }
 
@@ -104,6 +115,8 @@ class UsuariosController extends Controller
     {
         $usuarioModel = new UsuarioModel();
         $usuarioModel->delete($id);
+
+        registrarAccion(session()->get('id'), 'Eliminación de usuario', 'ID: ' . $id);
 
         return $this->response->setJSON(['message' => 'Usuario eliminado correctamente']);
     }

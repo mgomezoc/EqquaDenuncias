@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\ClienteModel;
+use App\Models\UsuarioModel;
 use CodeIgniter\Controller;
 
 class ClientesController extends Controller
@@ -80,8 +81,11 @@ class ClientesController extends Controller
             }
 
             $clienteModel->update($id, $data);
+            registrarAccion(session()->get('id'), 'Actualización de cliente', 'ID: ' . $id);
         } else {
             $clienteModel->save($data);
+            $newId = $clienteModel->insertID(); // Obtener el ID del nuevo cliente creado
+            registrarAccion(session()->get('id'), 'Creación de cliente', 'ID: ' . $newId);
         }
 
         return $this->response->setJSON(['message' => 'Cliente guardado correctamente']);
@@ -92,16 +96,28 @@ class ClientesController extends Controller
         $clienteModel = new ClienteModel();
         $cliente = $clienteModel->find($id);
 
+        registrarAccion(session()->get('id'), 'Visualización de cliente', 'ID: ' . $id);
+
         return $this->response->setJSON($cliente);
     }
 
     public function eliminar($id)
     {
+        $usuarioModel = new UsuarioModel();
+        $usuario = $usuarioModel->where('id_cliente', $id)->first();
+
+        if ($usuario) {
+            return $this->response->setStatusCode(409)->setJSON(['message' => 'No se puede eliminar el cliente porque tiene usuarios asociados']);
+        }
+
         $clienteModel = new ClienteModel();
         $clienteModel->delete($id);
 
+        registrarAccion(session()->get('id'), 'Eliminación de cliente', 'ID: ' . $id);
+
         return $this->response->setJSON(['message' => 'Cliente eliminado correctamente']);
     }
+
 
     public function subirImagen()
     {

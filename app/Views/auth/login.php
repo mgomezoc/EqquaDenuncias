@@ -46,12 +46,12 @@
                             <div class="row gy-3">
                                 <div class="col-xl-12 mt-0">
                                     <label for="signin-username" class="form-label text-default">Correo Electrónico</label>
-                                    <input type="email" class="form-control form-control-lg" id="signin-username" name="correo_electronico" placeholder="Correo Electrónico" required>
+                                    <input type="email" class="form-control form-control-lg" id="signin-username" name="correo_electronico" placeholder="Correo Electrónico" tabindex="1" required>
                                 </div>
                                 <div class="col-xl-12 mb-3">
                                     <label for="signin-password" class="form-label text-default d-block">Contraseña<a href="reset-password-cover.html" class="float-end text-info">¿Olvidaste tu contraseña?</a></label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control form-control-lg" id="signin-password" name="contrasena" placeholder="Contraseña" required>
+                                        <input type="password" class="form-control form-control-lg" id="signin-password" name="contrasena" placeholder="Contraseña" tabindex="2" required>
                                         <button class="btn btn-light" type="button" onclick="togglePassword('signin-password', this)" id="button-addon2"><i class="fas fa-eye-slash align-middle"></i></button>
                                     </div>
                                     <div class="mt-2">
@@ -64,7 +64,7 @@
                                     </div>
                                 </div>
                                 <div class="col-xl-12 d-grid mt-2">
-                                    <button type="submit" class="btn btn-lg btn-info">Iniciar Sesión</button>
+                                    <button type="submit" class="btn btn-lg btn-info" tabindex="3">Iniciar Sesión</button>
                                 </div>
                             </div>
                             <div class="text-center">

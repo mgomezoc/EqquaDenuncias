@@ -29,9 +29,6 @@
     </div>
 </div>
 <template id="tplAccionesTabla">
-    <button class="btn btn-sm btn-info edit">
-        <i class="fa fa-edit"></i>
-    </button>
     <button class="btn btn-sm btn-danger remove">
         <i class="fa fa-trash"></i>
     </button>
