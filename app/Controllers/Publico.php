@@ -3,9 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\ClienteModel;
-use CodeIgniter\Controller;
 
-class Publico extends Controller
+class Publico extends BaseController
 {
     public function verCliente($slug)
     {
@@ -17,10 +16,10 @@ class Publico extends Controller
         }
 
         $data = [
-            'title' => 'Información del Cliente',
+            'title' => 'Inicio - Sistema de Denuncias',
             'cliente' => $cliente
         ];
 
-        return view('publico/cliente', $data);
+        return view('publico/ver_cliente', $data);
     }
 }

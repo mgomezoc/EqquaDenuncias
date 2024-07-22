@@ -46,17 +46,19 @@ class ClientesController extends Controller
         if ($id) {
             $existingClient = $clienteModel->find($id);
 
-            // Validar unicidad del nombre de empresa y correo de contacto
+            // Validar unicidad del nombre de empresa, correo de contacto y slug
             $clienteExistente = $clienteModel->where('id !=', $id)
                 ->groupStart()
                 ->where('nombre_empresa', $this->request->getVar('nombre_empresa'))
                 ->orWhere('correo_contacto', $this->request->getVar('correo_contacto'))
+                ->orWhere('slug', $this->request->getVar('slug'))
                 ->groupEnd()
                 ->first();
         } else {
             $clienteExistente = $clienteModel->groupStart()
                 ->where('nombre_empresa', $this->request->getVar('nombre_empresa'))
                 ->orWhere('correo_contacto', $this->request->getVar('correo_contacto'))
+                ->orWhere('slug', $this->request->getVar('slug'))
                 ->groupEnd()
                 ->first();
         }
@@ -68,6 +70,9 @@ class ClientesController extends Controller
             }
             if ($clienteExistente['correo_contacto'] == $this->request->getVar('correo_contacto')) {
                 $message[] = 'El correo de contacto ya está en uso';
+            }
+            if ($clienteExistente['slug'] == $this->request->getVar('slug')) {
+                $message[] = 'El slug ya está en uso';
             }
             return $this->response->setStatusCode(409)->setJSON(['message' => implode(', ', $message)]);
         }
@@ -118,7 +123,6 @@ class ClientesController extends Controller
         return $this->response->setJSON(['message' => 'Cliente eliminado correctamente']);
     }
 
-
     public function subirImagen()
     {
         $file = $this->request->getFile('file');
@@ -139,6 +143,7 @@ class ClientesController extends Controller
         $nombre_empresa = $this->request->getVar('nombre_empresa');
         $numero_identificacion = $this->request->getVar('numero_identificacion');
         $correo_contacto = $this->request->getVar('correo_contacto');
+        $slug = $this->request->getVar('slug');
 
         $conditions = [];
         if ($nombre_empresa) {
@@ -149,6 +154,9 @@ class ClientesController extends Controller
         }
         if ($correo_contacto) {
             $conditions['correo_contacto'] = $correo_contacto;
+        }
+        if ($slug) {
+            $conditions['slug'] = $slug;
         }
 
         if (!empty($conditions)) {
@@ -174,6 +182,9 @@ class ClientesController extends Controller
                 }
                 if ($cliente['correo_contacto'] == $correo_contacto) {
                     $messages[] = 'El correo de contacto ya está en uso';
+                }
+                if ($cliente['slug'] == $slug) {
+                    $messages[] = 'El slug ya está en uso';
                 }
 
                 return $this->response->setJSON(false);

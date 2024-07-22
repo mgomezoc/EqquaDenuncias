@@ -11,6 +11,16 @@ let dropzones = {};
 
 Dropzone.autoDiscover = false; // Desactivar la autodetección de Dropzone
 
+// Añadir la regla personalizada 'regex'
+$.validator.addMethod(
+    'regex',
+    function (value, element, regexp) {
+        var re = new RegExp(regexp);
+        return this.optional(element) || re.test(value);
+    },
+    'Por favor, ingrese un valor válido.'
+);
+
 $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplDetalleTabla = $('#tplDetalleTabla').html();
@@ -34,6 +44,10 @@ $(function () {
             {
                 field: 'telefono_contacto',
                 title: 'Teléfono Contacto'
+            },
+            {
+                field: 'slug',
+                title: 'SLUG'
             },
             {
                 field: 'operate',
@@ -109,7 +123,20 @@ $(function () {
                         required: true
                     },
                     slug: {
-                        required: true
+                        required: true,
+                        regex: /^[a-zA-Z0-9-]+$/,
+                        remote: {
+                            url: `${Server}clientes/validarUnico`,
+                            type: 'post',
+                            data: {
+                                slug: function () {
+                                    return $detail.find('[name="slug"]').val();
+                                },
+                                id: function () {
+                                    return $detail.find('[name="id"]').val();
+                                }
+                            }
+                        }
                     }
                 },
                 messages: {
@@ -130,7 +157,9 @@ $(function () {
                         required: 'Por favor ingrese la dirección'
                     },
                     slug: {
-                        required: 'Por favor ingrese el slug'
+                        required: 'Por favor ingrese el slug',
+                        regex: 'El slug solo puede contener letras, números y guiones',
+                        remote: 'El slug ya está en uso'
                     }
                 }
             });
@@ -184,7 +213,17 @@ $(function () {
                 required: true
             },
             slug: {
-                required: true
+                required: true,
+                regex: /^[a-zA-Z0-9-]+$/,
+                remote: {
+                    url: `${Server}clientes/validarUnico`,
+                    type: 'post',
+                    data: {
+                        slug: function () {
+                            return $('#formCrearCliente [name="slug"]').val();
+                        }
+                    }
+                }
             }
         },
         messages: {
@@ -209,7 +248,9 @@ $(function () {
                 required: 'Por favor ingrese la dirección'
             },
             slug: {
-                required: 'Por favor ingrese el slug'
+                required: 'Por favor ingrese el slug',
+                regex: 'El slug solo puede contener letras, números y guiones',
+                remote: 'El slug ya está en uso'
             }
         },
         errorPlacement: function (error, element) {
@@ -380,6 +421,9 @@ window.operateEvents = {
     },
     'click .remove': function (e, value, row, index) {
         eliminarCliente(row.id);
+    },
+    'click .view-public': function (e, value, row, index) {
+        window.open(`${Server}cliente/${row.slug}`, '_blank');
     }
 };
 
