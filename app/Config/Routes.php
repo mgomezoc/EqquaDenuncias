@@ -55,9 +55,9 @@ $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'auth
     $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1');
     $routes->post('guardar', 'DenunciasController::guardar');
     $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
-    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
+    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');  // Esta es la ruta correcta
     $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
-    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1'); // Nueva ruta para obtener sucursales
+    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
 });
 
 
