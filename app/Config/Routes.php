@@ -60,7 +60,6 @@ $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'auth
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
 });
 
-
 // SUCURSALES
 $routes->group('sucursales', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'SucursalesController::index');
@@ -80,6 +79,15 @@ $routes->group('categorias', ['namespace' => 'App\Controllers', 'filter' => 'aut
     $routes->post('guardarSubcategoria', 'CategoriasController::guardarSubcategoria');
     $routes->post('eliminarCategoria/(:num)', 'CategoriasController::eliminarCategoria/$1');
     $routes->post('eliminarSubcategoria/(:num)', 'CategoriasController::eliminarSubcategoria/$1');
+});
+
+// Rutas para la administración de Departamentos
+$routes->group('departamentos', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
+    $routes->get('/', 'DepartamentosController::index');
+    $routes->get('listarDepartamentos', 'DepartamentosController::listarDepartamentos');
+    $routes->post('guardarDepartamento', 'DepartamentosController::guardarDepartamento');
+    $routes->post('eliminar/(:num)', 'DepartamentosController::eliminarDepartamento/$1');
+    $routes->get('listarSucursales', 'DepartamentosController::listarSucursales');  // Ruta para listar sucursales
 });
 
 // Cargar rutas adicionales basadas en el entorno
