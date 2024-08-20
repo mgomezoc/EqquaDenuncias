@@ -49,6 +49,40 @@ $routes->group('clientes', ['namespace' => 'App\Controllers', 'filter' => 'authF
     $routes->post('subirImagen', 'ClientesController::subirImagen'); // Ruta para subir imágenes
 });
 
+// DENUNCIAS
+$routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
+    $routes->get('/', 'DenunciasController::index');
+    $routes->get('listar', 'DenunciasController::listar');
+    $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1');
+    $routes->post('guardar', 'DenunciasController::guardar');
+    $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
+    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
+    $routes->post('subirAnexo', 'DenunciasController::subirAnexo'); // Ruta para subir anexos
+});
+
+// SUCURSALES
+$routes->group('sucursales', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
+    $routes->get('/', 'SucursalesController::index');
+    $routes->get('listar', 'SucursalesController::listar');
+    $routes->post('guardar', 'SucursalesController::guardar');
+    $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1');
+    $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1');
+});
+
+// Rutas para la administración de Categorías y Subcategorías
+$routes->group('categorias', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
+    $routes->get('/', 'CategoriasController::index');
+    $routes->get('listarCategorias', 'CategoriasController::listarCategorias');
+    $routes->get('listarSubcategorias', 'CategoriasController::listarSubcategorias');
+    $routes->post('guardarCategoria', 'CategoriasController::guardarCategoria');
+    $routes->post('guardarSubcategoria', 'CategoriasController::guardarSubcategoria');
+    $routes->post('eliminarCategoria/(:num)', 'CategoriasController::eliminarCategoria/$1');
+    $routes->post('eliminarSubcategoria/(:num)', 'CategoriasController::eliminarSubcategoria/$1');
+});
+
+
+
+
 // Cargar rutas adicionales basadas en el entorno
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';
