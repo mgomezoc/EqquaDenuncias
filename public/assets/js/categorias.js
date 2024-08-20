@@ -14,6 +14,12 @@ $(function () {
     $modalCrearCategoria = $('#modalCrearCategoria');
     $modalCrearSubcategoria = $('#modalCrearSubcategoria');
 
+    $('#id_categoria').select2({
+        placeholder: 'Seleccione una opción',
+        allowClear: true,
+        dropdownParent: $('#modalCrearSubcategoria')
+    });
+
     // Inicializar la tabla de Categorías
     $tablaCategorias = $('#tablaCategorias').bootstrapTable({
         url: `${Server}categorias/listarCategorias`,
@@ -164,6 +170,10 @@ $(function () {
                     options += `<option value="${categoria.id}">${categoria.nombre}</option>`;
                 });
                 $('#id_categoria').html(options).trigger('change');
+
+                const selected = $('#id_categoria').data('selected');
+
+                $('#id_categoria').val(selected).trigger('change');
             },
             error: function () {
                 console.error('Error loading categories.');
@@ -237,7 +247,7 @@ $(function () {
     function editarSubcategoria(subcategoria) {
         $('#formCrearSubcategoria input[name="id"]').val(subcategoria.id);
         $('#formCrearSubcategoria input[name="nombre"]').val(subcategoria.nombre);
-        $('#id_categoria').val(subcategoria.id_categoria).trigger('change');
+        $('#id_categoria').data('selected', subcategoria.id_categoria);
         $modalCrearSubcategoria.modal('show');
     }
 
