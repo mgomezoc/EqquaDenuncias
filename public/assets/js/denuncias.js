@@ -103,6 +103,18 @@ $(function () {
                     }
                 }
             });
+
+            // Cargar dinámicamente las subcategorías según la categoría seleccionada
+            $detail.find(`#categoria-${row.id}`).change(function () {
+                const categoriaId = $(this).val();
+                loadSubcategorias(categoriaId, `#subcategoria-${row.id}`);
+            });
+
+            // Cargar dinámicamente las sucursales según el cliente seleccionado
+            $detail.find(`#id_cliente-${row.id}`).change(function () {
+                const clienteId = $(this).val();
+                loadSucursales(clienteId, `#id_sucursal-${row.id}`);
+            });
         }
     });
 
@@ -207,22 +219,19 @@ $(function () {
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
     });
-});
 
-window.operateEvents = {
-    'click .edit': function (e, value, row, index) {
-        editarDenuncia(row.id);
-    },
-    'click .remove': function (e, value, row, index) {
-        eliminarDenuncia(row.id);
-    },
-    'click .view-detail': function (e, value, row, index) {
-        verDetalleDenuncia(row.id);
-    },
-    'click .change-status': function (e, value, row, index) {
-        cambiarEstadoDenuncia(row.id);
-    }
-};
+    // Cargar dinámicamente las subcategorías según la categoría seleccionada
+    $('#categoria').change(function () {
+        const categoriaId = $(this).val();
+        loadSubcategorias(categoriaId, '#subcategoria');
+    });
+
+    // Cargar dinámicamente las sucursales según el cliente seleccionado
+    $('#id_cliente').change(function () {
+        const clienteId = $(this).val();
+        loadSucursales(clienteId, '#id_sucursal');
+    });
+});
 
 function operateFormatter(value, row, index) {
     const renderData = Handlebars.compile(tplAccionesTabla)(row);
@@ -268,4 +277,42 @@ async function cambiarEstadoDenuncia(id) {
 
 function verDetalleDenuncia(id) {
     // Implementación de la función para ver detalles completos de una denuncia en un modal o nueva vista.
+}
+
+function loadSubcategorias(categoriaId, selectSelector) {
+    $(selectSelector).html('<option>Cargando...</option>');
+    $.ajax({
+        url: `${Server}categorias/listarSubcategorias`,
+        method: 'GET',
+        data: { id_categoria: categoriaId },
+        success: function (data) {
+            let options = '<option value="">Seleccione una subcategoría</option>';
+            data.forEach(function (subcategoria) {
+                options += `<option value="${subcategoria.id}">${subcategoria.nombre}</option>`;
+            });
+            $(selectSelector).html(options);
+        },
+        error: function () {
+            console.error('Error loading subcategories.');
+        }
+    });
+}
+
+function loadSucursales(clienteId, selectSelector) {
+    $(selectSelector).html('<option>Cargando...</option>');
+    $.ajax({
+        url: `${Server}sucursales/listar`,
+        method: 'GET',
+        data: { id_cliente: clienteId },
+        success: function (data) {
+            let options = '<option value="">Seleccione una sucursal</option>';
+            data.forEach(function (sucursal) {
+                options += `<option value="${sucursal.id}">${sucursal.nombre}</option>`;
+            });
+            $(selectSelector).html(options);
+        },
+        error: function () {
+            console.error('Error loading branches.');
+        }
+    });
 }

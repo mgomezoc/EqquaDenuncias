@@ -48,7 +48,7 @@ $routes->group('clientes', ['namespace' => 'App\Controllers', 'filter' => 'authF
     $routes->post('subirImagen', 'ClientesController::subirImagen'); // Ruta para subir imágenes
 });
 
-// DENUNCIAS
+// Rutas para denuncias
 $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'DenunciasController::index');
     $routes->get('listar', 'DenunciasController::listar');
@@ -56,8 +56,10 @@ $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'auth
     $routes->post('guardar', 'DenunciasController::guardar');
     $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
     $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
-    $routes->post('subirAnexo', 'DenunciasController::subirAnexo'); // Ruta para subir anexos
+    $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
+    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1'); // Nueva ruta para obtener sucursales
 });
+
 
 // SUCURSALES
 $routes->group('sucursales', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {

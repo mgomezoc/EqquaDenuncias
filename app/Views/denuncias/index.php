@@ -31,6 +31,7 @@
         </div>
     </div>
 </div>
+
 <template id="tplAccionesTabla">
     <button class="btn btn-sm btn-danger remove">
         <i class="fa fa-trash"></i>
@@ -143,9 +144,7 @@
                         <div class="col-md-6">
                             <label for="subcategoria" class="form-label">Subcategoría</label>
                             <select class="form-select" id="subcategoria" name="subcategoria" required>
-                                <?php foreach ($subcategorias as $subcategoria) : ?>
-                                    <option value="<?= $subcategoria['id'] ?>"><?= $subcategoria['nombre'] ?></option>
-                                <?php endforeach; ?>
+                                <!-- Opciones de subcategorías aquí -->
                             </select>
                         </div>
                         <!-- Departamento -->
@@ -210,7 +209,6 @@
         </div>
     </div>
 </div>
-
 
 <?= $this->endSection() ?>
 

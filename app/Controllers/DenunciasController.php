@@ -7,6 +7,7 @@ use App\Models\ClienteModel;
 use App\Models\EstadoDenunciaModel;
 use App\Models\CategoriaDenunciaModel;
 use App\Models\SubcategoriaDenunciaModel;
+use App\Models\SucursalModel;  // Nuevo modelo para sucursales
 use App\Models\AnexoDenunciaModel;
 use App\Models\SeguimientoDenunciaModel;
 use CodeIgniter\Controller;
@@ -139,5 +140,13 @@ class DenunciasController extends Controller
         }
 
         return $this->response->setStatusCode(400)->setJSON(['error' => 'No se pudo subir el anexo.']);
+    }
+
+    // Nuevo método para obtener sucursales por cliente
+    public function obtenerSucursalesPorCliente($id_cliente)
+    {
+        $sucursalModel = new SucursalModel();
+        $sucursales = $sucursalModel->where('id_cliente', $id_cliente)->findAll();
+        return $this->response->setJSON($sucursales);
     }
 }
