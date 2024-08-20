@@ -50,30 +50,30 @@
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label for="folio-{{id}}" class="form-label">Folio</label>
-                    <input type="text" class="form-control" id="folio-{{id}}" name="folio" value="{{folio}}" required>
-                </div>
-                <div class="col-md-4">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
-                    <select class="form-select" id="id_cliente-{{id}}" name="id_cliente" required>
+                    <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" required>
+                        <option value="">Seleccione un cliente</option>
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label for="categoria-{{id}}" class="form-label">Categoría</label>
-                    <select class="form-select" id="categoria-{{id}}" name="categoria" required>
+                    <select class="form-select select2" id="categoria-{{id}}" name="categoria" required>
+                        <option value="">Seleccione una categoría</option>
                         {{{selectOptions categorias categoria}}}
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label for="subcategoria-{{id}}" class="form-label">Subcategoría</label>
-                    <select class="form-select" id="subcategoria-{{id}}" name="subcategoria" required>
+                    <select class="form-select select2" id="subcategoria-{{id}}" name="subcategoria" required>
+                        <option value="">Seleccione una subcategoría</option>
                         {{{selectOptions subcategorias subcategoria}}}
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label for="estado_actual-{{id}}" class="form-label">Estado</label>
-                    <select class="form-select" id="estado_actual-{{id}}" name="estado_actual" required>
+                    <select class="form-select select2" id="estado_actual-{{id}}" name="estado_actual" required>
+                        <option value="">Seleccione un estado</option>
                         {{{selectOptions estados estado_actual}}}
                     </select>
                 </div>
@@ -105,15 +105,11 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <!-- Folio -->
-                        <div class="col-md-6">
-                            <label for="folio" class="form-label">Folio</label>
-                            <input type="text" class="form-control" id="folio" name="folio" required>
-                        </div>
                         <!-- Cliente -->
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>
-                            <select class="form-select" id="id_cliente" name="id_cliente" required>
+                            <select class="form-select select2" id="id_cliente" name="id_cliente" required>
+                                <option value="">Seleccione un cliente</option>
                                 <?php foreach ($clientes as $cliente) : ?>
                                     <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
                                 <?php endforeach; ?>
@@ -122,19 +118,20 @@
                         <!-- Sucursal -->
                         <div class="col-md-6">
                             <label for="id_sucursal" class="form-label">Sucursal</label>
-                            <select class="form-select" id="id_sucursal" name="id_sucursal" required>
-                                <!-- Opciones de sucursales aquí -->
+                            <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
+                                <option value="">Seleccione una sucursal</option>
                             </select>
                         </div>
                         <!-- Tipo de Denunciante -->
                         <div class="col-md-6">
                             <label for="tipo_denunciante" class="form-label">Tipo de Denunciante</label>
-                            <input type="text" class="form-control" id="tipo_denunciante" name="tipo_denunciante" required>
+                            <input type="text" class="form-control" id="tipo_denunciante" name="tipo_denunciante" required placeholder="Ingrese el tipo de denunciante">
                         </div>
                         <!-- Categoría -->
                         <div class="col-md-6">
                             <label for="categoria" class="form-label">Categoría</label>
-                            <select class="form-select" id="categoria" name="categoria" required>
+                            <select class="form-select select2" id="categoria" name="categoria" required>
+                                <option value="">Seleccione una categoría</option>
                                 <?php foreach ($categorias as $categoria) : ?>
                                     <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
                                 <?php endforeach; ?>
@@ -143,19 +140,20 @@
                         <!-- Subcategoría -->
                         <div class="col-md-6">
                             <label for="subcategoria" class="form-label">Subcategoría</label>
-                            <select class="form-select" id="subcategoria" name="subcategoria" required>
-                                <!-- Opciones de subcategorías aquí -->
+                            <select class="form-select select2" id="subcategoria" name="subcategoria" required>
+                                <option value="">Seleccione una subcategoría</option>
                             </select>
                         </div>
                         <!-- Departamento -->
                         <div class="col-md-6">
                             <label for="departamento" class="form-label">Departamento</label>
-                            <input type="text" class="form-control" id="departamento" name="departamento" required>
+                            <input type="text" class="form-control" id="departamento" name="departamento" required placeholder="Ingrese el departamento">
                         </div>
                         <!-- Anonimo -->
                         <div class="col-md-6">
                             <label for="anonimo" class="form-label">Anónimo</label>
-                            <select class="form-select" id="anonimo" name="anonimo" required>
+                            <select class="form-select select2" id="anonimo" name="anonimo" required>
+                                <option value="">Seleccione una opción</option>
                                 <option value="1">Sí</option>
                                 <option value="0">No</option>
                             </select>
@@ -168,31 +166,22 @@
                         <!-- Como se enteró -->
                         <div class="col-md-6">
                             <label for="como_se_entero" class="form-label">¿Cómo se Enteró?</label>
-                            <input type="text" class="form-control" id="como_se_entero" name="como_se_entero" required>
+                            <input type="text" class="form-control" id="como_se_entero" name="como_se_entero" required placeholder="Ej. Fui víctima">
                         </div>
                         <!-- Denunciar a Alguien -->
                         <div class="col-md-6">
                             <label for="denunciar_a_alguien" class="form-label">Denunciar a Alguien</label>
-                            <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien"></textarea>
+                            <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien" placeholder="Describa a la persona involucrada"></textarea>
                         </div>
                         <!-- Área del Incidente -->
                         <div class="col-md-6">
                             <label for="area_incidente" class="form-label">Área del Incidente</label>
-                            <input type="text" class="form-control" id="area_incidente" name="area_incidente" required>
+                            <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
                         </div>
                         <!-- Descripción -->
                         <div class="col-md-12">
                             <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
-                        </div>
-                        <!-- Estado Actual -->
-                        <div class="col-md-6">
-                            <label for="estado_actual" class="form-label">Estado Actual</label>
-                            <select class="form-select" id="estado_actual" name="estado_actual" required>
-                                <?php foreach ($estados as $estado) : ?>
-                                    <option value="<?= $estado['id'] ?>"><?= $estado['nombre'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia"></textarea>
                         </div>
                         <!-- Archivos Adjuntos -->
                         <div class="col-md-12">

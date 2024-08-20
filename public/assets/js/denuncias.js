@@ -13,6 +13,7 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearDenuncia = $('#modalCrearDenuncia');
 
+    // Inicialización de la tabla de denuncias
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
         url: `${Server}denuncias/listar`,
         columns: [
@@ -63,9 +64,6 @@ $(function () {
             $detail.find('select').select2();
             $detail.find('.formEditarDenuncia').validate({
                 rules: {
-                    folio: {
-                        required: true
-                    },
                     id_cliente: {
                         required: true
                     },
@@ -83,9 +81,6 @@ $(function () {
                     }
                 },
                 messages: {
-                    folio: {
-                        required: 'Por favor ingrese el folio'
-                    },
                     id_cliente: {
                         required: 'Por favor seleccione un cliente'
                     },
@@ -118,11 +113,9 @@ $(function () {
         }
     });
 
+    // Validación y manejo del formulario de creación de denuncias
     $('#formCrearDenuncia').validate({
         rules: {
-            folio: {
-                required: true
-            },
             id_cliente: {
                 required: true
             },
@@ -137,9 +130,6 @@ $(function () {
             }
         },
         messages: {
-            folio: {
-                required: 'Por favor ingrese el folio'
-            },
             id_cliente: {
                 required: 'Por favor seleccione un cliente'
             },
@@ -182,37 +172,7 @@ $(function () {
         }
     });
 
-    $(document).on('submit', '.formEditarDenuncia', function (e) {
-        e.preventDefault();
-
-        const $frm = $(this);
-        if (!$frm.valid()) {
-            return false;
-        }
-
-        const formData = $frm.serializeObject();
-
-        loadingFormXHR($frm, true);
-
-        ajaxCall({
-            url: `${Server}denuncias/guardar`,
-            method: 'POST',
-            data: formData,
-            success: function (data) {
-                loadingFormXHR($frm, false);
-                $tablaDenuncias.bootstrapTable('refresh');
-                showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
-            },
-            error: function (xhr) {
-                loadingFormXHR($frm, false);
-                if (xhr.status === 409) {
-                    const response = JSON.parse(xhr.responseText);
-                    showToast(response.message, 'error');
-                }
-            }
-        });
-    });
-
+    // Resetear el formulario al cerrar el modal de creación
     $modalCrearDenuncia.on('hidden.bs.modal', function () {
         const $form = $('#formCrearDenuncia');
         $form[0].reset();
@@ -220,13 +180,13 @@ $(function () {
         $form.validate().resetForm();
     });
 
-    // Cargar dinámicamente las subcategorías según la categoría seleccionada
+    // Cargar dinámicamente las subcategorías según la categoría seleccionada en el formulario de creación
     $('#categoria').change(function () {
         const categoriaId = $(this).val();
         loadSubcategorias(categoriaId, '#subcategoria');
     });
 
-    // Cargar dinámicamente las sucursales según el cliente seleccionado
+    // Cargar dinámicamente las sucursales según el cliente seleccionado en el formulario de creación
     $('#id_cliente').change(function () {
         const clienteId = $(this).val();
         loadSucursales(clienteId, '#id_sucursal');

@@ -30,6 +30,34 @@ class DenunciaModel extends Model
         'visible_para_cliente'
     ];
 
+    protected $beforeInsert = ['generateFolio', 'setDefaultValues'];
+
+    protected function generateFolio(array $data)
+    {
+        $yearMonth = date('Ym');
+        $lastDenuncia = $this->select('folio')
+            ->like('folio', "DEN-$yearMonth", 'after')
+            ->orderBy('id', 'DESC')
+            ->first();
+
+        if ($lastDenuncia) {
+            $lastFolio = substr($lastDenuncia['folio'], -5);
+            $newFolio = (int)$lastFolio + 1;
+        } else {
+            $newFolio = 1;
+        }
+
+        $data['data']['folio'] = "DEN-$yearMonth-" . str_pad($newFolio, 5, '0', STR_PAD_LEFT);
+        return $data;
+    }
+
+    protected function setDefaultValues(array $data)
+    {
+        $data['data']['fecha_hora_reporte'] = date('Y-m-d H:i:s');
+        $data['data']['estado_actual'] = 1;  // ID del estado 'Recepción'
+        return $data;
+    }
+
     public function getDenuncias()
     {
         return $this->select('denuncias.*, clientes.nombre_empresa AS cliente_nombre, estados_denuncias.nombre AS estado_nombre')
@@ -65,5 +93,15 @@ class DenunciaModel extends Model
     public function cambiarEstado($id, $estadoNuevo)
     {
         return $this->update($id, ['estado_actual' => $estadoNuevo]);
+    }
+
+    public function buscarPorCliente($id_cliente)
+    {
+        return $this->where('id_cliente', $id_cliente)->findAll();
+    }
+
+    public function buscarPorEstado($estado)
+    {
+        return $this->where('estado_actual', $estado)->findAll();
     }
 }
