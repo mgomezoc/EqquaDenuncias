@@ -30,12 +30,24 @@ $(function () {
                 title: 'Cliente'
             },
             {
-                field: 'categoria',
+                field: 'sucursal_nombre',
+                title: 'Sucursal'
+            },
+            {
+                field: 'tipo_denunciante',
+                title: 'Tipo Denunciante'
+            },
+            {
+                field: 'categoria_nombre',
                 title: 'Categoría'
             },
             {
-                field: 'subcategoria',
+                field: 'subcategoria_nombre',
                 title: 'Subcategoría'
+            },
+            {
+                field: 'departamento',
+                title: 'Departamento'
             },
             {
                 field: 'estado_nombre',
@@ -43,7 +55,9 @@ $(function () {
             },
             {
                 field: 'fecha_hora_reporte',
-                title: 'Fecha'
+                title: 'Fecha',
+                sortable: true,
+                order: 'desc'
             },
             {
                 field: 'operate',
@@ -110,7 +124,9 @@ $(function () {
                 const clienteId = $(this).val();
                 loadSucursales(clienteId, `#id_sucursal-${row.id}`);
             });
-        }
+        },
+        sortOrder: 'desc', // Ordenar por la denuncia más reciente
+        sortName: 'fecha_hora_reporte' // Columna para ordenar
     });
 
     // Validación y manejo del formulario de creación de denuncias

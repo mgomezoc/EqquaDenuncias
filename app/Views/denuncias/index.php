@@ -20,8 +20,11 @@
                         <th>ID</th>
                         <th>Folio</th>
                         <th>Cliente</th>
+                        <th>Sucursal</th>
+                        <th>Tipo Denunciante</th>
                         <th>Categoría</th>
                         <th>Subcategoría</th>
+                        <th>Departamento</th>
                         <th>Estado</th>
                         <th>Fecha</th>
                         <th>Acciones</th>

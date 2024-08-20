@@ -60,9 +60,18 @@ class DenunciaModel extends Model
 
     public function getDenuncias()
     {
-        return $this->select('denuncias.*, clientes.nombre_empresa AS cliente_nombre, estados_denuncias.nombre AS estado_nombre')
+        return $this->select('denuncias.*, 
+                          clientes.nombre_empresa AS cliente_nombre, 
+                          sucursales.nombre AS sucursal_nombre, 
+                          categorias_denuncias.nombre AS categoria_nombre, 
+                          subcategorias_denuncias.nombre AS subcategoria_nombre, 
+                          estados_denuncias.nombre AS estado_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
+            ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
+            ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
+            ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
+            ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
 
