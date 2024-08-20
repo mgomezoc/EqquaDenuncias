@@ -7,9 +7,12 @@
 
 <div class="card custom-card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span>Categorías</span>
+        <span>Categorías y Subcategorías</span>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearCategoria">
             <i class="fa fa-plus"></i> Agregar Categoría
+        </button>
+        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalCrearSubcategoria">
+            <i class="fa fa-plus"></i> Agregar Subcategoría
         </button>
     </div>
     <div class="card-body">
@@ -19,32 +22,11 @@
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
+                        <th>Categoría/Subcategoría</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="card custom-card mt-5">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span>Subcategorías</span>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearSubcategoria">
-            <i class="fa fa-plus"></i> Agregar Subcategoría
-        </button>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table id="tablaSubcategorias" class="table table-sm table-striped table-eqqua">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
+                <tbody></tbody>
             </table>
         </div>
     </div>
@@ -58,6 +40,42 @@
         <i class="fa fa-edit"></i>
     </button>
 </template>
+
+<!-- Template para la tabla de subcategorías -->
+<template id="tplSubcategoriaTable">
+    <div class="card card-body">
+        {{#if subcategorias}}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+                {{#each subcategorias}}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                <span class="text-muted">ID: {{id}}</span>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary edit" data-id="{{id}}" data-nombre="{{nombre}}" data-subcategoria="{{id_categoria}}" aria-label="Edit">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger remove" data-id="{{id}}" aria-label="Delete">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body text-center">
+                                <h5 class="card-title">{{nombre}}</h5>
+                                <p class="card-text text-muted">ID Categoría: {{id_categoria}}</p>
+                            </div>
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+        {{else}}
+            <div class="text-center text-muted">No hay subcategorías disponibles.</div>
+        {{/if}}
+    </div>
+</template>
+
+
+
 
 <!-- Modal Crear Categoría -->
 <div class="modal fade" id="modalCrearCategoria" tabindex="-1" aria-labelledby="modalCrearCategoriaLabel" aria-hidden="true">
@@ -101,7 +119,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="id_categoria" class="form-label">Categoría</label>
-                        <select class="form-select" id="id_categoria" name="id_categoria" required style="width: 100%;">
+                        <select class="form-select select2" id="id_categoria" name="id_categoria" required style="width: 100%;">
                             <!-- Opciones dinámicas desde el JS -->
                         </select>
                     </div>

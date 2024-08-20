@@ -1,16 +1,12 @@
-/***
- *
- * CATEGORÍAS Y SUBCATEGORÍAS
- *
- */
 let tplAccionesTabla;
+let tplSubcategoriaTable;
 let $tablaCategorias;
-let $tablaSubcategorias;
 let $modalCrearCategoria;
 let $modalCrearSubcategoria;
 
 $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
+    tplSubcategoriaTable = Handlebars.compile($('#tplSubcategoriaTable').html());
     $modalCrearCategoria = $('#modalCrearCategoria');
     $modalCrearSubcategoria = $('#modalCrearSubcategoria');
 
@@ -20,9 +16,9 @@ $(function () {
         dropdownParent: $('#modalCrearSubcategoria')
     });
 
-    // Inicializar la tabla de Categorías
+    // Inicializar la tabla de Categorías/Subcategorías
     $tablaCategorias = $('#tablaCategorias').bootstrapTable({
-        url: `${Server}categorias/listarCategorias`,
+        url: `${Server}categorias/listarCategoriasYSubcategorias`,
         columns: [
             {
                 field: 'id',
@@ -33,32 +29,8 @@ $(function () {
                 title: 'Nombre'
             },
             {
-                field: 'operate',
-                title: 'Acciones',
-                align: 'center',
-                valign: 'middle',
-                clickToSelect: false,
-                formatter: operateFormatter,
-                events: window.operateEvents
-            }
-        ]
-    });
-
-    // Inicializar la tabla de Subcategorías
-    $tablaSubcategorias = $('#tablaSubcategorias').bootstrapTable({
-        url: `${Server}categorias/listarSubcategorias`,
-        columns: [
-            {
-                field: 'id',
-                title: 'ID'
-            },
-            {
-                field: 'nombre',
-                title: 'Nombre'
-            },
-            {
-                field: 'categoria_nombre',
-                title: 'Categoría'
+                field: 'subcategorias_total',
+                title: 'Subcategorías'
             },
             {
                 field: 'operate',
@@ -69,10 +41,16 @@ $(function () {
                 formatter: operateFormatter,
                 events: window.operateEvents
             }
-        ]
+        ],
+        detailView: true,
+        onExpandRow: function (index, row, $detail) {
+            if (row.subcategorias) {
+                $detail.html(tplSubcategoriaTable(row));
+            }
+        }
     });
 
-    // Validación y envío del formulario de crear categoría
+    // Validación y envío del formulario de crear/editar categoría
     $('#formCrearCategoria').validate({
         rules: {
             nombre: {
@@ -87,6 +65,7 @@ $(function () {
         submitHandler: function (form) {
             const $frm = $(form);
             const formData = $frm.serializeObject();
+            const isEdit = formData.id ? true : false;
 
             loadingFormXHR($frm, true);
 
@@ -98,19 +77,19 @@ $(function () {
                     loadingFormXHR($frm, false);
                     $modalCrearCategoria.modal('hide');
                     $tablaCategorias.bootstrapTable('refresh');
-                    showToast('¡Listo!, se creó correctamente la categoría.', 'success');
+                    showToast(isEdit ? '¡Categoría actualizada correctamente!' : '¡Categoría creada correctamente!', 'success');
                     $frm[0].reset();
                     $frm.find('.is-valid').removeClass('is-valid');
                 },
                 error: function (xhr) {
                     loadingFormXHR($frm, false);
-                    handleError(xhr, 'Error al crear la categoría.');
+                    handleError(xhr, 'Error al procesar la categoría.');
                 }
             });
         }
     });
 
-    // Validación y envío del formulario de crear subcategoría
+    // Validación y envío del formulario de crear/editar subcategoría
     $('#formCrearSubcategoria').validate({
         rules: {
             nombre: {
@@ -131,6 +110,7 @@ $(function () {
         submitHandler: function (form) {
             const $frm = $(form);
             const formData = $frm.serializeObject();
+            const isEdit = formData.id ? true : false;
 
             loadingFormXHR($frm, true);
 
@@ -141,20 +121,20 @@ $(function () {
                 success: function (data) {
                     loadingFormXHR($frm, false);
                     $modalCrearSubcategoria.modal('hide');
-                    $tablaSubcategorias.bootstrapTable('refresh');
-                    showToast('¡Listo!, se creó correctamente la subcategoría.', 'success');
+                    $tablaCategorias.bootstrapTable('refresh');
+                    showToast(isEdit ? '¡Subcategoría actualizada correctamente!' : '¡Subcategoría creada correctamente!', 'success');
                     $frm[0].reset();
                     $frm.find('.is-valid').removeClass('is-valid');
                 },
                 error: function (xhr) {
                     loadingFormXHR($frm, false);
-                    handleError(xhr, 'Error al crear la subcategoría.');
+                    handleError(xhr, 'Error al procesar la subcategoría.');
                 }
             });
         }
     });
 
-    // Cargar categorías al abrir el modal de crear subcategoría
+    // Cargar categorías al abrir el modal de crear/editar subcategoría
     $modalCrearSubcategoria.on('shown.bs.modal', function () {
         loadCategorias();
     });
@@ -234,7 +214,6 @@ $(function () {
             method: 'POST',
             success: function () {
                 $tablaCategorias.bootstrapTable('refresh');
-                $tablaSubcategorias.bootstrapTable('refresh');
                 showToast('¡Categoría eliminada correctamente!', 'success');
             },
             error: function (xhr) {
@@ -256,7 +235,7 @@ $(function () {
             url: `${Server}categorias/eliminarSubcategoria/${id}`,
             method: 'POST',
             success: function () {
-                $tablaSubcategorias.bootstrapTable('refresh');
+                $tablaCategorias.bootstrapTable('refresh');
                 showToast('¡Subcategoría eliminada correctamente!', 'success');
             },
             error: function (xhr) {

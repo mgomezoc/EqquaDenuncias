@@ -105,4 +105,19 @@ class CategoriasController extends Controller
 
         return $this->response->setJSON(['message' => 'Subcategoría eliminada correctamente']);
     }
+
+    public function listarCategoriasYSubcategorias()
+    {
+        $categoriaModel = new CategoriaDenunciaModel();
+        $subcategoriaModel = new SubcategoriaDenunciaModel();
+
+        $categorias = $categoriaModel->findAll();
+        foreach ($categorias as &$categoria) {
+            $subcategorias = $subcategoriaModel->where('id_categoria', $categoria['id'])->findAll();
+            $categoria['subcategorias'] = $subcategorias;
+            $categoria['subcategorias_total'] = count($subcategorias);  // Contar subcategorías
+        }
+
+        return $this->response->setJSON($categorias);
+    }
 }

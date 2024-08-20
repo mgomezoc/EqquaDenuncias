@@ -27,7 +27,6 @@ $routes->get('/noautorizado', 'Error::noautorizado');
 
 $routes->get('cliente/(:segment)', 'Publico::verCliente/$1');
 
-
 // USUARIOS
 $routes->group('usuarios', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'UsuariosController::index');
@@ -74,14 +73,12 @@ $routes->group('categorias', ['namespace' => 'App\Controllers', 'filter' => 'aut
     $routes->get('/', 'CategoriasController::index');
     $routes->get('listarCategorias', 'CategoriasController::listarCategorias');
     $routes->get('listarSubcategorias', 'CategoriasController::listarSubcategorias');
+    $routes->get('listarCategoriasYSubcategorias', 'CategoriasController::listarCategoriasYSubcategorias'); // Nueva ruta para obtener categorías y subcategorías en una estructura jerárquica
     $routes->post('guardarCategoria', 'CategoriasController::guardarCategoria');
     $routes->post('guardarSubcategoria', 'CategoriasController::guardarSubcategoria');
     $routes->post('eliminarCategoria/(:num)', 'CategoriasController::eliminarCategoria/$1');
     $routes->post('eliminarSubcategoria/(:num)', 'CategoriasController::eliminarSubcategoria/$1');
 });
-
-
-
 
 // Cargar rutas adicionales basadas en el entorno
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
