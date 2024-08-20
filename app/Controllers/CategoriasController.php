@@ -40,9 +40,7 @@ class CategoriasController extends Controller
         $categoriaModel = new CategoriaDenunciaModel();
         $id = $this->request->getVar('id');
 
-        $data = [
-            'nombre' => $this->request->getVar('nombre')
-        ];
+        $data = ['nombre' => $this->request->getVar('nombre')];
 
         if ($id) {
             $categoriaModel->update($id, $data);
@@ -82,7 +80,7 @@ class CategoriasController extends Controller
     {
         $subcategoriaModel = new SubcategoriaDenunciaModel();
 
-        // Primero, eliminar las subcategorías asociadas
+        // Eliminar subcategorías asociadas primero
         $subcategoriaModel->where('id_categoria', $id)->delete();
 
         // Luego, eliminar la categoría

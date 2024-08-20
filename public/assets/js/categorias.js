@@ -1,10 +1,5 @@
-let tplAccionesTabla;
-let tplSubcategoriaTable;
-let $tablaCategorias;
-let $modalCrearCategoria;
-let $modalCrearSubcategoria;
-
 $(function () {
+    // Compilación de los templates de Handlebars
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplSubcategoriaTable = Handlebars.compile($('#tplSubcategoriaTable').html());
     $modalCrearCategoria = $('#modalCrearCategoria');
@@ -20,18 +15,9 @@ $(function () {
     $tablaCategorias = $('#tablaCategorias').bootstrapTable({
         url: `${Server}categorias/listarCategoriasYSubcategorias`,
         columns: [
-            {
-                field: 'id',
-                title: 'ID'
-            },
-            {
-                field: 'nombre',
-                title: 'Nombre'
-            },
-            {
-                field: 'subcategorias_total',
-                title: 'Subcategorías'
-            },
+            { field: 'id', title: 'ID' },
+            { field: 'nombre', title: 'Nombre' },
+            { field: 'subcategorias_total', title: 'Subcategorías' },
             {
                 field: 'operate',
                 title: 'Acciones',
@@ -52,16 +38,8 @@ $(function () {
 
     // Validación y envío del formulario de crear/editar categoría
     $('#formCrearCategoria').validate({
-        rules: {
-            nombre: {
-                required: true
-            }
-        },
-        messages: {
-            nombre: {
-                required: 'Por favor ingrese el nombre de la categoría'
-            }
-        },
+        rules: { nombre: { required: true } },
+        messages: { nombre: { required: 'Por favor ingrese el nombre de la categoría' } },
         submitHandler: function (form) {
             const $frm = $(form);
             const formData = $frm.serializeObject();
@@ -92,20 +70,12 @@ $(function () {
     // Validación y envío del formulario de crear/editar subcategoría
     $('#formCrearSubcategoria').validate({
         rules: {
-            nombre: {
-                required: true
-            },
-            id_categoria: {
-                required: true
-            }
+            nombre: { required: true },
+            id_categoria: { required: true }
         },
         messages: {
-            nombre: {
-                required: 'Por favor ingrese el nombre de la subcategoría'
-            },
-            id_categoria: {
-                required: 'Por favor seleccione una categoría'
-            }
+            nombre: { required: 'Por favor ingrese el nombre de la subcategoría' },
+            id_categoria: { required: 'Por favor seleccione una categoría' }
         },
         submitHandler: function (form) {
             const $frm = $(form);
@@ -152,7 +122,6 @@ $(function () {
                 $('#id_categoria').html(options).trigger('change');
 
                 const selected = $('#id_categoria').data('selected');
-
                 $('#id_categoria').val(selected).trigger('change');
             },
             error: function () {
@@ -166,25 +135,24 @@ $(function () {
         const $btn = $(this);
         const id = $btn.data('id');
         const nombre = $btn.data('nombre');
+        const data = { id: id, nombre: nombre };
 
-        const data = {
-            id: id,
-            nombre: nombre
-        };
-        const isCategoria = $btn.closest('table').attr('id') === 'tablaCategorias';
-        if (isCategoria) {
+        data.id_categoria = $btn.data('subcategoria');
+
+        if (!data.id_categoria) {
             editarCategoria(data);
         } else {
-            data.id_categoria = $btn.data('subcategoria');
             editarSubcategoria(data);
         }
     });
 
     // Evento para eliminar categorías o subcategorías
     $(document).on('click', '.remove', async function () {
-        const id = $(this).data('id');
-        const isCategoria = $(this).closest('table').attr('id') === 'tablaCategorias';
-        if (isCategoria) {
+        const $btn = $(this);
+        const id = $btn.data('id');
+        const id_categoria = $btn.data('subcategoria');
+
+        if (!id_categoria) {
             const result = await confirm('Confirmación', '¿Está seguro de eliminar esta categoría? Esto también eliminará las subcategorías asociadas.');
             if (result.isConfirmed) {
                 eliminarCategoria(id);
@@ -197,6 +165,7 @@ $(function () {
         }
     });
 
+    // Función para manejar la tabla de acciones
     function operateFormatter(value, row, index) {
         return Handlebars.compile(tplAccionesTabla)(row);
     }

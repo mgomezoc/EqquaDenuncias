@@ -33,7 +33,7 @@
 </div>
 
 <template id="tplAccionesTabla">
-    <button class="btn btn-sm btn-danger remove" data-id="{{id}}">
+    <button class="btn btn-sm btn-danger remove" data-id="{{id}}" data-subcategoria="{{id_categoria}}">
         <i class="fa fa-trash"></i>
     </button>
     <button class="btn btn-sm btn-info edit" data-id="{{id}}" data-nombre="{{nombre}}" data-subcategoria="{{id_categoria}}">
@@ -55,7 +55,7 @@
                                     <button class="btn btn-sm btn-outline-primary edit" data-id="{{id}}" data-nombre="{{nombre}}" data-subcategoria="{{id_categoria}}" aria-label="Edit">
                                         <i class="fa fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger remove" data-id="{{id}}" aria-label="Delete">
+                                    <button class="btn btn-sm btn-outline-danger remove" data-id="{{id}}" data-subcategoria="{{id_categoria}}" aria-label="Delete">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </div>
