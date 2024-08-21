@@ -75,7 +75,7 @@ class DenunciasController extends Controller
             'tipo_denunciante' => $this->request->getVar('tipo_denunciante'),
             'categoria' => $this->request->getVar('categoria'),
             'subcategoria' => $this->request->getVar('subcategoria'),
-            'departamento' => $this->request->getVar('departamento'),
+            'id_departamento' => $this->request->getVar('id_departamento'),
             'anonimo' => $this->request->getVar('anonimo'),
             'fecha_incidente' => $this->request->getVar('fecha_incidente'),
             'como_se_entero' => $this->request->getVar('como_se_entero'),

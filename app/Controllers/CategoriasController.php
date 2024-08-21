@@ -29,10 +29,19 @@ class CategoriasController extends Controller
 
     public function listarSubcategorias()
     {
-        $subcategoriaModel = new SubcategoriaDenunciaModel();
-        $subcategorias = $subcategoriaModel->getSubcategorias();
+        $id_categoria = $this->request->getVar('id_categoria');
 
-        return $this->response->setJSON($subcategorias);
+        // Verifica que se haya pasado la categoría
+        if ($id_categoria) {
+            $subcategoriaModel = new SubcategoriaDenunciaModel();
+
+            // Filtra las subcategorías por el id_categoria
+            $subcategorias = $subcategoriaModel->where('id_categoria', $id_categoria)->findAll();
+
+            return $this->response->setJSON($subcategorias);
+        } else {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Categoría no especificada']);
+        }
     }
 
     public function guardarCategoria()

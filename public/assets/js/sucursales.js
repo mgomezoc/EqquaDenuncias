@@ -18,6 +18,12 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearSucursal = $('#modalCrearSucursal');
 
+    $modalCrearSucursal.find('.select2').select2({
+        placeholder: 'Seleccione una opción',
+        allowClear: true,
+        dropdownParent: $modalCrearSucursal
+    });
+
     $tablaSucursales = $('#tablaSucursales').bootstrapTable({
         url: `${Server}sucursales/listar`,
         columns: [

@@ -48,7 +48,7 @@
                 </div>
                 <div class="col-md-6">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
-                    <select class="form-select" id="id_cliente-{{id}}" name="id_cliente" required>
+                    <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" required>
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
@@ -86,7 +86,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>
-                            <select class="form-select" id="id_cliente" name="id_cliente" required>
+                            <select class="form-select select2" id="id_cliente" name="id_cliente" required>
                                 <?php foreach ($clientes as $cliente) : ?>
                                     <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
                                 <?php endforeach; ?>
