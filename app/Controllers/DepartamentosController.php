@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\DepartamentoModel;
+use App\Models\ClienteModel;
 use App\Models\SucursalModel;
 use CodeIgniter\Controller;
 
@@ -27,14 +28,6 @@ class DepartamentosController extends Controller
         return $this->response->setJSON($departamentos);
     }
 
-    public function listarSucursales()
-    {
-        $sucursalModel = new SucursalModel();
-        $sucursales = $sucursalModel->findAll();
-
-        return $this->response->setJSON($sucursales);
-    }
-
     public function guardarDepartamento()
     {
         $departamentoModel = new DepartamentoModel();
@@ -47,11 +40,8 @@ class DepartamentosController extends Controller
 
         if ($id) {
             $departamentoModel->update($id, $data);
-            registrarAccion(session()->get('id'), 'Actualización de departamento', 'ID: ' . $id);
         } else {
             $departamentoModel->save($data);
-            $newId = $departamentoModel->insertID();
-            registrarAccion(session()->get('id'), 'Creación de departamento', 'ID: ' . $newId);
         }
 
         return $this->response->setJSON(['message' => 'Departamento guardado correctamente']);
@@ -62,8 +52,34 @@ class DepartamentosController extends Controller
         $departamentoModel = new DepartamentoModel();
         $departamentoModel->delete($id);
 
-        registrarAccion(session()->get('id'), 'Eliminación de departamento', 'ID: ' . $id);
-
         return $this->response->setJSON(['message' => 'Departamento eliminado correctamente']);
+    }
+
+    public function listarClientes()
+    {
+        $clienteModel = new ClienteModel();
+        $clientes = $clienteModel->findAll();
+
+        return $this->response->setJSON($clientes);
+    }
+
+    public function listarSucursales($id_cliente)
+    {
+        $sucursalModel = new SucursalModel();
+        $sucursales = $sucursalModel->where('id_cliente', $id_cliente)->findAll();
+
+        return $this->response->setJSON($sucursales);
+    }
+
+    public function obtener($id)
+    {
+        $departamentoModel = new DepartamentoModel();
+        $departamento = $departamentoModel->find($id);
+
+        if (!$departamento) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Departamento no encontrado']);
+        }
+
+        return $this->response->setJSON($departamento);
     }
 }

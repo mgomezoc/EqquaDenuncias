@@ -30,15 +30,15 @@
 </div>
 
 <template id="tplAccionesTabla">
+    <button class="btn btn-sm btn-info edit" data-id="{{id}}">
+        <i class="fa fa-edit"></i>
+    </button>
     <button class="btn btn-sm btn-danger remove" data-id="{{id}}">
         <i class="fa fa-trash"></i>
     </button>
-    <button class="btn btn-sm btn-info edit" data-id="{{id}}" data-nombre="{{nombre}}" data-sucursal="{{id_sucursal}}">
-        <i class="fa fa-edit"></i>
-    </button>
 </template>
 
-<!-- Modal Crear/Editar Departamento -->
+<!-- Modal para crear o editar un departamento -->
 <div class="modal fade" id="modalCrearDepartamento" tabindex="-1" aria-labelledby="modalCrearDepartamentoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -54,8 +54,16 @@
                         <input type="text" class="form-control" id="nombre" name="nombre" required>
                     </div>
                     <div class="mb-3">
+                        <label for="id_cliente" class="form-label">Cliente</label>
+                        <select class="form-select select2" id="id_cliente" name="id_cliente" required style="width: 100%;">
+                            <option value="">Seleccione un cliente</option>
+                            <!-- Opciones dinámicas desde el JS -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="id_sucursal" class="form-label">Sucursal</label>
                         <select class="form-select select2" id="id_sucursal" name="id_sucursal" required style="width: 100%;">
+                            <option value="">Seleccione una sucursal</option>
                             <!-- Opciones dinámicas desde el JS -->
                         </select>
                     </div>

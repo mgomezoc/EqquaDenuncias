@@ -84,11 +84,16 @@ $routes->group('categorias', ['namespace' => 'App\Controllers', 'filter' => 'aut
 // Rutas para la administración de Departamentos
 $routes->group('departamentos', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'DepartamentosController::index');
-    $routes->get('listarDepartamentos', 'DepartamentosController::listarDepartamentos');
-    $routes->post('guardarDepartamento', 'DepartamentosController::guardarDepartamento');
+    $routes->get('listar', 'DepartamentosController::listarDepartamentos');
+    $routes->post('guardar', 'DepartamentosController::guardarDepartamento');
     $routes->post('eliminar/(:num)', 'DepartamentosController::eliminarDepartamento/$1');
-    $routes->get('listarSucursales', 'DepartamentosController::listarSucursales');  // Ruta para listar sucursales
+    $routes->get('obtener/(:num)', 'DepartamentosController::obtener/$1');
+    $routes->get('listarClientes', 'DepartamentosController::listarClientes');
+    $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1');
 });
+
+
+
 
 // Cargar rutas adicionales basadas en el entorno
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
