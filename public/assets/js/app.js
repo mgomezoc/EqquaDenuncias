@@ -9,11 +9,18 @@ Handlebars.registerHelper('select', function (value, options) {
 
 Handlebars.registerHelper('selectOptions', function (options, selected) {
     var html = '';
+
+    // Verificar si options es undefined, null, o no es un array
+    if (!Array.isArray(options)) {
+        options = []; // Si no es un array, inicializarlo como un array vacío
+    }
+
     options.forEach(function (option) {
         var isSelected = option.id === selected ? 'selected' : '';
         html += '<option value="' + option.id + '" ' + isSelected + '>' + option.name + '</option>';
     });
-    return html;
+
+    return new Handlebars.SafeString(html); // Usar SafeString para prevenir la escapada de HTML
 });
 
 $(document).ready(function () {});

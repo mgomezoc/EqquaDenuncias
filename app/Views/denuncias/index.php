@@ -52,48 +52,97 @@
         <form id="formEditarDenuncia-{{id}}" action="<?= base_url('denuncias/guardar') ?>" method="post" class="formEditarDenuncia">
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
-                <!-- Cliente -->
+                <!-- Información General -->
                 <div class="col-md-4">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
                     <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" required>
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
-                <!-- Categoría -->
                 <div class="col-md-4">
                     <label for="categoria-{{id}}" class="form-label">Categoría</label>
                     <select class="form-select select2" id="categoria-{{id}}" name="categoria" required>
                         {{{selectOptions categorias categoria}}}
                     </select>
                 </div>
-                <!-- Subcategoría -->
                 <div class="col-md-4">
                     <label for="subcategoria-{{id}}" class="form-label">Subcategoría</label>
                     <select class="form-select select2" id="subcategoria-{{id}}" name="subcategoria" required>
                         {{{selectOptions subcategorias subcategoria}}}
                     </select>
                 </div>
-                <!-- Estado -->
                 <div class="col-md-4">
                     <label for="estado_actual-{{id}}" class="form-label">Estado</label>
                     <select id="estado_actual-{{id}}" name="estado_actual" class="form-select select2">
                         {{{selectOptions estados estado_actual}}}
                     </select>
                 </div>
-                <!-- Descripción -->
+                <div class="col-md-4">
+                    <label for="fecha_incidente-{{id}}" class="form-label">Fecha del Incidente</label>
+                    <input type="text" class="form-control flatpickr" id="fecha_incidente-{{id}}" name="fecha_incidente" value="{{fecha_incidente}}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="como_se_entero-{{id}}" class="form-label">¿Cómo se Enteró?</label>
+                    <select name="como_se_entero" id="como_se_entero-{{id}}" class="form-select select2" required>
+                        {{{selectOptions como_se_entero como_se_entero_actual}}}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="area_incidente-{{id}}" class="form-label">Área del Incidente</label>
+                    <input type="text" class="form-control" id="area_incidente-{{id}}" name="area_incidente" value="{{area_incidente}}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="denunciar_a_alguien-{{id}}" class="form-label">Denunciar a Alguien</label>
+                    <textarea class="form-control" id="denunciar_a_alguien-{{id}}" name="denunciar_a_alguien">{{denunciar_a_alguien}}</textarea>
+                </div>
                 <div class="col-md-12">
                     <label for="descripcion-{{id}}" class="form-label">Descripción</label>
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" required>{{descripcion}}</textarea>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label">Anónimo</label>
+                    <div class="d-flex align-items-center">
+                        {{#ifCond anonimo '==' '1'}}
+                            <span>Sí</span>
+                            {{else}}
+                                <span>No</span>
+                        {{/ifCond}}
+                    </div>
+                </div>
+
 
                 <!-- Botón de Actualizar -->
                 <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Actualizar
-                    </button>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Actualizar</button>
                 </div>
             </div>
         </form>
+
+        <!-- Sección de Archivos Adjuntos -->
+        <hr>
+        <h5>Archivos Adjuntos</h5>
+        <div class="row">
+            <!-- Archivos Existentes -->
+            <div class="col-md-6">
+                <h6>Archivos Actuales</h6>
+                {{#each anexos}}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <a href="<?= base_url('assets/denuncias/{{ruta_archivo}}') ?>" target="_blank">{{nombre_archivo}}</a>
+                            <button class="btn btn-danger btn-sm float-end delete-anexo" data-id="{{id_anexo}}">Eliminar</button>
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+
+            <!-- Subir Nuevos Archivos -->
+            <div class="col-md-6">
+                <h6>Subir Nuevos Archivos</h6>
+                <div id="dropzoneArchivos-{{id}}" class="dropzone"></div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-3" id="actualizarAnexos-{{id}}">Actualizar Archivos</button>
     </div>
 </template>
 

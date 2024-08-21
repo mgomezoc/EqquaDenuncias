@@ -195,4 +195,12 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON($estados);
     }
+
+    public function obtenerAnexos($id_denuncia)
+    {
+        $anexoModel = new \App\Models\AnexoDenunciaModel();
+        $anexos = $anexoModel->getAnexosByDenunciaId($id_denuncia);
+
+        return $this->response->setJSON($anexos);
+    }
 }

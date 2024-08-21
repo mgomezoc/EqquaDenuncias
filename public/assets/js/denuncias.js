@@ -227,28 +227,33 @@ $(function () {
         ],
         detailView: true,
         onExpandRow: function (index, row, $detail) {
+            $detail.html(`Cargando...`);
+
             $.when(
-                $.get(`${Server}clientes/listar`), // Obtener clientes
-                $.get(`${Server}categorias/listarCategorias`), // Obtener categorías
-                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }), // Obtener subcategorías según la categoría
-                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), // Obtener sucursales según el cliente
-                $.get(`${Server}denuncias/detalle/${row.id}`), // Obtener detalles de la denuncia
-                $.get(`${Server}denuncias/obtenerEstados`) // Obtener lista de estados
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados) {
+                $.get(`${Server}clientes/listar`),
+                $.get(`${Server}categorias/listarCategorias`),
+                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
+                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
+                $.get(`${Server}denuncias/detalle/${row.id}`),
+                $.get(`${Server}denuncias/obtenerEstados`),
+                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
+            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados, anexos) {
                 const data = {
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
                     subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
-                    estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })), // Mapea los estados aquí
+                    estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
+                    anexos: anexos[0], // Añadir los anexos a los datos
                     id_cliente: row.id_cliente,
                     categoria: row.categoria,
                     subcategoria: row.subcategoria,
                     estado_actual: row.estado_actual,
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
-                    departamento_nombre: row.departamento_nombre
+                    departamento_nombre: row.departamento_nombre,
+                    denuncia: row
                 };
 
                 console.log(data);
@@ -262,38 +267,18 @@ $(function () {
                 $detail.find('select').select2();
                 $detail.find('.formEditarDenuncia').validate({
                     rules: {
-                        id_cliente: {
-                            required: true
-                        },
-                        categoria: {
-                            required: true
-                        },
-                        subcategoria: {
-                            required: true
-                        },
-                        estado_actual: {
-                            required: true
-                        },
-                        descripcion: {
-                            required: true
-                        }
+                        id_cliente: { required: true },
+                        categoria: { required: true },
+                        subcategoria: { required: true },
+                        estado_actual: { required: true },
+                        descripcion: { required: true }
                     },
                     messages: {
-                        id_cliente: {
-                            required: 'Por favor seleccione un cliente'
-                        },
-                        categoria: {
-                            required: 'Por favor seleccione una categoría'
-                        },
-                        subcategoria: {
-                            required: 'Por favor seleccione una subcategoría'
-                        },
-                        estado_actual: {
-                            required: 'Por favor seleccione un estado'
-                        },
-                        descripcion: {
-                            required: 'Por favor ingrese la descripción'
-                        }
+                        id_cliente: { required: 'Por favor seleccione un cliente' },
+                        categoria: { required: 'Por favor seleccione una categoría' },
+                        subcategoria: { required: 'Por favor seleccione una subcategoría' },
+                        estado_actual: { required: 'Por favor seleccione un estado' },
+                        descripcion: { required: 'Por favor ingrese la descripción' }
                     }
                 });
 

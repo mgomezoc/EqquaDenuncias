@@ -51,6 +51,7 @@ $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'auth
     $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
     $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
+    $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
 });
 
 // SUCURSALES
