@@ -38,10 +38,123 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearDenuncia = $('#modalCrearDenuncia');
 
+    // Inicializar select2 en los selects dentro del modal
     $('#modalCrearDenuncia .select2').select2({
         placeholder: 'Seleccione una opción',
         allowClear: true,
         dropdownParent: $('#modalCrearDenuncia')
+    });
+
+    // Configurar la validación del formulario
+    $('#formCrearDenuncia').validate({
+        errorClass: 'is-invalid',
+        validClass: 'is-valid',
+        errorElement: 'div',
+        errorPlacement: function (error, element) {
+            if (element.hasClass('select2') && element.next('.select2-container').length) {
+                error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
+            } else if (element.is('input[type="checkbox"]') || element.is('input[type="radio"]')) {
+                error.addClass('invalid-feedback').insertAfter(element.closest('div'));
+            } else {
+                error.addClass('invalid-feedback').insertAfter(element);
+            }
+        },
+        highlight: function (element, errorClass, validClass) {
+            if ($(element).hasClass('select2')) {
+                $(element).next('.select2-container').find('.select2-selection').addClass(errorClass).removeClass(validClass);
+            } else {
+                $(element).addClass(errorClass).removeClass(validClass);
+            }
+        },
+        unhighlight: function (element, errorClass, validClass) {
+            if ($(element).hasClass('select2')) {
+                $(element).next('.select2-container').find('.select2-selection').removeClass(errorClass).addClass(validClass);
+            } else {
+                $(element).removeClass(errorClass).addClass(validClass);
+            }
+        },
+        rules: {
+            id_cliente: {
+                required: true
+            },
+            categoria: {
+                required: true
+            },
+            subcategoria: {
+                required: true
+            },
+            id_departamento: {
+                required: true
+            },
+            fecha_incidente: {
+                required: true,
+                date: true
+            },
+            descripcion: {
+                required: true
+            }
+        },
+        messages: {
+            id_cliente: {
+                required: 'Por favor seleccione un cliente'
+            },
+            categoria: {
+                required: 'Por favor seleccione una categoría'
+            },
+            subcategoria: {
+                required: 'Por favor seleccione una subcategoría'
+            },
+            id_departamento: {
+                required: 'Por favor seleccione un departamento'
+            },
+            fecha_incidente: {
+                required: 'Por favor ingrese la fecha del incidente',
+                date: 'Ingrese una fecha válida'
+            },
+            descripcion: {
+                required: 'Por favor ingrese la descripción'
+            }
+        },
+        submitHandler: function (form) {
+            const $frm = $(form);
+            const formData = $frm.serializeObject();
+
+            loadingFormXHR($frm, true);
+
+            ajaxCall({
+                url: `${Server}denuncias/guardar`,
+                method: 'POST',
+                data: formData,
+                success: function (data) {
+                    loadingFormXHR($frm, false);
+                    $modalCrearDenuncia.modal('hide');
+                    $tablaDenuncias.bootstrapTable('refresh');
+                    showToast('¡Listo!, se creó correctamente la denuncia.', 'success');
+                    $frm[0].reset();
+                    $frm.find('.is-valid').removeClass('is-valid');
+                },
+                error: function (xhr) {
+                    loadingFormXHR($frm, false);
+                    if (xhr.status === 409) {
+                        const response = JSON.parse(xhr.responseText);
+                        showToast(response.message, 'error');
+                    }
+                }
+            });
+        }
+    });
+
+    // Cuando se selecciona una opción en select2, se debe actualizar la validación
+    $('#modalCrearDenuncia .select2').on('change', function (e) {
+        $(this).valid();
+    });
+
+    // Resetear el formulario al cerrar el modal de creación
+    $modalCrearDenuncia.on('hidden.bs.modal', function () {
+        const $form = $('#formCrearDenuncia');
+        $form[0].reset();
+        $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
+        $form.validate().resetForm();
     });
 
     // Inicialización de la tabla de denuncias
@@ -185,81 +298,6 @@ $(function () {
     // Inicializar flatpickr para el campo de fecha
     $('#fecha_incidente').flatpickr({
         dateFormat: 'Y-m-d'
-    });
-
-    // Validación y manejo del formulario de creación de denuncias
-    $('#formCrearDenuncia').validate({
-        rules: {
-            id_cliente: {
-                required: true
-            },
-            categoria: {
-                required: true
-            },
-            subcategoria: {
-                required: true
-            },
-            descripcion: {
-                required: true
-            },
-            fecha_incidente: {
-                required: true,
-                date: true
-            }
-        },
-        messages: {
-            id_cliente: {
-                required: 'Por favor seleccione un cliente'
-            },
-            categoria: {
-                required: 'Por favor seleccione una categoría'
-            },
-            subcategoria: {
-                required: 'Por favor seleccione una subcategoría'
-            },
-            descripcion: {
-                required: 'Por favor ingrese la descripción'
-            },
-            fecha_incidente: {
-                required: 'Por favor ingrese la fecha del incidente',
-                date: 'Ingrese una fecha válida'
-            }
-        },
-        submitHandler: function (form) {
-            const $frm = $(form);
-            const formData = $frm.serializeObject();
-
-            loadingFormXHR($frm, true);
-
-            ajaxCall({
-                url: `${Server}denuncias/guardar`,
-                method: 'POST',
-                data: formData,
-                success: function (data) {
-                    loadingFormXHR($frm, false);
-                    $modalCrearDenuncia.modal('hide');
-                    $tablaDenuncias.bootstrapTable('refresh');
-                    showToast('¡Listo!, se creó correctamente la denuncia.', 'success');
-                    $frm[0].reset();
-                    $frm.find('.is-valid').removeClass('is-valid');
-                },
-                error: function (xhr) {
-                    loadingFormXHR($frm, false);
-                    if (xhr.status === 409) {
-                        const response = JSON.parse(xhr.responseText);
-                        showToast(response.message, 'error');
-                    }
-                }
-            });
-        }
-    });
-
-    // Resetear el formulario al cerrar el modal de creación
-    $modalCrearDenuncia.on('hidden.bs.modal', function () {
-        const $form = $('#formCrearDenuncia');
-        $form[0].reset();
-        $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
-        $form.validate().resetForm();
     });
 
     // Cargar dinámicamente las subcategorías según la categoría seleccionada en el formulario de creación
