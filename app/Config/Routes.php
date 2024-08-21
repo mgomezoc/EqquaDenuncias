@@ -6,13 +6,7 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// Configuración inicial de rutas
-$routes->setDefaultNamespace('App\Controllers');
-$routes->setDefaultController('Home');
-$routes->setDefaultMethod('index');
-$routes->setTranslateURIDashes(false);
-$routes->set404Override('App\Controllers\Errors::show404');
-$routes->setAutoRoute(false);
+
 
 $routes->get('/', 'Home::index');
 $routes->get('/login', 'Auth::login');
@@ -90,6 +84,7 @@ $routes->group('departamentos', ['namespace' => 'App\Controllers', 'filter' => '
     $routes->get('obtener/(:num)', 'DepartamentosController::obtener/$1');
     $routes->get('listarClientes', 'DepartamentosController::listarClientes');
     $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1');
+    $routes->get('listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1');
 });
 
 

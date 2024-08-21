@@ -272,6 +272,31 @@ $(function () {
         const clienteId = $(this).val();
         loadSucursales(clienteId, '#id_sucursal');
     });
+
+    // Cargar dinámicamente los departamentos según la sucursal seleccionada en el formulario de creación
+    $('#id_sucursal').change(function () {
+        const sucursalId = $(this).val();
+        loadDepartamentos(sucursalId, '#id_departamento');
+    });
+
+    // Función para cargar los departamentos
+    function loadDepartamentos(sucursalId, selectSelector) {
+        $(selectSelector).html('<option>Cargando...</option>');
+        $.ajax({
+            url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
+            method: 'GET',
+            success: function (data) {
+                let options = '<option value="">Seleccione un departamento</option>';
+                data.forEach(function (departamento) {
+                    options += `<option value="${departamento.id}">${departamento.nombre}</option>`;
+                });
+                $(selectSelector).html(options);
+            },
+            error: function () {
+                console.error('Error al cargar los departamentos.');
+            }
+        });
+    }
 });
 
 function operateFormatter(value, row, index) {

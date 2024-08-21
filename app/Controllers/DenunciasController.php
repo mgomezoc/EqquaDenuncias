@@ -9,6 +9,7 @@ use App\Models\CategoriaDenunciaModel;
 use App\Models\SubcategoriaDenunciaModel;
 use App\Models\SucursalModel;
 use App\Models\AnexoDenunciaModel;
+use App\Models\DepartamentoModel;
 use App\Models\SeguimientoDenunciaModel;
 use CodeIgniter\Controller;
 
@@ -148,5 +149,13 @@ class DenunciasController extends Controller
         $sucursalModel = new SucursalModel();
         $sucursales = $sucursalModel->where('id_cliente', $id_cliente)->findAll();
         return $this->response->setJSON($sucursales);
+    }
+
+    public function listarDepartamentosPorSucursal($id_sucursal)
+    {
+        $departamentoModel = new DepartamentoModel();
+        $departamentos = $departamentoModel->where('id_sucursal', $id_sucursal)->findAll();
+
+        return $this->response->setJSON($departamentos);
     }
 }

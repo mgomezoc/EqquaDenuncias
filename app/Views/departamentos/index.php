@@ -18,14 +18,15 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Nombre</th>
+                        <th>Nombre del Departamento</th>
+                        <th>Cliente</th>
                         <th>Sucursal</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
             </table>
         </div>
+
     </div>
 </div>
 

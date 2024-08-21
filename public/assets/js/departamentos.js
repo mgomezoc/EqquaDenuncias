@@ -18,7 +18,8 @@ $(function () {
         url: `${Server}departamentos/listar`,
         columns: [
             { field: 'id', title: 'ID' },
-            { field: 'nombre', title: 'Nombre' },
+            { field: 'nombre', title: 'Nombre del Departamento' },
+            { field: 'cliente_nombre', title: 'Cliente' },
             { field: 'sucursal_nombre', title: 'Sucursal' },
             {
                 field: 'operate',

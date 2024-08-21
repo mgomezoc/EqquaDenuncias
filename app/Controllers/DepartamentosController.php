@@ -23,7 +23,7 @@ class DepartamentosController extends Controller
     public function listarDepartamentos()
     {
         $departamentoModel = new DepartamentoModel();
-        $departamentos = $departamentoModel->findAll();
+        $departamentos = $departamentoModel->getDepartamentosWithDetails(); // Usar el nuevo método
 
         return $this->response->setJSON($departamentos);
     }
@@ -81,5 +81,13 @@ class DepartamentosController extends Controller
         }
 
         return $this->response->setJSON($departamento);
+    }
+
+    public function listarDepartamentosPorSucursal($id_sucursal)
+    {
+        $departamentoModel = new DepartamentoModel();
+        $departamentos = $departamentoModel->where('id_sucursal', $id_sucursal)->findAll();
+
+        return $this->response->setJSON($departamentos);
     }
 }

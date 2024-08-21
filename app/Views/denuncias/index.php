@@ -194,9 +194,14 @@
                         </div>
                         <!-- Departamento -->
                         <div class="col-md-6">
-                            <label for="departamento" class="form-label">Departamento</label>
-                            <input type="text" class="form-control" id="departamento" name="departamento" required placeholder="Ingrese el departamento">
+                            <label for="id_departamento" class="form-label">Departamento</label>
+                            <div class="d-flex flex-column-reverse">
+                                <select class="form-select select2" id="id_departamento" name="id_departamento" required>
+                                    <option value="">Seleccione un departamento</option>
+                                </select>
+                            </div>
                         </div>
+
                         <!-- Anonimo -->
                         <div class="col-md-6">
                             <label class="form-label">Anónimo</label>
