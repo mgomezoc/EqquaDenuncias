@@ -6,8 +6,6 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-
-
 $routes->get('/', 'Home::index');
 $routes->get('/login', 'Auth::login');
 $routes->get('logout', 'Auth::logout');
@@ -42,15 +40,15 @@ $routes->group('clientes', ['namespace' => 'App\Controllers', 'filter' => 'authF
     $routes->post('subirImagen', 'ClientesController::subirImagen'); // Ruta para subir imágenes
 });
 
-// Rutas para denuncias
+// DENUNCIAS
 $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'DenunciasController::index');
     $routes->get('listar', 'DenunciasController::listar');
     $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1');
     $routes->post('guardar', 'DenunciasController::guardar');
     $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
-    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');  // Esta es la ruta correcta
-    $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
+    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
+    $routes->post('subirAnexo', 'DenunciasController::subirAnexo'); // Nueva ruta para subir archivos adjuntos en denuncias
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
 });
 
@@ -63,7 +61,7 @@ $routes->group('sucursales', ['namespace' => 'App\Controllers', 'filter' => 'aut
     $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1');
 });
 
-// Rutas para la administración de Categorías y Subcategorías
+// CATEGORÍAS Y SUBCATEGORÍAS
 $routes->group('categorias', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'CategoriasController::index');
     $routes->get('listarCategorias', 'CategoriasController::listarCategorias');
@@ -75,7 +73,7 @@ $routes->group('categorias', ['namespace' => 'App\Controllers', 'filter' => 'aut
     $routes->post('eliminarSubcategoria/(:num)', 'CategoriasController::eliminarSubcategoria/$1');
 });
 
-// Rutas para la administración de Departamentos
+// DEPARTAMENTOS
 $routes->group('departamentos', ['namespace' => 'App\Controllers', 'filter' => 'authFilter'], function ($routes) {
     $routes->get('/', 'DepartamentosController::index');
     $routes->get('listar', 'DepartamentosController::listarDepartamentos');
@@ -86,9 +84,6 @@ $routes->group('departamentos', ['namespace' => 'App\Controllers', 'filter' => '
     $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1');
     $routes->get('listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1');
 });
-
-
-
 
 // Cargar rutas adicionales basadas en el entorno
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {

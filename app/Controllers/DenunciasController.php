@@ -61,6 +61,7 @@ class DenunciasController extends Controller
     public function guardar()
     {
         $denunciaModel = new DenunciaModel();
+        $anexoModel = new AnexoDenunciaModel();
         $id = $this->request->getVar('id');
 
         // Verifica que la sesión esté iniciada y el usuario esté autenticado
@@ -69,6 +70,7 @@ class DenunciasController extends Controller
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Usuario no autenticado o sesión no iniciada']);
         }
 
+        // Datos principales de la denuncia
         $data = [
             'id_cliente' => $this->request->getVar('id_cliente'),
             'id_sucursal' => $this->request->getVar('id_sucursal'),
@@ -83,9 +85,12 @@ class DenunciasController extends Controller
             'area_incidente' => $this->request->getVar('area_incidente'),
             'descripcion' => $this->request->getVar('descripcion'),
             'id_creador' => $idCreador, // Obtiene el ID del creador desde la sesión
-            // No es necesario incluir 'folio' y 'fecha_hora_reporte', ya que se generan automáticamente en el modelo
         ];
 
+        $db = \Config\Database::connect();
+        $db->transStart(); // Inicia una transacción
+
+        // Guardar o actualizar la denuncia
         if ($id) {
             $denunciaModel->update($id, $data);
             registrarAccion($idCreador, 'Actualización de denuncia', 'ID: ' . $id);
@@ -93,6 +98,30 @@ class DenunciasController extends Controller
             $denunciaModel->save($data);
             $newId = $denunciaModel->insertID();
             registrarAccion($idCreador, 'Creación de denuncia', 'ID: ' . $newId);
+            $id = $newId; // Usa el nuevo ID para la inserción de anexos
+        }
+
+        // Procesa los archivos adjuntos (anexos) desde los inputs ocultos
+        $anexos = $this->request->getVar('archivos');
+        if ($anexos && is_array($anexos)) {
+            foreach ($anexos as $rutaArchivo) {
+                // Obtener el nombre del archivo desde la ruta
+                $nombreArchivo = basename($rutaArchivo);
+
+                // Guarda la información del anexo en la base de datos
+                $anexoModel->save([
+                    'id_denuncia' => $id,
+                    'nombre_archivo' => $nombreArchivo,
+                    'ruta_archivo' => $rutaArchivo,
+                    'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
+                ]);
+            }
+        }
+
+        $db->transComplete(); // Finaliza la transacción
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al guardar la denuncia y los archivos adjuntos']);
         }
 
         return $this->response->setJSON(['message' => 'Denuncia guardada correctamente']);

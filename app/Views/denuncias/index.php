@@ -124,7 +124,6 @@
     </div>
 </template>
 
-
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
@@ -132,7 +131,7 @@
 <div class="modal fade" id="modalCrearDenuncia" tabindex="-1" aria-labelledby="modalCrearDenunciaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post">
+            <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalCrearDenunciaLabel">Agregar Denuncia</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -236,7 +235,7 @@
                         <!-- Sección 5: Archivos Adjuntos -->
                         <div class="col-md-12">
                             <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivos_adjuntos" name="archivos_adjuntos[]" multiple>
+                            <div id="dropzoneArchivos" class="dropzone"></div>
                         </div>
                     </div>
                 </div>
@@ -254,6 +253,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -264,5 +264,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
 <script src="<?= base_url('assets/js/denuncias.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -5,6 +5,9 @@ let tplAccionesTabla;
 let tplDetalleTabla;
 let $tablaDenuncias;
 let $modalCrearDenuncia;
+let dropzones = {};
+
+Dropzone.autoDiscover = false; // Desactivar la autodetección de Dropzone
 
 Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
     switch (operator) {
@@ -117,14 +120,17 @@ $(function () {
         },
         submitHandler: function (form) {
             const $frm = $(form);
-            const formData = $frm.serializeObject();
+            const formData = new FormData(form);
 
             loadingFormXHR($frm, true);
 
-            ajaxCall({
+            // Enviar la solicitud AJAX para guardar la denuncia
+            $.ajax({
                 url: `${Server}denuncias/guardar`,
                 method: 'POST',
                 data: formData,
+                processData: false,
+                contentType: false,
                 success: function (data) {
                     loadingFormXHR($frm, false);
                     $modalCrearDenuncia.modal('hide');
@@ -132,6 +138,9 @@ $(function () {
                     showToast('¡Listo!, se creó correctamente la denuncia.', 'success');
                     $frm[0].reset();
                     $frm.find('.is-valid').removeClass('is-valid');
+                    if (dropzones['archivosAdjuntos']) {
+                        dropzones['archivosAdjuntos'].removeAllFiles(true);
+                    }
                 },
                 error: function (xhr) {
                     loadingFormXHR($frm, false);
@@ -155,6 +164,11 @@ $(function () {
         $form[0].reset();
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
+
+        // Resetear los archivos subidos en Dropzone
+        if (dropzones['archivosAdjuntos']) {
+            dropzones['archivosAdjuntos'].removeAllFiles(true);
+        }
     });
 
     // Inicialización de la tabla de denuncias
@@ -318,72 +332,32 @@ $(function () {
         loadDepartamentos(sucursalId, '#id_departamento');
     });
 
-    // Función para cargar los departamentos
-    function loadDepartamentos(sucursalId, selectSelector) {
-        $(selectSelector).html('<option>Cargando...</option>');
-        $.ajax({
-            url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
-            method: 'GET',
-            success: function (data) {
-                let options = '<option value="">Seleccione un departamento</option>';
-                data.forEach(function (departamento) {
-                    options += `<option value="${departamento.id}">${departamento.nombre}</option>`;
-                });
-                $(selectSelector).html(options);
-            },
-            error: function () {
-                console.error('Error al cargar los departamentos.');
-            }
-        });
-    }
+    // Inicializar Dropzone para los archivos adjuntos
+    initializeDropzone('dropzoneArchivos', 'archivosAdjuntos');
 });
 
-function operateFormatter(value, row, index) {
-    const renderData = Handlebars.compile(tplAccionesTabla)(row);
-    return renderData;
+// Función para inicializar Dropzone
+function initializeDropzone(elementId, fieldName) {
+    dropzones[fieldName] = new Dropzone(`#${elementId}`, {
+        url: `${Server}denuncias/subirAnexo`,
+        maxFiles: 5,
+        acceptedFiles: 'image/*,application/pdf',
+        addRemoveLinks: true,
+        dictDefaultMessage: 'Arrastra los archivos aquí para subirlos',
+        dictRemoveFile: 'Eliminar archivo',
+        init: function () {
+            this.on('success', function (file, response) {
+                $(`#formCrearDenuncia`).append(`<input type="hidden" name="archivos[]" value="assets/denuncias/${response.filename}">`);
+            });
+            this.on('removedfile', function (file) {
+                const name = file.upload.filename;
+                $(`input[value="assets/denuncias/${name}"]`).remove();
+            });
+        }
+    });
 }
 
-async function eliminarDenuncia(id) {
-    const data = await confirm('¿Estás seguro de eliminar esta denuncia?');
-    if (data.isConfirmed) {
-        ajaxCall({
-            url: `${Server}denuncias/eliminar/${id}`,
-            method: 'POST',
-            success: function (response) {
-                $tablaDenuncias.bootstrapTable('refresh');
-                showToast('¡Denuncia eliminada correctamente!', 'success');
-            },
-            error: function (xhr, status, error) {
-                let errorMessage = 'Ocurrió un error al eliminar la denuncia.';
-                showToast(errorMessage, 'error');
-            }
-        });
-    }
-}
-
-async function cambiarEstadoDenuncia(id) {
-    const newStatus = await promptForStatus(); // Función que muestra un modal para seleccionar el nuevo estado
-    if (newStatus) {
-        ajaxCall({
-            url: `${Server}denuncias/cambiarEstado`,
-            method: 'POST',
-            data: { id, estado_nuevo: newStatus },
-            success: function (response) {
-                $tablaDenuncias.bootstrapTable('refresh');
-                showToast('¡Estado de la denuncia actualizado correctamente!', 'success');
-            },
-            error: function (xhr, status, error) {
-                let errorMessage = 'Ocurrió un error al actualizar el estado de la denuncia.';
-                showToast(errorMessage, 'error');
-            }
-        });
-    }
-}
-
-function verDetalleDenuncia(id) {
-    // Implementación de la función para ver detalles completos de una denuncia en un modal o nueva vista.
-}
-
+// Función para cargar subcategorías
 function loadSubcategorias(categoriaId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
     $.ajax({
@@ -403,6 +377,7 @@ function loadSubcategorias(categoriaId, selectSelector) {
     });
 }
 
+// Función para cargar sucursales
 function loadSucursales(clienteId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
     $.ajax({
@@ -419,4 +394,28 @@ function loadSucursales(clienteId, selectSelector) {
             console.error('Error loading branches.');
         }
     });
+}
+
+// Función para cargar departamentos
+function loadDepartamentos(sucursalId, selectSelector) {
+    $(selectSelector).html('<option>Cargando...</option>');
+    $.ajax({
+        url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
+        method: 'GET',
+        success: function (data) {
+            let options = '<option value="">Seleccione un departamento</option>';
+            data.forEach(function (departamento) {
+                options += `<option value="${departamento.id}">${departamento.nombre}</option>`;
+            });
+            $(selectSelector).html(options);
+        },
+        error: function () {
+            console.error('Error al cargar los departamentos.');
+        }
+    });
+}
+
+function operateFormatter(value, row, index) {
+    const renderData = Handlebars.compile(tplAccionesTabla)(row);
+    return renderData;
 }
