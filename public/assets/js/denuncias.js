@@ -77,7 +77,7 @@ $(function () {
                 title: 'Subcategoría'
             },
             {
-                field: 'departamento',
+                field: 'departamento_nombre',
                 title: 'Departamento'
             },
             {
@@ -121,7 +121,8 @@ $(function () {
                     subcategoria: row.subcategoria,
                     estado_actual: row.estado_actual,
                     descripcion: row.descripcion,
-                    anonimo: row.anonimo
+                    anonimo: row.anonimo,
+                    departamento_nombre: row.departamento_nombre
                 });
 
                 // Renderizar y mostrar el detalle
