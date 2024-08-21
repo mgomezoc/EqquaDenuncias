@@ -48,8 +48,9 @@
 </template>
 
 <template id="tplDetalleTabla">
-    <div class="card custom-card card-body">
-        <form id="formEditarDenuncia-{{id}}" action="<?= base_url('denuncias/guardar') ?>" method="post" class="formEditarDenuncia">
+    <div class="">
+        <!-- Formulario para editar la denuncia -->
+        <form id="formEditarDenuncia-{{id}}" action="<?= base_url('denuncias/guardar') ?>" method="post" class="formEditarDenuncia card custom-card card-body mb-4">
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
                 <!-- Información General -->
@@ -110,42 +111,66 @@
                     </div>
                 </div>
 
-
                 <!-- Botón de Actualizar -->
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Actualizar</button>
+                <div class="mt-5">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> Actualizar
+                    </button>
                 </div>
             </div>
         </form>
 
-        <!-- Sección de Archivos Adjuntos -->
-        <hr>
-        <h5>Archivos Adjuntos</h5>
-        <div class="row">
-            <!-- Archivos Existentes -->
-            <div class="col-md-6">
-                <h6>Archivos Actuales</h6>
-                {{#each anexos}}
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <a href="<?= base_url('assets/denuncias/{{ruta_archivo}}') ?>" target="_blank">{{nombre_archivo}}</a>
-                            <button class="btn btn-danger btn-sm float-end delete-anexo" data-id="{{id_anexo}}">Eliminar</button>
+        <!-- Formulario para actualizar imágenes -->
+        <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card">
+            <input type="hidden" name="id" value="{{id}}">
+            <div class="card-body">
+                <div class="row g-4">
+                    <!-- Sección de Archivos Existentes -->
+                    <div class="col-md-6">
+                        <div class="card border-light mb-3">
+                            <div class="card-header text-center bg-light">
+                                <h5 class="mb-0">Archivos Existentes</h5>
+                            </div>
+                            <div class="card-body">
+                                {{#each anexos}}
+                                    <div class="card mb-3">
+                                        <div class="card-body d-flex justify-content-between align-items-center">
+                                            <a href="<?= base_url('assets/denuncias/') ?>{{nombre_archivo}}" target="_blank">{{nombre_archivo}}</a>
+                                            <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
+                                                <i class="fa fa-trash"></i> Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                {{else}}
+                                    <p class="text-center">No hay archivos adjuntos.</p>
+                                {{/each}}
+                            </div>
                         </div>
                     </div>
-                {{/each}}
-            </div>
 
-            <!-- Subir Nuevos Archivos -->
-            <div class="col-md-6">
-                <h6>Subir Nuevos Archivos</h6>
-                <div id="dropzoneArchivos-{{id}}" class="dropzone"></div>
-            </div>
-        </div>
+                    <!-- Sección para Subir Nuevos Archivos -->
+                    <div class="col-md-6">
+                        <div class="card border-light mb-3">
+                            <div class="card-header text-center bg-light">
+                                <h5 class="mb-0">Subir Nuevos Archivos</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="dropzoneArchivos-{{id}}" class="dropzone mb-3"></div>
+                                <small class="text-muted d-block">Solo si adjuntas nuevos archivos, estos se agregarán a la denuncia.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <button class="btn btn-primary mt-3" id="actualizarAnexos-{{id}}">Actualizar Archivos</button>
+                <div class="mt-4 text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> Actualizar Archivos
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </template>
-
 
 <?= $this->endSection() ?>
 

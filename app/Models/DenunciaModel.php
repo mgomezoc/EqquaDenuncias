@@ -51,7 +51,7 @@ class DenunciaModel extends Model
             ->first();
 
         $newFolio = $lastDenuncia ? (int)substr($lastDenuncia['folio'], -5) + 1 : 1;
-        $data['data']['folio'] = "DEN-$yearMonth-" . str_pad($newFolio, 5, '0', STR_PAD_LEFT);
+        $data['data']['folio'] = "$yearMonth-" . str_pad($newFolio, 5, '0', STR_PAD_LEFT);
 
         return $data;
     }

@@ -7,34 +7,7 @@ let $tablaDenuncias;
 let $modalCrearDenuncia;
 let dropzones = {};
 
-Dropzone.autoDiscover = false; // Desactivar la autodetección de Dropzone
-
-Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
-    switch (operator) {
-        case '==':
-            return v1 == v2 ? options.fn(this) : options.inverse(this);
-        case '===':
-            return v1 === v2 ? options.fn(this) : options.inverse(this);
-        case '!=':
-            return v1 != v2 ? options.fn(this) : options.inverse(this);
-        case '!==':
-            return v1 !== v2 ? options.fn(this) : options.inverse(this);
-        case '<':
-            return v1 < v2 ? options.fn(this) : options.inverse(this);
-        case '<=':
-            return v1 <= v2 ? options.fn(this) : options.inverse(this);
-        case '>':
-            return v1 > v2 ? options.fn(this) : options.inverse(this);
-        case '>=':
-            return v1 >= v2 ? options.fn(this) : options.inverse(this);
-        case '&&':
-            return v1 && v2 ? options.fn(this) : options.inverse(this);
-        case '||':
-            return v1 || v2 ? options.fn(this) : options.inverse(this);
-        default:
-            return options.inverse(this);
-    }
-});
+Dropzone.autoDiscover = false;
 
 $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
@@ -209,7 +182,8 @@ $(function () {
             },
             {
                 field: 'estado_nombre',
-                title: 'Estado'
+                title: 'Estado',
+                formatter: operateFormatterEstado
             },
             {
                 field: 'fecha_hora_reporte',
@@ -228,6 +202,12 @@ $(function () {
         detailView: true,
         onExpandRow: function (index, row, $detail) {
             $detail.html(`Cargando...`);
+            const como_se_entero = [
+                { id: 'Fui víctima', name: 'Fui víctima' },
+                { id: 'Fui testigo', name: 'Fui testigo' },
+                { id: 'Estaba involucrado', name: 'Estaba involucrado' },
+                { id: 'Otro', name: 'Otro' }
+            ];
 
             $.when(
                 $.get(`${Server}clientes/listar`),
@@ -253,7 +233,11 @@ $(function () {
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
                     departamento_nombre: row.departamento_nombre,
-                    denuncia: row
+                    fecha_incidente: denunciaDetalles[0].fecha_incidente,
+                    como_se_entero: denunciaDetalles[0].como_se_entero,
+                    area_incidente: denunciaDetalles[0].area_incidente,
+                    denunciar_a_alguien: denunciaDetalles[0].denunciar_a_alguien,
+                    como_se_entero: como_se_entero
                 };
 
                 console.log(data);
@@ -406,4 +390,36 @@ function loadDepartamentos(sucursalId, selectSelector) {
 function operateFormatter(value, row, index) {
     const renderData = Handlebars.compile(tplAccionesTabla)(row);
     return renderData;
+}
+
+function operateFormatterEstado(value, row, index) {
+    const estado = row.estado_nombre;
+    let badgeClass = '';
+
+    switch (estado) {
+        case 'Recepción':
+            badgeClass = 'bg-primary';
+            break;
+        case 'Clasificada':
+            badgeClass = 'bg-warning text-dark';
+            break;
+        case 'Revisada por Calidad':
+            badgeClass = 'bg-orange text-dark'; // Se puede agregar una clase CSS personalizada para naranja
+            break;
+        case 'Liberada al Cliente':
+            badgeClass = 'bg-success';
+            break;
+        case 'En Revisión por Cliente':
+            badgeClass = 'bg-info';
+            break;
+        case 'Cerrada':
+            badgeClass = 'bg-secondary';
+            break;
+        default:
+            badgeClass = 'bg-light text-dark'; // Para estados no reconocidos
+    }
+
+    const estadoBadge = `<span class="badge ${badgeClass}">${estado}</span>`;
+
+    return estadoBadge;
 }

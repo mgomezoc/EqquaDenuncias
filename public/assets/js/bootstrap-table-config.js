@@ -28,6 +28,8 @@ $.fn.bootstrapTable.defaults.icons = {
 };
 $.fn.bootstrapTable.defaults.search = true;
 $.fn.bootstrapTable.defaults.pagination = true;
+$.fn.bootstrapTable.defaults.pageSize = 50;
+$.fn.bootstrapTable.defaults.showRefresh = true;
 $.fn.bootstrapTable.defaults.iconsSize = 'sm';
 $.fn.bootstrapTable.defaults.iconSize = 'sm';
 $.fn.bootstrapTable.defaults.showSearchClearButton = true;
