@@ -48,8 +48,9 @@ $routes->group('denuncias', ['namespace' => 'App\Controllers', 'filter' => 'auth
     $routes->post('guardar', 'DenunciasController::guardar');
     $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
     $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
-    $routes->post('subirAnexo', 'DenunciasController::subirAnexo'); // Nueva ruta para subir archivos adjuntos en denuncias
+    $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
+    $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
 });
 
 // SUCURSALES

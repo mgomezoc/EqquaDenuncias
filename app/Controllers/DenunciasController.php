@@ -187,4 +187,12 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON($departamentos);
     }
+
+    public function obtenerEstados()
+    {
+        $estadoModel = new EstadoDenunciaModel();
+        $estados = $estadoModel->getEstados();
+
+        return $this->response->setJSON($estados);
+    }
 }

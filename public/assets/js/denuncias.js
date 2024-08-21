@@ -227,22 +227,21 @@ $(function () {
         ],
         detailView: true,
         onExpandRow: function (index, row, $detail) {
-            // Obtener datos para los selectores de la fila expandida
             $.when(
-                $.get(`${Server}clientes/listar`), // Ruta para listar clientes
-                $.get(`${Server}categorias/listarCategorias`), // Ruta para listar categorías
-                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }), // Ruta para listar subcategorías basadas en la categoría seleccionada
-                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), // Ruta para obtener sucursales por cliente
-                $.get(`${Server}denuncias/detalle/${row.id}`) // Ruta para obtener los detalles de la denuncia
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles) {
-                // Compilar el template con los datos recibidos
-                const renderData = Handlebars.compile(tplDetalleTabla)({
+                $.get(`${Server}clientes/listar`), // Obtener clientes
+                $.get(`${Server}categorias/listarCategorias`), // Obtener categorías
+                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }), // Obtener subcategorías según la categoría
+                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), // Obtener sucursales según el cliente
+                $.get(`${Server}denuncias/detalle/${row.id}`), // Obtener detalles de la denuncia
+                $.get(`${Server}denuncias/obtenerEstados`) // Obtener lista de estados
+            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados) {
+                const data = {
                     id: row.id,
-                    clientes: clientes[0],
-                    categorias: categorias[0],
-                    subcategorias: subcategorias[0],
-                    sucursales: sucursales[0],
-                    estados: denunciaDetalles[0].estados || [],
+                    clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
+                    categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
+                    subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
+                    sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
+                    estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })), // Mapea los estados aquí
                     id_cliente: row.id_cliente,
                     categoria: row.categoria,
                     subcategoria: row.subcategoria,
@@ -250,7 +249,11 @@ $(function () {
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
                     departamento_nombre: row.departamento_nombre
-                });
+                };
+
+                console.log(data);
+
+                const renderData = Handlebars.compile(tplDetalleTabla)(data);
 
                 // Renderizar y mostrar el detalle
                 $detail.html(renderData);

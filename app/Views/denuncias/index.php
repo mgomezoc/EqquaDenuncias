@@ -56,40 +56,28 @@
                 <div class="col-md-4">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
                     <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" required>
-                        <option value="">Seleccione un cliente</option>
-                        {{#each clientes}}
-                            <option value="{{this.id}}" {{#ifCond ../id_cliente '==' this.id}}selected{{/ifCond}}>{{this.nombre_empresa}}</option>
-                        {{/each}}
+                        {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
                 <!-- Categoría -->
                 <div class="col-md-4">
                     <label for="categoria-{{id}}" class="form-label">Categoría</label>
                     <select class="form-select select2" id="categoria-{{id}}" name="categoria" required>
-                        <option value="">Seleccione una categoría</option>
-                        {{#each categorias}}
-                            <option value="{{this.id}}" {{#ifCond ../categoria '==' this.id}}selected{{/ifCond}}>{{this.nombre}}</option>
-                        {{/each}}
+                        {{{selectOptions categorias categoria}}}
                     </select>
                 </div>
                 <!-- Subcategoría -->
                 <div class="col-md-4">
                     <label for="subcategoria-{{id}}" class="form-label">Subcategoría</label>
                     <select class="form-select select2" id="subcategoria-{{id}}" name="subcategoria" required>
-                        <option value="">Seleccione una subcategoría</option>
-                        {{#each subcategorias}}
-                            <option value="{{this.id}}" {{#ifCond ../subcategoria '==' this.id}}selected{{/ifCond}}>{{this.nombre}}</option>
-                        {{/each}}
+                        {{{selectOptions subcategorias subcategoria}}}
                     </select>
                 </div>
                 <!-- Estado -->
                 <div class="col-md-4">
                     <label for="estado_actual-{{id}}" class="form-label">Estado</label>
-                    <select class="form-select select2" id="estado_actual-{{id}}" name="estado_actual" required>
-                        <option value="">Seleccione un estado</option>
-                        {{#each estados}}
-                            <option value="{{this.id}}" {{#ifCond ../estado_actual '==' this.id}}selected{{/ifCond}}>{{this.nombre}}</option>
-                        {{/each}}
+                    <select id="estado_actual-{{id}}" name="estado_actual" class="form-select select2">
+                        {{{selectOptions estados estado_actual}}}
                     </select>
                 </div>
                 <!-- Descripción -->
@@ -97,22 +85,7 @@
                     <label for="descripcion-{{id}}" class="form-label">Descripción</label>
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" required>{{descripcion}}</textarea>
                 </div>
-                <!-- Anonimo -->
-                <div class="col-md-6">
-                    <label class="form-label">Anónimo</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si-{{id}}" value="1" {{#ifCond anonimo '==' '1'}}checked{{/ifCond}} required>
-                        <label class="form-check-label" for="anonimo-si-{{id}}">
-                            Sí
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no-{{id}}" value="0" {{#ifCond anonimo '==' '0'}}checked{{/ifCond}} required>
-                        <label class="form-check-label" for="anonimo-no-{{id}}">
-                            No
-                        </label>
-                    </div>
-                </div>
+
                 <!-- Botón de Actualizar -->
                 <div class="col-md-12">
                     <button type="submit" class="btn btn-primary">
@@ -123,6 +96,7 @@
         </form>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 
