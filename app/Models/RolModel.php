@@ -8,6 +8,5 @@ class RolModel extends Model
 {
     protected $table = 'roles';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['nombre'];
-    protected $useTimestamps = true;
+    protected $allowedFields = ['nombre', 'slug', 'created_at'];
 }

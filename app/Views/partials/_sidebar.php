@@ -20,55 +20,70 @@
                         <span class="side-menu__label">Dashboard</span>
                     </a>
                 </li>
-                <li class="slide">
-                    <a href="<?= base_url('usuarios') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-users side-menu__icon"></i>
-                        <span class="side-menu__label">Usuarios</span>
-                    </a>
-                </li>
-                <li class="slide">
-                    <a href="<?= base_url('clientes') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-building side-menu__icon"></i>
-                        <span class="side-menu__label">Clientes</span>
-                    </a>
-                </li>
-                <li class="slide">
-                    <a href="<?= base_url('sucursales') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-store side-menu__icon"></i>
-                        <span class="side-menu__label">Sucursales</span>
-                    </a>
-                </li>
-                <li class="slide">
-                    <a href="<?= base_url('departamentos') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-building-user side-menu__icon"></i>
-                        <span class="side-menu__label">Departamentos</span>
-                    </a>
-                </li>
-                <li class="slide">
-                    <a href="<?= base_url('categorias') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-tags side-menu__icon"></i>
-                        <span class="side-menu__label">Categorías</span>
-                    </a>
-                </li>
-                <li class="slide">
-                    <a href="<?= base_url('denuncias') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
-                        <span class="side-menu__label">Denuncias</span>
-                    </a>
-                </li>
-                <li class="slide__category"><span class="category-name">Reportes</span></li>
-                <li class="slide has-sub">
-                    <a href="javascript:void(0);" class="side-menu__item">
-                        <i class="fa-solid fa-chart-bar side-menu__icon"></i>
-                        <span class="side-menu__label">Reportes</span>
-                        <i class="fa fa-chevron-right side-menu__angle"></i>
-                    </a>
-                    <ul class="slide-menu child1">
-                        <li class="slide">
-                            <a href="<?= base_url('reportes/gasolina') ?>" class="side-menu__item">Reporte Denuncias</a>
-                        </li>
-                    </ul>
-                </li>
+
+                <?php $rol = session()->get('rol_slug'); ?>
+
+                <?php if ($rol == 'ADMIN'): ?>
+                    <li class="slide">
+                        <a href="<?= base_url('usuarios') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-users side-menu__icon"></i>
+                            <span class="side-menu__label">Usuarios</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('clientes') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-building side-menu__icon"></i>
+                            <span class="side-menu__label">Clientes</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('sucursales') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-store side-menu__icon"></i>
+                            <span class="side-menu__label">Sucursales</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('departamentos') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-building-user side-menu__icon"></i>
+                            <span class="side-menu__label">Departamentos</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('categorias') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-tags side-menu__icon"></i>
+                            <span class="side-menu__label">Categorías</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('denuncias') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
+                            <span class="side-menu__label">Denuncias</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
+
+                <?php if ($rol == 'CLIENTE'): ?>
+                    <li class="slide">
+                        <a href="<?= base_url('denuncias') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
+                            <span class="side-menu__label">Mis Denuncias</span>
+                        </a>
+                    </li>
+                    <li class="slide__category"><span class="category-name">Reportes</span></li>
+                    <li class="slide has-sub">
+                        <a href="javascript:void(0);" class="side-menu__item">
+                            <i class="fa-solid fa-chart-bar side-menu__icon"></i>
+                            <span class="side-menu__label">Mis Reportes</span>
+                            <i class="fa fa-chevron-right side-menu__angle"></i>
+                        </a>
+                        <ul class="slide-menu child1">
+                            <li class="slide">
+                                <a href="<?= base_url('reportes/gasolina') ?>" class="side-menu__item">Reporte Denuncias</a>
+                            </li>
+                        </ul>
+                    </li>
+                <?php endif; ?>
+
             </ul>
             <div class="slide-right" id="slide-right">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">

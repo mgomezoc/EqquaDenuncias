@@ -74,7 +74,8 @@ class Auth extends BaseController
                 $ses_data = [
                     'id' => $data['id'],
                     'nombre_usuario' => $data['nombre_usuario'],
-                    'rol_nombre' => $data['rol_nombre'], // Aquí se guarda el nombre del rol
+                    'rol_nombre' => $data['rol_nombre'], // Nombre del rol
+                    'rol_slug' => $data['rol_slug'],     // Slug del rol
                     'isLoggedIn' => TRUE
                 ];
                 $session->set($ses_data);
@@ -91,6 +92,7 @@ class Auth extends BaseController
             return redirect()->to('/login');
         }
     }
+
 
     public function logout()
     {

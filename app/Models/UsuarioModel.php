@@ -20,14 +20,26 @@ class UsuarioModel extends Model
         return $data;
     }
 
+    /**
+     * Obtiene un usuario junto con su rol.
+     *
+     * @param string $email El correo electrónico del usuario.
+     * @return array|null Los datos del usuario junto con el rol, o null si no se encuentra.
+     */
     public function getUserWithRole($email)
     {
-        return $this->select('usuarios.*, roles.nombre AS rol_nombre')
+        return $this->select('usuarios.*, roles.nombre AS rol_nombre, roles.slug AS rol_slug')
             ->join('roles', 'roles.id = usuarios.rol_id')
             ->where('correo_electronico', $email)
             ->first();
     }
 
+    /**
+     * Actualiza la última conexión de un usuario.
+     *
+     * @param int $id El ID del usuario.
+     * @return bool Si la actualización fue exitosa o no.
+     */
     public function updateLastLogin($id)
     {
         return $this->update($id, ['ultima_conexion' => date('Y-m-d H:i:s')]);
