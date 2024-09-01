@@ -161,12 +161,18 @@ class DenunciasController extends Controller
         $id = $this->request->getVar('id');
         $estado_nuevo = $this->request->getVar('estado_nuevo');
 
+        // Obtener el estado anterior antes de realizar el cambio
+        $denuncia = $denunciaModel->find($id);
+        $estado_anterior = $denuncia['estado_actual'];
+
+        // Realizar el cambio de estado
         $denunciaModel->cambiarEstado($id, $estado_nuevo);
 
+        // Guardar en el historial de seguimiento
         $seguimientoModel = new SeguimientoDenunciaModel();
         $seguimientoModel->save([
             'id_denuncia' => $id,
-            'estado_anterior' => $this->request->getVar('estado_anterior'),
+            'estado_anterior' => $estado_anterior, // Aquí se asegura que no sea null
             'estado_nuevo' => $estado_nuevo,
             'comentario' => $this->request->getVar('comentario'),
             'id_usuario' => session()->get('id'),
@@ -176,6 +182,7 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
     }
+
 
     public function subirAnexo()
     {
