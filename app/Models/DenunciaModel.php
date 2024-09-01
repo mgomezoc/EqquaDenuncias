@@ -138,8 +138,19 @@ class DenunciaModel extends Model
         $this->db->transStart();
 
         try {
-            // Eliminar los anexos relacionados con la denuncia
+            // Obtener los anexos relacionados con la denuncia
             $anexosModel = new \App\Models\AnexoDenunciaModel();
+            $anexos = $anexosModel->where('id_denuncia', $id)->findAll();
+
+            // Intentar eliminar los archivos anexos del sistema de archivos
+            foreach ($anexos as $anexo) {
+                $rutaArchivo = WRITEPATH . '../public/' . $anexo['ruta_archivo'];
+                if (file_exists($rutaArchivo)) {
+                    unlink($rutaArchivo); // Eliminar el archivo físico
+                }
+            }
+
+            // Eliminar los registros de anexos relacionados con la denuncia
             $anexosModel->where('id_denuncia', $id)->delete();
 
             // Eliminar los registros de seguimiento de la denuncia
@@ -161,6 +172,7 @@ class DenunciaModel extends Model
         } catch (\Exception $e) {
             // Si ocurre un error, revertir la transacción
             $this->db->transRollback();
+            log_message('error', $e->getMessage());
             return false;
         }
     }
