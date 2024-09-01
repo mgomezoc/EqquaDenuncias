@@ -275,7 +275,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="id_departamento" class="form-label">Departamento</label>
-                            <select class="form-select select2" id="id_departamento" name="id_departamento" required>
+                            <select class="form-select select2" id="id_departamento" name="id_departamento">
                                 <option value="">Seleccione un departamento</option>
                             </select>
                         </div>

@@ -38,17 +38,24 @@ class DenunciaModel extends Model
 
     protected function generateFolio(array $data): array
     {
-        $date = date('Ymd'); // Añadir día a la fecha para asegurar folios únicos por día
+        // Obtener la fecha en formato "ymd" (240901)
+        $date = date('ymd'); // 'y' proporciona los últimos dos dígitos del año
+
+        // Buscar la última denuncia que tenga un folio que empiece con la fecha actual
         $lastDenuncia = $this->select('folio')
             ->like('folio', "$date-", 'after')
             ->orderBy('id', 'DESC')
             ->first();
 
-        $newFolio = $lastDenuncia ? (int)substr($lastDenuncia['folio'], -5) + 1 : 1;
-        $data['data']['folio'] = "$date-" . str_pad($newFolio, 5, '0', STR_PAD_LEFT);
+        // Determinar el nuevo número de secuencia
+        $newFolio = $lastDenuncia ? (int)substr($lastDenuncia['folio'], -4) + 1 : 1;
+
+        // Formatear el número de secuencia a 4 dígitos (e.g., 0003)
+        $data['data']['folio'] = "$date-" . str_pad($newFolio, 4, '0', STR_PAD_LEFT);
 
         return $data;
     }
+
 
     protected function setDefaultValues(array $data): array
     {

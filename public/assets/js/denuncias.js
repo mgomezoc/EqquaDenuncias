@@ -62,9 +62,6 @@ $(function () {
             subcategoria: {
                 required: true
             },
-            id_departamento: {
-                required: true
-            },
             fecha_incidente: {
                 required: true,
                 date: true
@@ -85,9 +82,6 @@ $(function () {
             },
             subcategoria: {
                 required: 'Por favor seleccione una subcategoría'
-            },
-            id_departamento: {
-                required: 'Por favor seleccione un departamento'
             },
             fecha_incidente: {
                 required: 'Por favor ingrese la fecha del incidente',
@@ -115,8 +109,16 @@ $(function () {
                     $modalCrearDenuncia.modal('hide');
                     $tablaDenuncias.bootstrapTable('refresh');
                     showToast('¡Listo!, se creó correctamente la denuncia.', 'success');
+
+                    // Limpiar el formulario y los estilos de validación
                     $frm[0].reset();
                     $frm.find('.is-valid').removeClass('is-valid');
+                    $frm.find('.is-invalid').removeClass('is-invalid');
+
+                    // Resetear todos los select2
+                    $frm.find('.select2').val(null).trigger('change');
+
+                    // Limpiar los archivos de Dropzone
                     if (dropzones['archivosAdjuntos']) {
                         dropzones['archivosAdjuntos'].removeAllFiles(true);
                     }
