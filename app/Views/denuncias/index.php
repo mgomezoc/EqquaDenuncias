@@ -140,7 +140,11 @@
                                 {{#each anexos}}
                                     <div class="card mb-3">
                                         <div class="card-body d-flex justify-content-between align-items-center">
-                                            <a href="<?= base_url('/') ?>{{ruta_archivo}}" target="_blank">{{nombre_archivo}}</a>
+                                            {{#ifCond tipo '==' 'application/pdf'}}
+                                                <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="pdf-{{id}}" data-title="{{nombre_archivo}}" class="pdf-viewer">{{nombre_archivo}}</a>
+                                {{else}}
+                                    <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="image-{{id}}" data-title="{{nombre_archivo}}">{{nombre_archivo}}</a>
+                                            {{/ifCond}}
                                             <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
                                                 <i class="fa fa-trash"></i> Eliminar
                                             </button>
@@ -306,6 +310,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -317,5 +322,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
 <script src="<?= base_url('assets/js/denuncias.js') ?>"></script>
 <?= $this->endSection() ?>

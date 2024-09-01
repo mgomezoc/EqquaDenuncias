@@ -434,17 +434,24 @@ function initializeDropzone(elementId, formId) {
     dropzones[elementId] = myDropzone;
 }
 
-// Función para eliminar un anexo
+// Función para eliminar un anexo con confirmación usando SweetAlert2
 function eliminarAnexo(anexoId, denunciaId) {
-    $.ajax({
-        url: `${Server}denuncias/anexos/eliminar/${anexoId}`,
-        method: 'POST',
-        success: function (response) {
-            showToast('Anexo eliminado correctamente.', 'success');
-            $(`#formActualizarAnexos-${denunciaId}`).find(`.delete-anexo[data-id="${anexoId}"]`).closest('.card').remove();
-        },
-        error: function (xhr) {
-            showToast('Error al eliminar el anexo.', 'error');
+    // Llamar a la función de confirmación
+    confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
+        // Si el usuario confirma la acción
+        if (result.isConfirmed) {
+            // Proceder con la eliminación
+            $.ajax({
+                url: `${Server}denuncias/anexos/eliminar/${anexoId}`,
+                method: 'POST',
+                success: function (response) {
+                    showToast('Anexo eliminado correctamente.', 'success');
+                    $(`#formActualizarAnexos-${denunciaId}`).find(`.delete-anexo[data-id="${anexoId}"]`).closest('.card').remove();
+                },
+                error: function (xhr) {
+                    showToast('Error al eliminar el anexo.', 'error');
+                }
+            });
         }
     });
 }
