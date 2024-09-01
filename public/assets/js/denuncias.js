@@ -247,6 +247,14 @@ $(function () {
         }
     };
 
+    // Agregar flatpickr a la fecha del incidente al cargar el detalle para edición
+    function initializeFlatpickrForEdit(selector) {
+        $(selector).flatpickr({
+            dateFormat: 'Y-m-d',
+            maxDate: 'today' // Restringe la selección a fechas anteriores o iguales a la actual
+        });
+    }
+
     // Inicialización de la tabla de denuncias
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
         url: `${Server}denuncias/listar`,
@@ -351,6 +359,9 @@ $(function () {
 
                 // Inicializar select2 para los nuevos selectores
                 $detail.find('select').select2();
+                // Aplicar flatpickr a "Fecha del Incidente" en la edición
+                initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
+
                 $detail.find('.formEditarDenuncia').validate({
                     errorClass: 'is-invalid',
                     validClass: 'is-valid',
@@ -480,7 +491,8 @@ $(function () {
 
     // Inicializar flatpickr para el campo de fecha
     $('#fecha_incidente').flatpickr({
-        dateFormat: 'Y-m-d'
+        dateFormat: 'Y-m-d',
+        maxDate: 'today'
     });
 
     // Cargar dinámicamente las subcategorías según la categoría seleccionada en el formulario de creación
