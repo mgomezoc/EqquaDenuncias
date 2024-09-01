@@ -106,7 +106,6 @@ $(function () {
                 contentType: false,
                 success: function (data) {
                     loadingFormXHR($frm, false);
-                    $modalCrearDenuncia.modal('hide');
                     $tablaDenuncias.bootstrapTable('refresh');
                     showToast('¡Listo!, se creó correctamente la denuncia.', 'success');
 
@@ -116,12 +115,14 @@ $(function () {
                     $frm.find('.is-invalid').removeClass('is-invalid');
 
                     // Resetear todos los select2
-                    $frm.find('.select2').val(null).trigger('change');
+                    $frm.find('.select2').val(null).trigger('change', true);
 
                     // Limpiar los archivos de Dropzone
                     if (dropzones['archivosAdjuntos']) {
                         dropzones['archivosAdjuntos'].removeAllFiles(true);
                     }
+
+                    $modalCrearDenuncia.modal('hide');
                 },
                 error: function (xhr) {
                     loadingFormXHR($frm, false);
@@ -135,8 +136,10 @@ $(function () {
     });
 
     // Cuando se selecciona una opción en select2, se debe actualizar la validación
-    $('#modalCrearDenuncia .select2').on('change', function (e) {
-        $(this).valid();
+    $('#modalCrearDenuncia .select2').on('change', function (e, trigger) {
+        if (!trigger) {
+            $(this).valid();
+        }
     });
 
     // Resetear el formulario al cerrar el modal de creación
@@ -145,6 +148,9 @@ $(function () {
         $form[0].reset();
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
+
+        // Reinicializar select2
+        $form.find('.select2').val(null).trigger('change'); // <--- Asegúrate de reinicializar los select2
 
         // Resetear los archivos subidos en Dropzone
         if (dropzones['archivosAdjuntos']) {
@@ -602,6 +608,7 @@ function loadSubcategorias(categoriaId, selectSelector) {
             $(selectSelector).html(options);
         },
         error: function () {
+            $(selectSelector).html('');
             console.error('Error loading subcategories.');
         }
     });
@@ -621,6 +628,7 @@ function loadSucursales(clienteId, selectSelector) {
             $(selectSelector).html(options);
         },
         error: function () {
+            $(selectSelector).html('');
             console.error('Error loading branches.');
         }
     });
@@ -628,6 +636,7 @@ function loadSucursales(clienteId, selectSelector) {
 
 // Función para cargar departamentos
 function loadDepartamentos(sucursalId, selectSelector) {
+    console.log(sucursalId, selectSelector);
     $(selectSelector).html('<option>Cargando...</option>');
     $.ajax({
         url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
@@ -640,6 +649,7 @@ function loadDepartamentos(sucursalId, selectSelector) {
             $(selectSelector).html(options);
         },
         error: function () {
+            $(selectSelector).html('');
             console.error('Error al cargar los departamentos.');
         }
     });
