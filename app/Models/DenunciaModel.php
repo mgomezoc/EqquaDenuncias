@@ -85,15 +85,22 @@ class DenunciaModel extends Model
     public function getDenunciaById(int $id): ?array
     {
         return $this->select('denuncias.*, 
-                              clientes.nombre_empresa AS cliente_nombre, 
-                              departamentos.nombre AS departamento_nombre, 
-                              estados_denuncias.nombre AS estado_nombre')
+                          clientes.nombre_empresa AS cliente_nombre, 
+                          departamentos.nombre AS departamento_nombre, 
+                          estados_denuncias.nombre AS estado_nombre,
+                          sucursales.nombre AS sucursal_nombre,
+                          categorias_denuncias.nombre AS categoria_nombre,
+                          subcategorias_denuncias.nombre AS subcategoria_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
+            ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
+            ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
+            ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->where('denuncias.id', $id)
             ->first();
     }
+
 
     public function cambiarEstado(int $id, int $estadoNuevo): bool
     {

@@ -150,6 +150,101 @@ $(function () {
         }
     });
 
+    // Funcionalidades para los botones de la tabla
+    window.operateEvents = {
+        // Funcionalidad para el botón de eliminar
+        'click .remove': function (e, value, row, index) {
+            confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
+                if (result.isConfirmed) {
+                    // Si se confirma, proceder con la eliminación
+                    $.ajax({
+                        url: `${Server}denuncias/eliminar/${row.id}`,
+                        method: 'POST',
+                        success: function () {
+                            showToast('Denuncia eliminada correctamente.', 'success');
+                            $tablaDenuncias.bootstrapTable('refresh');
+                        },
+                        error: function () {
+                            showToast('Error al eliminar la denuncia.', 'error');
+                        }
+                    });
+                }
+            });
+        },
+
+        // Funcionalidad para el botón de ver detalle
+        'click .view-detail': function (e, value, row, index) {
+            $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
+                const modal = new bootstrap.Modal($('#modalVerDetalle'));
+                const contenido = `
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Folio:</strong> ${data.folio}</p>
+                        <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
+                        <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
+                        <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                        <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
+                        <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
+                        <p><strong>Estado:</strong> ${data.estado_nombre}</p>
+                        <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
+                        <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
+                        <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
+                        <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <p><strong>Descripción:</strong></p>
+                        <p>${data.descripcion || 'N/A'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $('#modalVerDetalle .modal-body').html(contenido);
+                modal.show();
+            });
+        },
+
+        // Funcionalidad para el botón de cambiar estado
+        'click .change-status': function (e, value, row, index) {
+            $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
+                let opciones = '';
+                estados.forEach(estado => {
+                    const selected = estado.id === row.estado_actual ? 'selected' : '';
+                    opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
+                });
+
+                const modal = new bootstrap.Modal($('#modalCambiarEstado'));
+                $('#modalCambiarEstado .modal-body').html(`
+                    <form id="formCambiarEstado">
+                        <div class="mb-3">
+                            <label for="estado_nuevo" class="form-label">Nuevo Estado</label>
+                            <select id="estado_nuevo" name="estado_nuevo" class="form-select">
+                                ${opciones}
+                            </select>
+                        </div>
+                    </form>
+                `);
+                $('#modalCambiarEstado .modal-footer .btn-primary')
+                    .off('click')
+                    .on('click', function () {
+                        const estadoNuevo = $('#estado_nuevo').val();
+                        $.post(`${Server}denuncias/cambiarEstado`, { id: row.id, estado_nuevo: estadoNuevo }, function () {
+                            showToast('Estado actualizado correctamente.', 'success');
+                            $tablaDenuncias.bootstrapTable('refresh');
+                            modal.hide();
+                        }).fail(function () {
+                            showToast('Error al actualizar el estado.', 'error');
+                        });
+                    });
+                modal.show();
+            });
+        }
+    };
+
     // Inicialización de la tabla de denuncias
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
         url: `${Server}denuncias/listar`,
@@ -202,7 +297,7 @@ $(function () {
                 valign: 'middle',
                 clickToSelect: false,
                 formatter: operateFormatter,
-                events: window.operateEvents
+                events: operateEvents
             }
         ],
         detailView: true,
