@@ -246,4 +246,76 @@ class DenunciasController extends Controller
 
         return view('mis_denuncias/index', $data);
     }
+
+    public function actualizarAnexos()
+    {
+        $denunciaId = $this->request->getVar('id');
+        $anexoModel = new AnexoDenunciaModel();
+
+        // Iniciar la transacción
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        try {
+            // Procesar los nuevos archivos adjuntos desde los inputs ocultos
+            $anexos = $this->request->getVar('archivos');
+            if ($anexos && is_array($anexos)) {
+                foreach ($anexos as $rutaArchivo) {
+                    $nombreArchivo = basename($rutaArchivo);
+
+                    // Guardar la información del anexo en la base de datos
+                    if (!$anexoModel->save([
+                        'id_denuncia' => $denunciaId,
+                        'nombre_archivo' => $nombreArchivo,
+                        'ruta_archivo' => $rutaArchivo,
+                        'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
+                    ])) {
+                        throw new \RuntimeException('Error al guardar el anexo.');
+                    }
+                }
+            }
+
+            // Completar la transacción
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Fallo al completar la transacción.');
+            }
+
+            return $this->response->setJSON(['message' => 'Archivos actualizados correctamente']);
+        } catch (\Exception $e) {
+            $db->transRollback(); // Revertir la transacción en caso de error
+            log_message('error', $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al actualizar los archivos adjuntos. Error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function eliminarAnexo($id)
+    {
+        $anexoModel = new AnexoDenunciaModel();
+
+        try {
+            // Obtener el anexo antes de eliminarlo para eliminar el archivo físicamente
+            $anexo = $anexoModel->getAnexoById($id);
+            if (!$anexo) {
+                throw new \RuntimeException('Anexo no encontrado.');
+            }
+
+            // Eliminar el anexo de la base de datos
+            if (!$anexoModel->deleteAnexo($id)) {
+                throw new \RuntimeException('Error al eliminar el anexo.');
+            }
+
+            // Eliminar el archivo físicamente del servidor
+            $filePath = WRITEPATH . '../public/' . $anexo['ruta_archivo'];
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            return $this->response->setJSON(['message' => 'Anexo eliminado correctamente']);
+        } catch (\Exception $e) {
+            log_message('error', $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al eliminar el anexo. Error: ' . $e->getMessage()]);
+        }
+    }
 }

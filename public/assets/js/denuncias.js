@@ -207,7 +207,7 @@ $(function () {
         ],
         detailView: true,
         onExpandRow: function (index, row, $detail) {
-            $detail.html(`Cargando...`);
+            $detail.html('Cargando...');
             const como_se_entero = [
                 { id: 'Fui víctima', name: 'Fui víctima' },
                 { id: 'Fui testigo', name: 'Fui testigo' },
@@ -247,8 +247,6 @@ $(function () {
                     como_se_entero: como_se_entero
                 };
 
-                console.log(data);
-
                 const renderData = Handlebars.compile(tplDetalleTabla)(data);
 
                 // Renderizar y mostrar el detalle
@@ -257,6 +255,34 @@ $(function () {
                 // Inicializar select2 para los nuevos selectores
                 $detail.find('select').select2();
                 $detail.find('.formEditarDenuncia').validate({
+                    errorClass: 'is-invalid',
+                    validClass: 'is-valid',
+                    errorElement: 'div',
+                    errorPlacement: function (error, element) {
+                        if (element.hasClass('select2-hidden-accessible')) {
+                            // Para campos Select2, coloca el error después del contenedor de Select2
+                            error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
+                        } else if (element.is(':checkbox') || element.is(':radio')) {
+                            // Para checkboxes y radios
+                            error.addClass('invalid-feedback').insertAfter(element.closest('div'));
+                        } else {
+                            error.addClass('invalid-feedback').insertAfter(element);
+                        }
+                    },
+                    highlight: function (element, errorClass, validClass) {
+                        if ($(element).hasClass('select2-hidden-accessible')) {
+                            $(element).next('.select2-container').find('.select2-selection').addClass(errorClass).removeClass(validClass);
+                        } else {
+                            $(element).addClass(errorClass).removeClass(validClass);
+                        }
+                    },
+                    unhighlight: function (element, errorClass, validClass) {
+                        if ($(element).hasClass('select2-hidden-accessible')) {
+                            $(element).next('.select2-container').find('.select2-selection').removeClass(errorClass).addClass(validClass);
+                        } else {
+                            $(element).removeClass(errorClass).addClass(validClass);
+                        }
+                    },
                     rules: {
                         id_cliente: {
                             required: true
@@ -335,6 +361,22 @@ $(function () {
                     const clienteId = $(this).val();
                     loadSucursales(clienteId, `#id_sucursal-${row.id}`);
                 });
+
+                // Inicializar Dropzone para subir nuevos archivos
+                initializeDropzone(`dropzoneArchivos-${row.id}`, `formActualizarAnexos-${row.id}`);
+
+                // Manejo de la eliminación de anexos
+                $detail.on('click', '.delete-anexo', function () {
+                    const anexoId = $(this).data('id');
+                    eliminarAnexo(anexoId, row.id);
+                });
+
+                // Manejo del formulario de actualización de anexos
+                $detail.find(`#formActualizarAnexos-${row.id}`).submit(function (e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    actualizarAnexos(formData, row.id);
+                });
             });
         }
     });
@@ -362,13 +404,16 @@ $(function () {
         loadDepartamentos(sucursalId, '#id_departamento');
     });
 
-    // Inicializar Dropzone para los archivos adjuntos
-    initializeDropzone('dropzoneArchivos', 'archivosAdjuntos');
+    // Inicializar Dropzone para los archivos adjuntos en la creación de denuncia
+    initializeDropzone('dropzoneArchivos', 'formCrearDenuncia');
 });
 
 // Función para inicializar Dropzone
-function initializeDropzone(elementId, fieldName) {
-    dropzones[fieldName] = new Dropzone(`#${elementId}`, {
+function initializeDropzone(elementId, formId) {
+    const dropzoneElement = $(`#${elementId}`);
+    const formElement = $(`#${formId}`);
+
+    const myDropzone = new Dropzone(`#${elementId}`, {
         url: `${Server}denuncias/subirAnexo`,
         maxFiles: 5,
         acceptedFiles: 'image/*,application/pdf',
@@ -377,12 +422,51 @@ function initializeDropzone(elementId, fieldName) {
         dictRemoveFile: 'Eliminar archivo',
         init: function () {
             this.on('success', function (file, response) {
-                $(`#formCrearDenuncia`).append(`<input type="hidden" name="archivos[]" value="assets/denuncias/${response.filename}">`);
+                formElement.append(`<input type="hidden" name="archivos[]" value="assets/denuncias/${response.filename}">`);
             });
             this.on('removedfile', function (file) {
                 const name = file.upload.filename;
-                $(`input[value="assets/denuncias/${name}"]`).remove();
+                formElement.find(`input[value="assets/denuncias/${name}"]`).remove();
             });
+        }
+    });
+
+    dropzones[elementId] = myDropzone;
+}
+
+// Función para eliminar un anexo
+function eliminarAnexo(anexoId, denunciaId) {
+    $.ajax({
+        url: `${Server}denuncias/anexos/eliminar/${anexoId}`,
+        method: 'POST',
+        success: function (response) {
+            showToast('Anexo eliminado correctamente.', 'success');
+            $(`#formActualizarAnexos-${denunciaId}`).find(`.delete-anexo[data-id="${anexoId}"]`).closest('.card').remove();
+        },
+        error: function (xhr) {
+            showToast('Error al eliminar el anexo.', 'error');
+        }
+    });
+}
+
+// Función para actualizar anexos
+function actualizarAnexos(formData, denunciaId) {
+    loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), true);
+
+    $.ajax({
+        url: `${Server}denuncias/actualizarAnexos`,
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
+            showToast('Archivos actualizados correctamente.', 'success');
+            $tablaDenuncias.bootstrapTable('refresh');
+        },
+        error: function (xhr) {
+            loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
+            showToast('Error al actualizar los archivos.', 'error');
         }
     });
 }
@@ -477,6 +561,5 @@ function operateFormatterEstado(value, row, index) {
             badgeClass = 'bg-light text-dark'; // Para estados no reconocidos
     }
 
-    const estadoBadge = `<span class="badge ${badgeClass}">${estado}</span>`;
-    return estadoBadge;
+    return `<span class="badge ${badgeClass}">${estado}</span>`;
 }

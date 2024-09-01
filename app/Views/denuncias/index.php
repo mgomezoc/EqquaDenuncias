@@ -126,7 +126,7 @@
             </div>
         </form>
         <!-- Formulario para actualizar imágenes -->
-        <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card">
+        <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card" enctype="multipart/form-data">
             <input type="hidden" name="id" value="{{id}}">
             <div class="card-body">
                 <div class="row g-4">
@@ -140,7 +140,7 @@
                                 {{#each anexos}}
                                     <div class="card mb-3">
                                         <div class="card-body d-flex justify-content-between align-items-center">
-                                            <a href="<?= base_url('assets/denuncias/') ?>{{nombre_archivo}}" target="_blank">{{nombre_archivo}}</a>
+                                            <a href="<?= base_url('/') ?>{{ruta_archivo}}" target="_blank">{{nombre_archivo}}</a>
                                             <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
                                                 <i class="fa fa-trash"></i> Eliminar
                                             </button>

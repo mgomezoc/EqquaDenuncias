@@ -6,15 +6,13 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-$routes->get('/', 'Home::index', ['filter' => 'authFilter']);
-
 // Rutas para la autenticación
+$routes->get('/', 'Home::index', ['filter' => 'authFilter']);
 $routes->get('/login', 'Auth::login');
-$routes->get('logout', 'Auth::logout');
 $routes->post('/auth/loginSubmit', 'Auth::loginSubmit');
+$routes->get('/logout', 'Auth::logout');
 $routes->get('/register', 'Auth::register');
 $routes->post('/auth/registerSubmit', 'Auth::registerSubmit');
-$routes->get('/logout', 'Auth::logout');
 $routes->get('/noautorizado', 'Error::noautorizado');
 
 // Ruta del dashboard, accesible para todos los roles autenticados
@@ -23,7 +21,6 @@ $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']);
 // Grupo de rutas accesibles solo por ADMIN
 $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
     $routes->get('/admin', 'Admin::index');
-
     // Usuarios
     $routes->group('usuarios', function ($routes) {
         $routes->get('/', 'UsuariosController::index');
@@ -88,9 +85,15 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
     $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
     $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
     $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
+    $routes->post('actualizarAnexos', 'DenunciasController::actualizarAnexos');
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
     $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
     $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
+
+    // Grupo de rutas para la gestión de anexos
+    $routes->group('anexos', function ($routes) {
+        $routes->post('eliminar/(:num)', 'DenunciasController::eliminarAnexo/$1'); // Ruta para eliminar anexos
+    });
 
     // Rutas exclusivas para SUPERVISOR_CALIDAD
     $routes->group('supervision', ['filter' => 'authFilter:SUPERVISOR_CALIDAD'], function ($routes) {
@@ -100,7 +103,6 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
 
 // Grupo de rutas accesibles solo por CLIENTE (denuncias, clientes, sucursales, departamentos)
 $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
-
     // Clientes (acceso solo para el CLIENTE)
     $routes->group('clientes', function ($routes) {
         $routes->get('/', 'ClientesController::index');
@@ -115,7 +117,7 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
         $routes->get('/', 'SucursalesController::index');
         $routes->get('listar', 'SucursalesController::listar');
         $routes->post('guardar', 'SucursalesController::guardar');
-        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1'); // Asegúrate de que los clientes puedan acceder
+        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1');
         $routes->get('listarSucursales/(:num)', 'SucursalesController::listarSucursales/$1');
         $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1');
     });
