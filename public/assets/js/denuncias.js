@@ -251,18 +251,63 @@ $(function () {
                 $detail.find('select').select2();
                 $detail.find('.formEditarDenuncia').validate({
                     rules: {
-                        id_cliente: { required: true },
-                        categoria: { required: true },
-                        subcategoria: { required: true },
-                        estado_actual: { required: true },
-                        descripcion: { required: true }
+                        id_cliente: {
+                            required: true
+                        },
+                        categoria: {
+                            required: true
+                        },
+                        subcategoria: {
+                            required: true
+                        },
+                        estado_actual: {
+                            required: true
+                        },
+                        descripcion: {
+                            required: true
+                        }
                     },
                     messages: {
-                        id_cliente: { required: 'Por favor seleccione un cliente' },
-                        categoria: { required: 'Por favor seleccione una categoría' },
-                        subcategoria: { required: 'Por favor seleccione una subcategoría' },
-                        estado_actual: { required: 'Por favor seleccione un estado' },
-                        descripcion: { required: 'Por favor ingrese la descripción' }
+                        id_cliente: {
+                            required: 'Por favor seleccione un cliente'
+                        },
+                        categoria: {
+                            required: 'Por favor seleccione una categoría'
+                        },
+                        subcategoria: {
+                            required: 'Por favor seleccione una subcategoría'
+                        },
+                        estado_actual: {
+                            required: 'Por favor seleccione un estado'
+                        },
+                        descripcion: {
+                            required: 'Por favor ingrese la descripción'
+                        }
+                    },
+                    submitHandler: function (form) {
+                        const $frm = $(form);
+                        const formData = $frm.serializeObject();
+
+                        loadingFormXHR($frm, true);
+
+                        // Enviar la solicitud AJAX para actualizar la denuncia
+                        $.ajax({
+                            url: `${Server}denuncias/guardar`,
+                            method: 'POST',
+                            data: formData,
+                            success: function (data) {
+                                loadingFormXHR($frm, false);
+                                $tablaDenuncias.bootstrapTable('refresh');
+                                showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
+                            },
+                            error: function (xhr) {
+                                loadingFormXHR($frm, false);
+                                if (xhr.status === 409) {
+                                    const response = JSON.parse(xhr.responseText);
+                                    showToast(response.message, 'error');
+                                }
+                            }
+                        });
                     }
                 });
 

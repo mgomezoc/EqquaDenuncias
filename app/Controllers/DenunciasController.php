@@ -70,8 +70,8 @@ class DenunciasController extends Controller
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Usuario no autenticado o sesión no iniciada']);
         }
 
-        // Datos principales de la denuncia
-        $data = [
+        // Recopilar solo los datos enviados
+        $data = array_filter([
             'id_cliente' => $this->request->getVar('id_cliente'),
             'id_sucursal' => $this->request->getVar('id_sucursal'),
             'tipo_denunciante' => $this->request->getVar('tipo_denunciante'),
@@ -85,43 +85,58 @@ class DenunciasController extends Controller
             'area_incidente' => $this->request->getVar('area_incidente'),
             'descripcion' => $this->request->getVar('descripcion'),
             'id_creador' => $idCreador, // Obtiene el ID del creador desde la sesión
-        ];
+        ], function ($value) {
+            return $value !== null; // Filtrar solo valores no nulos
+        });
 
         $db = \Config\Database::connect();
         $db->transStart(); // Inicia una transacción
 
-        // Guardar o actualizar la denuncia
-        if ($id) {
-            $denunciaModel->update($id, $data);
-            registrarAccion($idCreador, 'Actualización de denuncia', 'ID: ' . $id);
-        } else {
-            $denunciaModel->save($data);
-            $newId = $denunciaModel->insertID();
-            registrarAccion($idCreador, 'Creación de denuncia', 'ID: ' . $newId);
-            $id = $newId; // Usa el nuevo ID para la inserción de anexos
-        }
-
-        // Procesa los archivos adjuntos (anexos) desde los inputs ocultos
-        $anexos = $this->request->getVar('archivos');
-        if ($anexos && is_array($anexos)) {
-            foreach ($anexos as $rutaArchivo) {
-                // Obtener el nombre del archivo desde la ruta
-                $nombreArchivo = basename($rutaArchivo);
-
-                // Guarda la información del anexo en la base de datos
-                $anexoModel->save([
-                    'id_denuncia' => $id,
-                    'nombre_archivo' => $nombreArchivo,
-                    'ruta_archivo' => $rutaArchivo,
-                    'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
-                ]);
+        try {
+            // Guardar o actualizar la denuncia
+            if ($id) {
+                // Actualizar solo los campos que se han proporcionado en la solicitud
+                if (!$denunciaModel->update($id, $data)) {
+                    throw new \RuntimeException('Error al actualizar la denuncia.');
+                }
+                registrarAccion($idCreador, 'Actualización de denuncia', 'ID: ' . $id);
+            } else {
+                if (!$denunciaModel->save($data)) {
+                    throw new \RuntimeException('Error al guardar la denuncia.');
+                }
+                $newId = $denunciaModel->insertID();
+                registrarAccion($idCreador, 'Creación de denuncia', 'ID: ' . $newId);
+                $id = $newId; // Usa el nuevo ID para la inserción de anexos
             }
-        }
 
-        $db->transComplete(); // Finaliza la transacción
+            // Procesa los archivos adjuntos (anexos) desde los inputs ocultos
+            $anexos = $this->request->getVar('archivos');
+            if ($anexos && is_array($anexos)) {
+                foreach ($anexos as $rutaArchivo) {
+                    // Obtener el nombre del archivo desde la ruta
+                    $nombreArchivo = basename($rutaArchivo);
 
-        if ($db->transStatus() === false) {
-            return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al guardar la denuncia y los archivos adjuntos']);
+                    // Guarda la información del anexo en la base de datos
+                    if (!$anexoModel->save([
+                        'id_denuncia' => $id,
+                        'nombre_archivo' => $nombreArchivo,
+                        'ruta_archivo' => $rutaArchivo,
+                        'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
+                    ])) {
+                        throw new \RuntimeException('Error al guardar el anexo.');
+                    }
+                }
+            }
+
+            $db->transComplete(); // Finaliza la transacción
+
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Fallo al completar la transacción.');
+            }
+        } catch (\Exception $e) {
+            $db->transRollback(); // Revertir la transacción en caso de error
+            log_message('error', $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al guardar la denuncia y los archivos adjuntos. Error: ' . $e->getMessage()]);
         }
 
         return $this->response->setJSON(['message' => 'Denuncia guardada correctamente']);
