@@ -143,17 +143,18 @@ class DenunciasController extends Controller
         return $this->response->setJSON(['message' => 'Denuncia guardada correctamente']);
     }
 
-
-
     public function eliminar($id)
     {
         $denunciaModel = new DenunciaModel();
-        $denunciaModel->deleteDenuncia($id);
 
-        registrarAccion(session()->get('id'), 'Eliminación de denuncia', 'ID: ' . $id);
-
-        return $this->response->setJSON(['message' => 'Denuncia eliminada correctamente']);
+        if ($denunciaModel->eliminarDenuncia($id)) {
+            return $this->response->setJSON(['message' => 'Denuncia eliminada correctamente']);
+        } else {
+            return $this->response->setStatusCode(500)
+                ->setJSON(['message' => 'Error al eliminar la denuncia']);
+        }
     }
+
 
     public function cambiarEstado()
     {

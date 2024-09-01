@@ -124,4 +124,37 @@ class DenunciaModel extends Model
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
+
+    public function eliminarDenuncia(int $id): bool
+    {
+        // Iniciar una transacción para asegurar la consistencia de los datos
+        $this->db->transStart();
+
+        try {
+            // Eliminar los anexos relacionados con la denuncia
+            $anexosModel = new \App\Models\AnexoDenunciaModel();
+            $anexosModel->where('id_denuncia', $id)->delete();
+
+            // Eliminar los registros de seguimiento de la denuncia
+            $seguimientoModel = new \App\Models\SeguimientoDenunciaModel();
+            $seguimientoModel->where('id_denuncia', $id)->delete();
+
+            // Finalmente, eliminar la denuncia
+            $this->delete($id);
+
+            // Finalizar la transacción
+            $this->db->transComplete();
+
+            // Verificar si la transacción fue exitosa
+            if ($this->db->transStatus() === FALSE) {
+                throw new \Exception('Error al eliminar la denuncia.');
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            // Si ocurre un error, revertir la transacción
+            $this->db->transRollback();
+            return false;
+        }
+    }
 }
