@@ -21,7 +21,7 @@ $routes->get('/noautorizado', 'Error::noautorizado');
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']);
 
 // Grupo de rutas accesibles solo por ADMIN
-$routes->group('', ['filter' => 'authFilter:ADMIN'], function ($routes) {
+$routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
     $routes->get('/admin', 'Admin::index');
 
     // Usuarios
@@ -80,7 +80,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN'], function ($routes) {
 });
 
 // Grupo de rutas accesibles por AGENTE y SUPERVISOR_CALIDAD (sección de denuncias)
-$routes->group('denuncias', ['filter' => 'authFilter:AGENTE,SUPERVISOR_CALIDAD'], function ($routes) {
+$routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CALIDAD'], function ($routes) {
     $routes->get('/', 'DenunciasController::index');
     $routes->get('listar', 'DenunciasController::listar');
     $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1');
@@ -115,7 +115,8 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
         $routes->get('/', 'SucursalesController::index');
         $routes->get('listar', 'SucursalesController::listar');
         $routes->post('guardar', 'SucursalesController::guardar');
-        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1');
+        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1'); // Asegúrate de que los clientes puedan acceder
+        $routes->get('listarSucursales/(:num)', 'SucursalesController::listarSucursales/$1');
         $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1');
     });
 
@@ -131,7 +132,7 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
         $routes->get('listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1');
     });
 
-    // Denuncias del cliente (pendiente de implementación)
+    // Denuncias del cliente
     $routes->group('denuncias', function ($routes) {
         $routes->get('mis-denuncias', 'DenunciasController::misDenuncias');
     });

@@ -78,6 +78,13 @@ class Auth extends BaseController
                     'rol_slug' => $data['rol_slug'],     // Slug del rol
                     'isLoggedIn' => TRUE
                 ];
+
+                // Si el rol es CLIENTE, agregamos id_cliente y nombre_cliente a la sesión
+                if ($data['rol_slug'] === 'CLIENTE') {
+                    $ses_data['id_cliente'] = $data['id_cliente']; // Guarda el id_cliente en la sesión
+                    $ses_data['nombre_cliente'] = $data['nombre_cliente']; // Guarda el nombre_cliente en la sesión
+                }
+
                 $session->set($ses_data);
 
                 // Registrar la acción en la auditoría

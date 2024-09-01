@@ -28,11 +28,13 @@ class UsuarioModel extends Model
      */
     public function getUserWithRole($email)
     {
-        return $this->select('usuarios.*, roles.nombre AS rol_nombre, roles.slug AS rol_slug')
+        return $this->select('usuarios.*, roles.nombre as rol_nombre, roles.slug as rol_slug, clientes.id as id_cliente, clientes.nombre_empresa as nombre_cliente')
             ->join('roles', 'roles.id = usuarios.rol_id')
-            ->where('correo_electronico', $email)
+            ->join('clientes', 'clientes.id = usuarios.id_cliente', 'left')
+            ->where('usuarios.correo_electronico', $email)
             ->first();
     }
+
 
     /**
      * Actualiza la última conexión de un usuario.

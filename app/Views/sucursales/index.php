@@ -32,9 +32,6 @@
     <button class="btn btn-sm btn-danger remove">
         <i class="fa fa-trash"></i>
     </button>
-    <button class="btn btn-sm btn-info view-detail">
-        <i class="fa fa-eye"></i>
-    </button>
 </template>
 
 <template id="tplDetalleTabla">

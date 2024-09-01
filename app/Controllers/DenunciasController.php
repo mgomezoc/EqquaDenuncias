@@ -203,4 +203,30 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON($anexos);
     }
+
+    public function misDenuncias()
+    {
+        $clienteId = session()->get('id_cliente'); // Asegurándote que 'id_cliente' esté en la sesión
+        $denunciaModel = new DenunciaModel();
+
+        // Verificar si la solicitud es AJAX
+        if ($this->request->isAJAX()) {
+            // Buscar denuncias por cliente y devolver en formato JSON
+            $denuncias = $denunciaModel->getDenunciasByCliente($clienteId);
+            return $this->response->setJSON($denuncias);
+        }
+
+        // Si no es AJAX, cargar la vista normalmente
+        $categoriaModel = new CategoriaDenunciaModel();
+        $categorias = $categoriaModel->findAll();
+
+        $data = [
+            'title' => 'Mis Denuncias',
+            'controlador' => 'Denuncias',
+            'vista' => 'Mis Denuncias',
+            'categorias' => $categorias,
+        ];
+
+        return view('mis_denuncias/index', $data);
+    }
 }
