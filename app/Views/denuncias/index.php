@@ -36,16 +36,32 @@
 </div>
 
 <template id="tplAccionesTabla">
-    <button class="btn btn-sm btn-danger remove">
-        <i class="fa fa-trash"></i>
-    </button>
-    <button class="btn btn-sm btn-info view-detail">
-        <i class="fa fa-eye"></i>
-    </button>
-    <button class="btn btn-sm btn-warning change-status">
-        <i class="fa fa-exchange-alt"></i>
-    </button>
+    <div class="dropdown">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="fas fa-ellipsis-v"></i><span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item view-detail" href="#">
+                    <i class="fas fa-eye me-2"></i> Ver Detalle
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item change-status" href="#">
+                    <i class="fas fa-exchange-alt me-2"></i> Cambiar Estado
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item remove" href="#">
+                    <i class="fas fa-trash-alt text-danger me-2"></i> Eliminar
+                </a>
+            </li>
+        </ul>
+    </div>
 </template>
+
+
+
 
 <template id="tplDetalleTabla">
     <div class="">

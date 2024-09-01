@@ -104,3 +104,34 @@ label.error {
 .bg-dark-teal {
     background-color: darken(#0f9d58, 20%); // Un verde azulado más oscuro
 }
+
+.dropdown-item i {
+    margin-right: 8px; /* Espacio entre icono y texto */
+    vertical-align: middle; /* Alineación vertical */
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px; /* Espaciado interno */
+}
+
+.dropdown-item .fa-trash {
+    color: #dc3545; /* Rojo para la acción de eliminar */
+}
+
+.dropdown-item .fa-eye,
+.dropdown-item .fa-exchange-alt {
+    color: #333333; /* Color más oscuro para otros iconos */
+}
+
+/* Sobrescribir el estilo de Sparic para usar Font Awesome */
+.dropdown-toggle::after {
+    display: inline-block;
+    margin-inline-start: 0.5rem;
+    vertical-align: 0;
+    content: '\f078'; /* Código Unicode para el icono de 'caret-down' en Font Awesome */
+    font-family: 'Font Awesome 6 Pro' !important; /* Asegura que Font Awesome sea utilizado */
+    font-size: 0.75rem;
+    font-weight: 900; /* Cambia el grosor del ícono si es necesario */
+}
