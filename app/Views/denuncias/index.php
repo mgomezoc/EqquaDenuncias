@@ -61,6 +61,12 @@
                     </select>
                 </div>
                 <div class="col-md-4">
+                    <label for="id_sucursal-{{id}}" class="form-label">Sucursal</label>
+                    <select class="form-select select2" id="id_sucursal-{{id}}" name="id_sucursal" required>
+                        {{{selectOptions sucursales id_sucursal}}}
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label for="categoria-{{id}}" class="form-label">Categoría</label>
                     <select class="form-select select2" id="categoria-{{id}}" name="categoria" required>
                         {{{selectOptions categorias categoria}}}
@@ -119,7 +125,6 @@
                 </div>
             </div>
         </form>
-
         <!-- Formulario para actualizar imágenes -->
         <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card">
             <input type="hidden" name="id" value="{{id}}">
@@ -147,7 +152,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Sección para Subir Nuevos Archivos -->
                     <div class="col-md-6">
                         <div class="card border-light mb-3">
@@ -161,7 +165,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="mt-4 text-center">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar Archivos
@@ -171,6 +174,7 @@
         </form>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 

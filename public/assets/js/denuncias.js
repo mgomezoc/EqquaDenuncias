@@ -53,6 +53,9 @@ $(function () {
             id_cliente: {
                 required: true
             },
+            id_sucursal: {
+                required: true
+            },
             categoria: {
                 required: true
             },
@@ -73,6 +76,9 @@ $(function () {
         messages: {
             id_cliente: {
                 required: 'Por favor seleccione un cliente'
+            },
+            id_sucursal: {
+                required: 'Por favor seleccione una sucursal'
             },
             categoria: {
                 required: 'Por favor seleccione una categoría'
@@ -227,6 +233,7 @@ $(function () {
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
                     anexos: anexos[0], // Añadir los anexos a los datos
                     id_cliente: row.id_cliente,
+                    id_sucursal: row.id_sucursal,
                     categoria: row.categoria,
                     subcategoria: row.subcategoria,
                     estado_actual: row.estado_actual,
@@ -254,6 +261,9 @@ $(function () {
                         id_cliente: {
                             required: true
                         },
+                        id_sucursal: {
+                            required: true
+                        },
                         categoria: {
                             required: true
                         },
@@ -270,6 +280,9 @@ $(function () {
                     messages: {
                         id_cliente: {
                             required: 'Por favor seleccione un cliente'
+                        },
+                        id_sucursal: {
+                            required: 'Por favor seleccione una sucursal'
                         },
                         categoria: {
                             required: 'Por favor seleccione una categoría'
@@ -443,28 +456,27 @@ function operateFormatterEstado(value, row, index) {
 
     switch (estado) {
         case 'Recepción':
-            badgeClass = 'bg-primary';
+            badgeClass = 'bg-yellow'; // Amarillo (#f4b400)
             break;
         case 'Clasificada':
-            badgeClass = 'bg-warning text-dark';
+            badgeClass = 'bg-purple'; // Púrpura (#4285f4)
             break;
         case 'Revisada por Calidad':
-            badgeClass = 'bg-orange text-dark'; // Se puede agregar una clase CSS personalizada para naranja
+            badgeClass = 'bg-teal'; // Verde Azulado (#0f9d58)
             break;
         case 'Liberada al Cliente':
-            badgeClass = 'bg-success';
+            badgeClass = 'bg-red'; // Rojo (#db4437)
             break;
         case 'En Revisión por Cliente':
-            badgeClass = 'bg-info';
+            badgeClass = 'bg-light-purple'; // Púrpura Claro
             break;
         case 'Cerrada':
-            badgeClass = 'bg-secondary';
+            badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
             break;
         default:
             badgeClass = 'bg-light text-dark'; // Para estados no reconocidos
     }
 
     const estadoBadge = `<span class="badge ${badgeClass}">${estado}</span>`;
-
     return estadoBadge;
 }

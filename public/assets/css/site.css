@@ -63,3 +63,21 @@ label.error {
   background: white;
   padding: 20px;
 }
+.bg-yellow {
+  background-color: #f4b400;
+}
+.bg-purple {
+  background-color: #4285f4;
+}
+.bg-teal {
+  background-color: #0f9d58;
+}
+.bg-red {
+  background-color: #db4437;
+}
+.bg-light-purple {
+  background-color: #a2c3fa;
+}
+.bg-dark-teal {
+  background-color: #064024;
+}
