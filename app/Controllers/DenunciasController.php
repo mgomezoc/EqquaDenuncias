@@ -53,7 +53,13 @@ class DenunciasController extends Controller
     public function detalle($id)
     {
         $denunciaModel = new DenunciaModel();
+        $seguimientoModel = new SeguimientoDenunciaModel(); // Instancia el modelo de seguimiento
+
         $denuncia = $denunciaModel->getDenunciaById($id);
+        $seguimientos = $seguimientoModel->getSeguimientoByDenunciaId($id); // Obtén el historial de seguimiento
+
+        // Adjunta los seguimientos al array de denuncia
+        $denuncia['seguimientos'] = $seguimientos;
 
         return $this->response->setJSON($denuncia);
     }

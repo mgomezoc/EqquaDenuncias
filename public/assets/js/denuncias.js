@@ -185,30 +185,59 @@ $(function () {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
                 const contenido = `
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Folio:</strong> ${data.folio}</p>
-                        <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
-                        <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
-                        <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
-                        <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
-                        <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
-                        <p><strong>Estado:</strong> ${data.estado_nombre}</p>
-                        <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
-                        <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
-                        <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
-                        <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
-                    </div>
-                    <div class="col-12 mt-3">
-                        <p><strong>Descripción:</strong></p>
-                        <p>${data.descripcion || 'N/A'}</p>
-                    </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Folio:</strong> ${data.folio}</p>
+                    <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
+                    <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
+                    <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                    <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
+                    <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
+                    <p><strong>Estado:</strong> ${data.estado_nombre}</p>
+                    <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
+                    <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
+                    <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
+                    <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
+                </div>
+                <div class="col-12 mt-3">
+                    <p><strong>Descripción:</strong></p>
+                    <p>${data.descripcion || 'N/A'}</p>
+                </div>
+                <div class="col-12 mt-3">
+                    <h5>Historial de Seguimiento</h5>
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>De</th>
+                                <th>A</th>
+                                <th>Comentario</th>
+                                <th>Por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.seguimientos
+                                .map(
+                                    seg => `
+                                    <tr>
+                                        <td>${seg.fecha}</td>
+                                        <td>${seg.estado_anterior_nombre}</td>
+                                        <td>${seg.estado_nuevo_nombre}</td>
+                                        <td>${seg.comentario || 'N/A'}</td>
+                                        <td>${seg.usuario_nombre}</td>
+                                    </tr>
+                                `
+                                )
+                                .join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
         `;
 
                 $('#modalVerDetalle .modal-body').html(contenido);
@@ -227,24 +256,38 @@ $(function () {
 
                 const modal = new bootstrap.Modal($('#modalCambiarEstado'));
                 $('#modalCambiarEstado .modal-body').html(`
-                    <form id="formCambiarEstado">
-                        <div class="mb-3">
-                            <label for="estado_nuevo" class="form-label">Nuevo Estado</label>
-                            <select id="estado_nuevo" name="estado_nuevo" class="form-select">
-                                ${opciones}
-                            </select>
-                        </div>
-                    </form>
-                `);
+            <form id="formCambiarEstado">
+                <div class="mb-3">
+                    <label for="estado_nuevo" class="form-label">Nuevo Estado</label>
+                    <select id="estado_nuevo" name="estado_nuevo" class="form-select">
+                        ${opciones}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="comentario" class="form-label">Comentario (opcional)</label>
+                    <textarea id="comentario" name="comentario" class="form-control" rows="3" placeholder="Escribe un comentario..."></textarea>
+                </div>
+            </form>
+        `);
                 $('#modalCambiarEstado .modal-footer .btn-primary')
                     .off('click')
                     .on('click', function () {
                         const estadoNuevo = $('#estado_nuevo').val();
-                        $.post(`${Server}denuncias/cambiarEstado`, { id: row.id, estado_nuevo: estadoNuevo }, function () {
-                            showToast('Estado actualizado correctamente.', 'success');
-                            $tablaDenuncias.bootstrapTable('refresh');
-                            modal.hide();
-                        }).fail(function () {
+                        const comentario = $('#comentario').val(); // Obtener el comentario
+
+                        $.post(
+                            `${Server}denuncias/cambiarEstado`,
+                            {
+                                id: row.id,
+                                estado_nuevo: estadoNuevo,
+                                comentario: comentario // Enviar el comentario al servidor
+                            },
+                            function () {
+                                showToast('Estado actualizado correctamente.', 'success');
+                                $tablaDenuncias.bootstrapTable('refresh');
+                                modal.hide();
+                            }
+                        ).fail(function () {
                             showToast('Error al actualizar el estado.', 'error');
                         });
                     });
