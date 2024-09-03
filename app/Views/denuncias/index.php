@@ -26,6 +26,7 @@
                         <th>Subcategoría</th>
                         <th>Departamento</th>
                         <th>Estado</th>
+                        <th>medio_recepcion</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
@@ -268,12 +269,12 @@
     </div>
 </div>
 
-
 <!-- Modal Crear Denuncia Mejorado -->
 <div class="modal fade" id="modalCrearDenuncia" tabindex="-1" aria-labelledby="modalCrearDenunciaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="medio_recepcion" value="Plataforma">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalCrearDenunciaLabel">Agregar Denuncia</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

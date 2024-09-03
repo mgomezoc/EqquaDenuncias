@@ -204,7 +204,7 @@ class DenunciasController extends Controller
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Usuario no autenticado o sesión no iniciada']);
         }
 
-        // Recopilar solo los datos enviados, incluyendo estado_actual
+        // Recopilar solo los datos enviados, incluyendo estado_actual y medio_recepcion
         $data = array_filter([
             'id_cliente' => $this->request->getVar('id_cliente'),
             'id_sucursal' => $this->request->getVar('id_sucursal'),
@@ -219,6 +219,7 @@ class DenunciasController extends Controller
             'area_incidente' => $this->request->getVar('area_incidente'),
             'descripcion' => $this->request->getVar('descripcion'),
             'estado_actual' => $this->request->getVar('estado_actual'),  // Capturar estado_actual
+            'medio_recepcion' => $this->request->getVar('medio_recepcion'), // Capturar medio_recepcion
             'id_creador' => $idCreador, // Obtiene el ID del creador desde la sesión
         ], function ($value) {
             return $value !== null; // Filtrar solo valores no nulos
@@ -289,7 +290,6 @@ class DenunciasController extends Controller
         }
     }
 
-
     public function cambiarEstado()
     {
         $denunciaModel = new DenunciaModel();
@@ -317,7 +317,6 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
     }
-
 
     public function subirAnexo()
     {

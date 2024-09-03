@@ -23,6 +23,7 @@ class DenunciaModel extends Model
         'denunciar_a_alguien',
         'area_incidente',
         'descripcion',
+        'medio_recepcion', // Nueva columna añadida aquí
         'estado_actual',
         'id_creador',
         'visible_para_agente',
@@ -55,7 +56,6 @@ class DenunciaModel extends Model
 
         return $data;
     }
-
 
     protected function setDefaultValues(array $data): array
     {
@@ -107,7 +107,6 @@ class DenunciaModel extends Model
             ->where('denuncias.id', $id)
             ->first();
     }
-
 
     public function cambiarEstado(int $id, int $estadoNuevo): bool
     {
@@ -180,7 +179,6 @@ class DenunciaModel extends Model
             return false;
         }
     }
-
 
     public function getDenunciasByAgente($agenteId)
     {

@@ -357,6 +357,10 @@ $(function () {
                 formatter: operateFormatterEstado
             },
             {
+                field: 'medio_recepcion',
+                title: 'Medio de Recepcion'
+            },
+            {
                 field: 'fecha_hora_reporte',
                 title: 'Fecha'
             },
