@@ -43,4 +43,12 @@ class ClienteModel extends Model
         }
         return $this->countAllResults() === 0;
     }
+
+    public function getClientesByAgente($agenteId)
+    {
+        return $this->select('clientes.*')
+            ->join('relacion_clientes_usuarios', 'clientes.id = relacion_clientes_usuarios.id_cliente')
+            ->where('relacion_clientes_usuarios.id_usuario', $agenteId)
+            ->findAll();
+    }
 }

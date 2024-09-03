@@ -176,4 +176,26 @@ class DenunciaModel extends Model
             return false;
         }
     }
+
+    public function getDenunciasByAgente($agenteId)
+    {
+        return $this->select('denuncias.*, 
+                          clientes.nombre_empresa AS cliente_nombre, 
+                          sucursales.nombre AS sucursal_nombre, 
+                          categorias_denuncias.nombre AS categoria_nombre, 
+                          subcategorias_denuncias.nombre AS subcategoria_nombre, 
+                          departamentos.nombre AS departamento_nombre, 
+                          estados_denuncias.nombre AS estado_nombre')
+            ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
+            ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
+            ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
+            ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
+            ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
+            ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
+            ->join('relacion_clientes_usuarios', 'relacion_clientes_usuarios.id_cliente = denuncias.id_cliente')
+            ->where('relacion_clientes_usuarios.id_usuario', $agenteId)
+            ->whereIn('denuncias.estado_actual', [1, 2]) // Filtrar por estados "Recepción" y "Clasificada"
+            ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
+            ->findAll();
+    }
 }

@@ -45,28 +45,27 @@ class DenunciasController extends Controller
     public function misDenunciasAgente()
     {
         $clienteModel = new ClienteModel();
-        $clientes = $clienteModel->findAll();
-
         $estadoModel = new EstadoDenunciaModel();
-        $estados = $estadoModel->findAll();
-
         $categoriaModel = new CategoriaDenunciaModel();
-        $categorias = $categoriaModel->findAll();
-
         $subcategoriaModel = new SubcategoriaDenunciaModel();
-        $subcategorias = $subcategoriaModel->findAll();
+
+        // Obtener el ID del agente desde la sesión
+        $agenteId = session()->get('id');
+
+        // Obtener solo los clientes relacionados con el agente
+        $clientes = $clienteModel->getClientesByAgente($agenteId);
 
         $data = [
-            'title' => 'Administración de Denuncias',
+            'title' => 'Mis Denuncias',
             'controlador' => 'Denuncias',
-            'vista' => 'Denuncias',
+            'vista' => 'Mis Denuncias Agente',
             'clientes' => $clientes,
-            'estados' => $estados,
-            'categorias' => $categorias,
-            'subcategorias' => $subcategorias,
+            'estados' => $estadoModel->findAll(),
+            'categorias' => $categoriaModel->findAll(),
+            'subcategorias' => $subcategoriaModel->findAll(),
         ];
 
-        return view('denuncias/index', $data);
+        return view('denuncias/mis_denuncias_agente', $data);
     }
 
     public function listar()
@@ -76,6 +75,18 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON($denuncias);
     }
+
+    public function listarDenunciasAgente()
+    {
+        $denunciaModel = new DenunciaModel();
+        $agenteId = session()->get('id');
+
+        // Filtra las denuncias según los clientes que el agente puede ver
+        $denuncias = $denunciaModel->getDenunciasByAgente($agenteId);
+
+        return $this->response->setJSON($denuncias);
+    }
+
 
     public function detalle($id)
     {

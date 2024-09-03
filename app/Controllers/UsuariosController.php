@@ -103,7 +103,7 @@ class UsuariosController extends Controller
         }
 
         // Actualizar la relación en la tabla `relacion_clientes_usuarios`
-        if (in_array($this->request->getVar('rol_id'), [4, 5]) && $id_cliente) {  // 4 y 5 son roles de Agente y Supervisor de Calidad
+        if (in_array($this->request->getVar('rol_id'), [2, 3, 4]) && $id_cliente) {  // 4 y 5 son roles de Agente y Supervisor de Calidad
             // Borrar relación existente
             $relacionModel->where('id_usuario', $idUsuario)->delete();
 

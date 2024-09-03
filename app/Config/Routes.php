@@ -19,7 +19,7 @@ $routes->get('/noautorizado', 'Error::noautorizado');
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']);
 
 // Grupo de rutas accesibles solo por ADMIN
-$routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
+$routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE'], function ($routes) {
     $routes->get('/admin', 'Admin::index');
     // Usuarios
     $routes->group('usuarios', function ($routes) {
@@ -91,6 +91,7 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
     $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
 
     $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente');
+    $routes->get('listar-denuncias-agente', 'DenunciasController::listarDenunciasAgente');
 
     // Grupo de rutas para la gestión de anexos
     $routes->group('anexos', function ($routes) {
