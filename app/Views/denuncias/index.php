@@ -221,28 +221,29 @@
     </div>
 </div>
 
-<!-- Modal para Ver Comentarios -->
-<div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="modalVerComentariosLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Modal para comentarios -->
+<div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="comentariosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalVerComentariosLabel">Comentarios de la Denuncia</h5>
+                <h5 class="modal-title" id="comentariosModalLabel">
+                    <i class="fas fa-comments"></i> Comentarios de la Denuncia
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="comentariosContainer" class="mb-4">
-                    <!-- Aquí se cargarán los comentarios -->
+                <div id="comentariosContainer" class="overflow-auto" style="max-height: 300px;">
+                    <!-- Aquí se insertan los comentarios -->
                 </div>
-                <hr>
-                <form id="formAgregarComentario">
+                <form id="formAgregarComentario" class="mt-4">
                     <input type="hidden" name="id_denuncia" id="id_denuncia">
-                    <div class="mb-3">
-                        <label for="contenido" class="form-label">Agregar Comentario</label>
-                        <textarea id="contenido" name="contenido" class="form-control" rows="3" required></textarea>
+                    <div class="form-group">
+                        <label for="contenidoComentario" class="form-label">Agregar Comentario</label>
+                        <textarea name="contenido" id="contenidoComentario" class="form-control" rows="3" placeholder="Escribe tu comentario aquí..." required></textarea>
                     </div>
-                    <div class="d-flex justify-content-end">
+                    <div class="d-flex justify-content-end mt-3">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-2"></i> Enviar
+                            <i class="fas fa-paper-plane"></i> Enviar
                         </button>
                     </div>
                 </form>
@@ -250,7 +251,6 @@
         </div>
     </div>
 </div>
-
 
 
 <!-- Modal Cambiar Estado -->

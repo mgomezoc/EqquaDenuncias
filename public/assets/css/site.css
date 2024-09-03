@@ -115,3 +115,53 @@ label.error {
   font-weight: 900;
   /* Cambia el grosor del ícono si es necesario */
 }
+#comentariosContainer {
+  border-top: 1px solid #ddd;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.comentario-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.comentario-item:last-child {
+  border-bottom: none;
+}
+.comentario-item .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+.comentario-item .contenido {
+  flex-grow: 1;
+}
+.comentario-item h6 {
+  margin: 0;
+  font-weight: bold;
+}
+.comentario-item small {
+  color: #888;
+}
+.avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #007bff;
+  /* Color de fondo para el avatar */
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+}

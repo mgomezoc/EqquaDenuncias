@@ -23,6 +23,7 @@ class ComentariosController extends BaseController
 
         $estado_denuncia = $denuncia['estado_actual'];
 
+
         // Guardar el comentario con el estado de la denuncia
         $data = [
             'id_denuncia' => $id_denuncia,
@@ -36,5 +37,15 @@ class ComentariosController extends BaseController
         } else {
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Error al guardar el comentario']);
         }
+    }
+
+    public function listar($id_denuncia)
+    {
+        $comentarioModel = new ComentarioDenunciaModel();
+
+        // Obtener los comentarios relacionados con la denuncia
+        $comentarios = $comentarioModel->getComentariosByDenuncia($id_denuncia);
+
+        return $this->response->setJSON($comentarios);
     }
 }
