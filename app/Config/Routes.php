@@ -90,6 +90,8 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
     $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
     $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
 
+    $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente');
+
     // Grupo de rutas para la gestión de anexos
     $routes->group('anexos', function ($routes) {
         $routes->post('eliminar/(:num)', 'DenunciasController::eliminarAnexo/$1'); // Ruta para eliminar anexos

@@ -79,8 +79,8 @@ class Auth extends BaseController
                     'isLoggedIn' => TRUE
                 ];
 
-                // Si el rol es CLIENTE, agregamos id_cliente y nombre_cliente a la sesión
-                if ($data['rol_slug'] === 'CLIENTE') {
+                // Si el rol es CLIENTE, AGENTE o SUPERVISOR_CALIDAD, agregar id_cliente y nombre_cliente a la sesión
+                if (in_array($data['rol_slug'], ['CLIENTE', 'AGENTE', 'SUPERVISOR_CALIDAD'])) {
                     $ses_data['id_cliente'] = $data['id_cliente']; // Guarda el id_cliente en la sesión
                     $ses_data['nombre_cliente'] = $data['nombre_cliente']; // Guarda el nombre_cliente en la sesión
                 }
@@ -99,7 +99,6 @@ class Auth extends BaseController
             return redirect()->to('/login');
         }
     }
-
 
     public function logout()
     {

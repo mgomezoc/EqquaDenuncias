@@ -42,6 +42,33 @@ class DenunciasController extends Controller
         return view('denuncias/index', $data);
     }
 
+    public function misDenunciasAgente()
+    {
+        $clienteModel = new ClienteModel();
+        $clientes = $clienteModel->findAll();
+
+        $estadoModel = new EstadoDenunciaModel();
+        $estados = $estadoModel->findAll();
+
+        $categoriaModel = new CategoriaDenunciaModel();
+        $categorias = $categoriaModel->findAll();
+
+        $subcategoriaModel = new SubcategoriaDenunciaModel();
+        $subcategorias = $subcategoriaModel->findAll();
+
+        $data = [
+            'title' => 'Administración de Denuncias',
+            'controlador' => 'Denuncias',
+            'vista' => 'Denuncias',
+            'clientes' => $clientes,
+            'estados' => $estados,
+            'categorias' => $categorias,
+            'subcategorias' => $subcategorias,
+        ];
+
+        return view('denuncias/index', $data);
+    }
+
     public function listar()
     {
         $denunciaModel = new DenunciaModel();
