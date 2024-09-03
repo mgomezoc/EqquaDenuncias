@@ -1,0 +1,221 @@
+// Variables
+@primary-color: #0047ba;
+@secondary-color: #003a9c;
+@light-color: #fff;
+@dark-color: #333;
+@background-color: #f9f9f9;
+@font-family-base: 'Roboto', sans-serif;
+@font-weight-bold: 700;
+@font-weight-normal: 400;
+@transition-ease: 0.3s ease;
+
+// Global styles
+body {
+    font-family: @font-family-base;
+    color: @dark-color;
+    background-color: @background-color;
+    background: #dbdbdb url(../images/imagenes/poly-bg-white-01.svg) no-repeat center center fixed;
+    background-size: cover;
+}
+
+// Navbar styles
+.navbar {
+    background-color: @light-color;
+    padding: 15px 0;
+    border-bottom: 2px solid lighten(@background-color, 5%);
+
+    .navbar-brand {
+        font-size: 1.75rem;
+        font-weight: @font-weight-bold;
+        color: @primary-color;
+    }
+
+    .nav-link {
+        color: @dark-color !important;
+        margin-right: 20px;
+        font-weight: 500;
+    }
+}
+
+// Hero section styles
+.hero-section {
+    background-size: cover;
+    padding: 100px 0;
+    text-align: center;
+    color: @light-color;
+    position: relative;
+
+    &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: -1;
+    }
+
+    h1 {
+        font-size: 3.5rem;
+        font-weight: @font-weight-bold;
+        margin-bottom: 20px;
+        color: @light-color;
+    }
+
+    p {
+        font-size: 1.25rem;
+        margin-bottom: 30px;
+        max-width: 800px;
+        color: lighten(@light-color, 30%);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-custom {
+        background-color: @primary-color;
+        color: @light-color;
+        padding: 12px 30px;
+        border-radius: 5px;
+        text-transform: uppercase;
+        font-weight: @font-weight-bold;
+        transition: background-color @transition-ease;
+        margin-right: 10px;
+
+        &:hover {
+            background-color: @secondary-color;
+        }
+    }
+
+    .logo-container {
+        text-align: center;
+        margin-bottom: 40px;
+
+        img {
+            max-width: 200px;
+            height: auto;
+            object-fit: contain;
+            background-color: @light-color;
+            padding: 10px;
+            border-radius: 10px;
+        }
+    }
+}
+
+// Section title styles
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: @font-weight-bold;
+    margin-bottom: 50px;
+    color: @dark-color;
+}
+
+// Service box styles
+.service-box {
+    background-color: @light-color;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-bottom: 30px;
+    transition: transform @transition-ease;
+
+    &:hover {
+        transform: translateY(-10px);
+    }
+
+    i {
+        font-size: 2rem;
+        color: @primary-color;
+        margin-bottom: 15px;
+    }
+
+    h4 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: @dark-color;
+    }
+
+    p {
+        font-size: 1rem;
+        color: darken(@dark-color, 20%);
+        margin-bottom: 0;
+    }
+}
+
+// Contact section styles
+.contact-section {
+    padding: 60px 0;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+
+    .contact-item {
+        background-color: @primary-color;
+        background: @primary-color url(../images/imagenes/crafto-landing-page-bg-01.png) no-repeat center center fixed;
+        background-size: cover;
+        color: @light-color;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+        flex-basis: 30%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform @transition-ease, background-color @transition-ease;
+
+        &:hover {
+            transform: translateY(-10px);
+            background-color: @secondary-color;
+        }
+
+        i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin: 10px 0;
+            font-size: 1rem;
+            color: @light-color;
+        }
+
+        a {
+            color: @light-color;
+            font-weight: @font-weight-bold;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+    }
+}
+
+// Footer styles
+footer {
+    background-color: @dark-color;
+    background: #dfdfdf url(../images/imagenes/demo-branding-agency-bg-01.png) no-repeat center center;
+    background-size: cover;
+    color: #696969;
+    padding: 40px 0;
+    text-align: center;
+
+    p {
+        margin-bottom: 0;
+    }
+
+    a {
+        color: @primary-color;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .footer-logo {
+        max-width: 150px;
+        margin-bottom: 20px;
+    }
+}

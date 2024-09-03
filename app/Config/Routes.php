@@ -15,6 +15,8 @@ $routes->get('/register', 'Auth::register');
 $routes->post('/auth/registerSubmit', 'Auth::registerSubmit');
 $routes->get('/noautorizado', 'Error::noautorizado');
 
+$routes->get('cliente/(:segment)', 'Publico::verCliente/$1');
+
 // Ruta del dashboard, accesible para todos los roles autenticados
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']);
 
