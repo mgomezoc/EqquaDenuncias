@@ -586,13 +586,14 @@ $(function () {
     // Enviar nuevo comentario
     $('#formAgregarComentario').submit(function (e) {
         e.preventDefault();
-
-        const formData = $(this).serialize();
+        const $frm = $(this);
+        const formData = $frm.serialize();
 
         $.post(`${Server}comentarios/guardar`, formData, function (response) {
             cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
             $('#contenido').val(''); // Limpiar el campo de texto
             showToast('Comentario agregado exitosamente.', 'success');
+            $frm[0].reset();
         }).fail(function () {
             showToast('Error al agregar el comentario.', 'error');
         });

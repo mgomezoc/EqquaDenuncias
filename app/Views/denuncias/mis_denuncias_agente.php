@@ -13,7 +13,7 @@
         </button>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="p-3 border">
             <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua">
                 <thead>
                     <tr>

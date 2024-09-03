@@ -52,6 +52,9 @@ label.error {
   background: #0f9d58;
   color: #fff;
 }
+.table-eqqua tbody {
+  background: #fff;
+}
 .img-thumbnail {
   max-width: 100%;
   height: auto;
@@ -164,4 +167,7 @@ label.error {
   justify-content: center;
   font-size: 1.25rem;
   font-weight: bold;
+}
+.bootstrap-table .fixed-table-container .fixed-table-body {
+  overflow: visible !important;
 }
