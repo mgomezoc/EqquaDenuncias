@@ -209,7 +209,7 @@ $(function () {
                 </div>
                 <div class="col-12 mt-3">
                     <h5>Historial de Seguimiento</h5>
-                    <table class="table table-sm table-striped table-bordered">
+                    <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
                         <thead>
                             <tr>
                                 <th>Fecha</th>

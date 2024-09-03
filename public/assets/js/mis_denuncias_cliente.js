@@ -14,26 +14,6 @@ $(function () {
 
     // Funcionalidades para los botones de la tabla
     window.operateEvents = {
-        // Funcionalidad para el botón de eliminar
-        'click .remove': function (e, value, row, index) {
-            confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
-                if (result.isConfirmed) {
-                    // Si se confirma, proceder con la eliminación
-                    $.ajax({
-                        url: `${Server}denuncias/eliminar/${row.id}`,
-                        method: 'POST',
-                        success: function () {
-                            showToast('Denuncia eliminada correctamente.', 'success');
-                            $tablaDenuncias.bootstrapTable('refresh');
-                        },
-                        error: function () {
-                            showToast('Error al eliminar la denuncia.', 'error');
-                        }
-                    });
-                }
-            });
-        },
-
         // Funcionalidad para el botón de ver detalle
         'click .view-detail': function (e, value, row, index) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
@@ -63,7 +43,7 @@ $(function () {
                 </div>
                 <div class="col-12 mt-3">
                     <h5>Historial de Seguimiento</h5>
-                    <table class="table table-sm table-striped table-bordered">
+                    <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
