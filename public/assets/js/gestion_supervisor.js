@@ -306,7 +306,7 @@ $(function () {
 
     // Inicialización de la tabla de denuncias
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
-        url: `${Server}denuncias/listar`,
+        url: `${Server}denuncias/listar-denuncias-calidad`,
         columns: [
             {
                 field: 'id',

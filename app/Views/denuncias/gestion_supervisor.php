@@ -8,9 +8,6 @@
 <div class="card custom-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Denuncias</span>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearDenuncia">
-            <i class="fa fa-plus"></i> Agregar Denuncia
-        </button>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -51,17 +48,9 @@
                     <i class="fas fa-exchange-alt me-2"></i> Cambiar Estado
                 </a>
             </li>
-            <li>
-                <a class="dropdown-item remove" href="#">
-                    <i class="fas fa-trash-alt text-danger me-2"></i> Eliminar
-                </a>
-            </li>
         </ul>
     </div>
 </template>
-
-
-
 
 <template id="tplDetalleTabla">
     <div class="">
@@ -72,13 +61,13 @@
                 <!-- Información General -->
                 <div class="col-md-4">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
-                    <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" required>
+                    <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" disabled>
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label for="id_sucursal-{{id}}" class="form-label">Sucursal</label>
-                    <select class="form-select select2" id="id_sucursal-{{id}}" name="id_sucursal" required>
+                    <select class="form-select select2" id="id_sucursal-{{id}}" name="id_sucursal" disabled>
                         {{{selectOptions sucursales id_sucursal}}}
                     </select>
                 </div>
@@ -232,128 +221,6 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary">Guardar</button>
             </div>
-        </div>
-    </div>
-</div>
-
-
-<!-- Modal Crear Denuncia Mejorado -->
-<div class="modal fade" id="modalCrearDenuncia" tabindex="-1" aria-labelledby="modalCrearDenunciaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalCrearDenunciaLabel">Agregar Denuncia</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-4">
-                        <!-- Sección 1: Información del Cliente -->
-                        <div class="col-md-6">
-                            <label for="id_cliente" class="form-label">Cliente</label>
-                            <select class="form-select select2" id="id_cliente" name="id_cliente" required>
-                                <option value="">Seleccione un cliente</option>
-                                <?php foreach ($clientes as $cliente) : ?>
-                                    <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="id_sucursal" class="form-label">Sucursal</label>
-                            <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
-                                <option value="">Seleccione una sucursal</option>
-                            </select>
-                        </div>
-
-                        <!-- Sección 2: Detalles de la Denuncia -->
-                        <div class="col-md-6">
-                            <label for="tipo_denunciante" class="form-label">Tipo de Denunciante</label>
-                            <select id="tipo_denunciante" name="tipo_denunciante" class="form-select select2" required>
-                                <option value="Colaborador">Colaborador</option>
-                                <option value="Proveedor">Proveedor</option>
-                                <option value="Cliente">Cliente</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="categoria" class="form-label">Categoría</label>
-                            <select class="form-select select2" id="categoria" name="categoria" required>
-                                <option value="">Seleccione una categoría</option>
-                                <?php foreach ($categorias as $categoria) : ?>
-                                    <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="subcategoria" class="form-label">Subcategoría</label>
-                            <select class="form-select select2" id="subcategoria" name="subcategoria" required>
-                                <option value="">Seleccione una subcategoría</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="id_departamento" class="form-label">Departamento</label>
-                            <select class="form-select select2" id="id_departamento" name="id_departamento">
-                                <option value="">Seleccione un departamento</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="fecha_incidente" class="form-label">Fecha del Incidente</label>
-                            <input type="text" class="form-control flatpickr" id="fecha_incidente" name="fecha_incidente" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="como_se_entero" class="form-label">¿Cómo se Enteró?</label>
-                            <select name="como_se_entero" id="como_se_entero" class="form-select select2" required>
-                                <option value="Fui víctima">Fui víctima</option>
-                                <option value="Fui testigo">Fui testigo</option>
-                                <option value="Estaba involucrado">Estaba involucrado</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-
-                        <!-- Sección 3: Detalles Adicionales -->
-                        <div class="col-md-6">
-                            <label for="area_incidente" class="form-label">Área del Incidente</label>
-                            <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="denunciar_a_alguien" class="form-label">Denunciar a Alguien</label>
-                            <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien" placeholder="Describa a la persona involucrada"></textarea>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia"></textarea>
-                        </div>
-
-                        <!-- Sección 4: Opciones de Denuncia -->
-                        <div class="col-md-6">
-                            <label class="form-label">Anónimo</label>
-                            <div class="d-flex gap-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" required checked>
-                                    <label class="form-check-label" for="anonimo-si">
-                                        Sí
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
-                                    <label class="form-check-label" for="anonimo-no">
-                                        No
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Sección 5: Archivos Adjuntos -->
-                        <div class="col-md-12">
-                            <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
-                            <div id="dropzoneArchivos" class="dropzone"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

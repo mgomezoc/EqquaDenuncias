@@ -120,6 +120,15 @@ class DenunciasController extends Controller
         return $this->response->setJSON($denuncias);
     }
 
+    public function listarDenunciasCalidad()
+    {
+        $denunciaModel = new DenunciaModel();
+        $denuncias = $denunciaModel->getDenunciasParaCalidad();
+
+        return $this->response->setJSON($denuncias);
+    }
+
+
 
     public function detalle($id)
     {
