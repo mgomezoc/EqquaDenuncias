@@ -100,9 +100,10 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
 
     // Rutas exclusivas para SUPERVISOR_CALIDAD
     $routes->group('supervision', ['filter' => 'authFilter:SUPERVISOR_CALIDAD'], function ($routes) {
-        $routes->get('gestion', 'DenunciasController::gestionSupervisor');
+        $routes->get('gestion', 'DenunciasController::gestionSupervisor'); // Nueva ruta para la vista del supervisor de calidad
     });
 });
+
 
 // Grupo de rutas accesibles solo por CLIENTE (denuncias, clientes, sucursales, departamentos)
 $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {

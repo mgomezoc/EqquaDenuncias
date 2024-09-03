@@ -68,6 +68,39 @@ class DenunciasController extends Controller
         return view('denuncias/mis_denuncias_agente', $data);
     }
 
+    public function gestionSupervisor()
+    {
+        $clienteModel = new ClienteModel();
+        $clientes = $clienteModel->findAll();
+
+        $estadoModel = new EstadoDenunciaModel();
+        $estados = $estadoModel->findAll();
+
+        $categoriaModel = new CategoriaDenunciaModel();
+        $categorias = $categoriaModel->findAll();
+
+        $subcategoriaModel = new SubcategoriaDenunciaModel();
+        $subcategorias = $subcategoriaModel->findAll();
+
+        // Obtener solo las denuncias que están en los estados relevantes para el supervisor de calidad
+        $denunciaModel = new DenunciaModel();
+        $denuncias = $denunciaModel->getDenunciasParaCalidad();
+
+        $data = [
+            'title' => 'Gestión de Denuncias - Supervisor de Calidad',
+            'controlador' => 'Denuncias',
+            'vista' => 'Gestión de Denuncias Supervisor',
+            'clientes' => $clientes,
+            'estados' => $estados,
+            'categorias' => $categorias,
+            'subcategorias' => $subcategorias,
+            'denuncias' => $denuncias,  // Pasar las denuncias relevantes a la vista
+        ];
+
+        return view('denuncias/gestion_supervisor', $data);
+    }
+
+
     public function listar()
     {
         $denunciaModel = new DenunciaModel();

@@ -198,4 +198,27 @@ class DenunciaModel extends Model
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
+
+    public function getDenunciasParaCalidad()
+    {
+        // Supongamos que los estados relevantes para el supervisor de calidad son 2, 3 y 4
+        $estadosRelevantes = [2, 3, 4]; // ID de los estados "Clasificada", "Revisada por Calidad", "Liberada al Cliente"
+
+        return $this->select('denuncias.*, 
+                          clientes.nombre_empresa AS cliente_nombre, 
+                          sucursales.nombre AS sucursal_nombre, 
+                          categorias_denuncias.nombre AS categoria_nombre, 
+                          subcategorias_denuncias.nombre AS subcategoria_nombre, 
+                          departamentos.nombre AS departamento_nombre, 
+                          estados_denuncias.nombre AS estado_nombre')
+            ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
+            ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
+            ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
+            ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
+            ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
+            ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
+            ->whereIn('denuncias.estado_actual', $estadosRelevantes)
+            ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
+            ->findAll();
+    }
 }
