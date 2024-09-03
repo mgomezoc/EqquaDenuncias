@@ -47,6 +47,11 @@
                 </a>
             </li>
             <li>
+                <a class="dropdown-item view-comments" href="#">
+                    <i class="fas fa-comments me-2"></i> Ver Comentarios
+                </a>
+            </li>
+            <li>
                 <a class="dropdown-item change-status" href="#">
                     <i class="fas fa-exchange-alt me-2"></i> Cambiar Estado
                 </a>
@@ -208,6 +213,36 @@
     </div>
 </div>
 
+<!-- Modal para comentarios -->
+<div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="comentariosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="comentariosModalLabel">
+                    <i class="fas fa-comments"></i> Comentarios de la Denuncia
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="comentariosContainer" class="overflow-auto" style="max-height: 300px;">
+                    <!-- Aquí se insertan los comentarios -->
+                </div>
+                <form id="formAgregarComentario" class="mt-4">
+                    <input type="hidden" name="id_denuncia" id="id_denuncia">
+                    <div class="form-group">
+                        <label for="contenidoComentario" class="form-label">Agregar Comentario</label>
+                        <textarea name="contenido" id="contenidoComentario" class="form-control" rows="3" placeholder="Escribe tu comentario aquí..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal Cambiar Estado -->
 <div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">

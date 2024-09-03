@@ -293,6 +293,17 @@ $(function () {
                     });
                 modal.show();
             });
+        },
+
+        'click .view-comments': function (e, value, row, index) {
+            // Cargar comentarios de la denuncia
+            cargarComentarios(row.id);
+
+            // Establecer la ID de la denuncia en el formulario
+            $('#id_denuncia').val(row.id);
+
+            // Mostrar el modal
+            $('#modalVerComentarios').modal('show');
         }
     };
 
@@ -564,6 +575,22 @@ $(function () {
 
     // Inicializar Dropzone para los archivos adjuntos en la creación de denuncia
     initializeDropzone('dropzoneArchivos', 'formCrearDenuncia');
+
+    // Enviar nuevo comentario
+    $('#formAgregarComentario').submit(function (e) {
+        e.preventDefault();
+        const $frm = $(this);
+        const formData = $frm.serialize();
+
+        $.post(`${Server}comentarios/guardar`, formData, function (response) {
+            cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
+            $('#contenido').val(''); // Limpiar el campo de texto
+            showToast('Comentario agregado exitosamente.', 'success');
+            $frm[0].reset();
+        }).fail(function () {
+            showToast('Error al agregar el comentario.', 'error');
+        });
+    });
 });
 
 // Función para inicializar Dropzone
@@ -731,4 +758,58 @@ function operateFormatterEstado(value, row, index) {
     }
 
     return `<span class="badge ${badgeClass}">${estado}</span>`;
+}
+
+function cargarComentarios(denunciaId) {
+    $.get(`${Server}comentarios/listar/${denunciaId}`, function (data) {
+        let comentariosHtml = '';
+        if (data.length > 0) {
+            data.forEach(comentario => {
+                let iniciales = comentario.nombre_usuario.charAt(0).toUpperCase();
+                let badgeClass = '';
+
+                // Asignar el color correspondiente según el estado
+                switch (comentario.estado_nombre) {
+                    case 'Recepción':
+                        badgeClass = 'bg-yellow'; // Amarillo
+                        break;
+                    case 'Clasificada':
+                        badgeClass = 'bg-purple'; // Púrpura
+                        break;
+                    case 'Revisada por Calidad':
+                        badgeClass = 'bg-teal'; // Verde Azulado
+                        break;
+                    case 'Liberada al Cliente':
+                        badgeClass = 'bg-red'; // Rojo
+                        break;
+                    case 'En Revisión por Cliente':
+                        badgeClass = 'bg-light-purple'; // Púrpura Claro
+                        break;
+                    case 'Cerrada':
+                        badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+                        break;
+                    default:
+                        badgeClass = 'bg-light text-dark'; // Estado no reconocido
+                }
+
+                comentariosHtml += `
+                    <div class="comentario-item d-flex mb-3">
+                        <div class="avatar me-3">${iniciales}</div>
+                        <div class="contenido flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">${comentario.nombre_usuario}</h6>
+                                <small class="text-muted">${comentario.fecha_comentario}</small>
+                            </div>
+                            <span class="badge ${badgeClass} mb-2">${comentario.estado_nombre}</span>
+                            <p class="mb-0">${comentario.contenido}</p>
+                        </div>
+                    </div>
+                    <hr>
+                `;
+            });
+        } else {
+            comentariosHtml = '<p class="text-muted">No hay comentarios aún.</p>';
+        }
+        $('#comentariosContainer').html(comentariosHtml);
+    });
 }

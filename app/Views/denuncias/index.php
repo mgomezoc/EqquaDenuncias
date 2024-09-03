@@ -197,8 +197,6 @@
         </form>
     </div>
 </template>
-
-
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
@@ -250,7 +248,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Modal Cambiar Estado -->
 <div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
