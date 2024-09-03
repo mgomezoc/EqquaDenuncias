@@ -79,7 +79,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
 });
 
 // Grupo de rutas accesibles por AGENTE y SUPERVISOR_CALIDAD (sección de denuncias)
-$routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CALIDAD'], function ($routes) {
+$routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CALIDAD,CLIENTE'], function ($routes) {
     $routes->get('/', 'DenunciasController::index');
     $routes->get('listar', 'DenunciasController::listar');
     $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1');
@@ -94,8 +94,8 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
 
     $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente');
     $routes->get('listar-denuncias-agente', 'DenunciasController::listarDenunciasAgente');
-
     $routes->get('listar-denuncias-calidad', 'DenunciasController::listarDenunciasCalidad', ['filter' => 'authFilter:SUPERVISOR_CALIDAD']);
+    $routes->get('listarDenunciasCliente', 'DenunciasController::listarDenunciasCliente');
 
 
     // Grupo de rutas para la gestión de anexos
@@ -145,7 +145,7 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
 
     // Denuncias del cliente
     $routes->group('denuncias', function ($routes) {
-        $routes->get('mis-denuncias', 'DenunciasController::misDenuncias');
+        $routes->get('mis-denuncias-cliente', 'DenunciasController::misDenunciasCliente');
     });
 });
 

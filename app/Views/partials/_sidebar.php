@@ -64,7 +64,7 @@
 
                 <?php if ($rol == 'CLIENTE'): ?>
                     <li class="slide">
-                        <a href="<?= base_url('denuncias/mis-denuncias') ?>" class="side-menu__item">
+                        <a href="<?= base_url('denuncias/mis-denuncias-cliente') ?>" class="side-menu__item">
                             <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
                             <span class="side-menu__label">Mis Denuncias</span>
                         </a>

@@ -12,13 +12,6 @@ $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplDetalleTabla = $('#tplDetalleTabla').html();
 
-    // Inicializar select2 en los selects dentro del modal
-    $('#modalCrearDenuncia .select2').select2({
-        placeholder: 'Seleccione una opción',
-        allowClear: true,
-        dropdownParent: $('#modalCrearDenuncia')
-    });
-
     // Funcionalidades para los botones de la tabla
     window.operateEvents = {
         // Funcionalidad para el botón de eliminar
@@ -168,17 +161,9 @@ $(function () {
         }
     };
 
-    // Agregar flatpickr a la fecha del incidente al cargar el detalle para edición
-    function initializeFlatpickrForEdit(selector) {
-        $(selector).flatpickr({
-            dateFormat: 'Y-m-d',
-            maxDate: 'today' // Restringe la selección a fechas anteriores o iguales a la actual
-        });
-    }
-
     // Inicialización de la tabla de denuncias
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
-        url: `${Server}denuncias/listar-denuncias-calidad`,
+        url: `${Server}denuncias/listarDenunciasCliente`,
         columns: [
             {
                 field: 'id',
@@ -187,10 +172,6 @@ $(function () {
             {
                 field: 'folio',
                 title: 'Folio'
-            },
-            {
-                field: 'cliente_nombre',
-                title: 'Cliente'
             },
             {
                 field: 'sucursal_nombre',
@@ -230,184 +211,7 @@ $(function () {
                 formatter: operateFormatter,
                 events: operateEvents
             }
-        ],
-        detailView: true,
-        onExpandRow: function (index, row, $detail) {
-            $detail.html('Cargando...');
-            const como_se_entero = [
-                { id: 'Fui víctima', name: 'Fui víctima' },
-                { id: 'Fui testigo', name: 'Fui testigo' },
-                { id: 'Estaba involucrado', name: 'Estaba involucrado' },
-                { id: 'Otro', name: 'Otro' }
-            ];
-
-            $.when(
-                $.get(`${Server}clientes/listar`),
-                $.get(`${Server}categorias/listarCategorias`),
-                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
-                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
-                $.get(`${Server}denuncias/detalle/${row.id}`),
-                $.get(`${Server}denuncias/obtenerEstados`),
-                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados, anexos) {
-                const data = {
-                    id: row.id,
-                    clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
-                    categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
-                    subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
-                    sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
-                    estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
-                    anexos: anexos[0], // Añadir los anexos a los datos
-                    id_cliente: row.id_cliente,
-                    id_sucursal: row.id_sucursal,
-                    categoria: row.categoria,
-                    subcategoria: row.subcategoria,
-                    estado_actual: row.estado_actual,
-                    descripcion: row.descripcion,
-                    anonimo: row.anonimo,
-                    departamento_nombre: row.departamento_nombre,
-                    fecha_incidente: denunciaDetalles[0].fecha_incidente,
-                    como_se_entero: denunciaDetalles[0].como_se_entero,
-                    area_incidente: denunciaDetalles[0].area_incidente,
-                    denunciar_a_alguien: denunciaDetalles[0].denunciar_a_alguien,
-                    como_se_entero: como_se_entero
-                };
-
-                const renderData = Handlebars.compile(tplDetalleTabla)(data);
-
-                // Renderizar y mostrar el detalle
-                $detail.html(renderData);
-
-                // Inicializar select2 para los nuevos selectores
-                $detail.find('select').select2();
-                // Aplicar flatpickr a "Fecha del Incidente" en la edición
-                initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
-
-                $detail.find('.formEditarDenuncia').validate({
-                    errorClass: 'is-invalid',
-                    validClass: 'is-valid',
-                    errorElement: 'div',
-                    errorPlacement: function (error, element) {
-                        if (element.hasClass('select2-hidden-accessible')) {
-                            // Para campos Select2, coloca el error después del contenedor de Select2
-                            error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
-                        } else if (element.is(':checkbox') || element.is(':radio')) {
-                            // Para checkboxes y radios
-                            error.addClass('invalid-feedback').insertAfter(element.closest('div'));
-                        } else {
-                            error.addClass('invalid-feedback').insertAfter(element);
-                        }
-                    },
-                    highlight: function (element, errorClass, validClass) {
-                        if ($(element).hasClass('select2-hidden-accessible')) {
-                            $(element).next('.select2-container').find('.select2-selection').addClass(errorClass).removeClass(validClass);
-                        } else {
-                            $(element).addClass(errorClass).removeClass(validClass);
-                        }
-                    },
-                    unhighlight: function (element, errorClass, validClass) {
-                        if ($(element).hasClass('select2-hidden-accessible')) {
-                            $(element).next('.select2-container').find('.select2-selection').removeClass(errorClass).addClass(validClass);
-                        } else {
-                            $(element).removeClass(errorClass).addClass(validClass);
-                        }
-                    },
-                    rules: {
-                        id_cliente: {
-                            required: true
-                        },
-                        id_sucursal: {
-                            required: true
-                        },
-                        categoria: {
-                            required: true
-                        },
-                        subcategoria: {
-                            required: true
-                        },
-                        estado_actual: {
-                            required: true
-                        },
-                        descripcion: {
-                            required: true
-                        }
-                    },
-                    messages: {
-                        id_cliente: {
-                            required: 'Por favor seleccione un cliente'
-                        },
-                        id_sucursal: {
-                            required: 'Por favor seleccione una sucursal'
-                        },
-                        categoria: {
-                            required: 'Por favor seleccione una categoría'
-                        },
-                        subcategoria: {
-                            required: 'Por favor seleccione una subcategoría'
-                        },
-                        estado_actual: {
-                            required: 'Por favor seleccione un estado'
-                        },
-                        descripcion: {
-                            required: 'Por favor ingrese la descripción'
-                        }
-                    },
-                    submitHandler: function (form) {
-                        const $frm = $(form);
-                        const formData = $frm.serializeObject();
-
-                        loadingFormXHR($frm, true);
-
-                        // Enviar la solicitud AJAX para actualizar la denuncia
-                        $.ajax({
-                            url: `${Server}denuncias/guardar`,
-                            method: 'POST',
-                            data: formData,
-                            success: function (data) {
-                                loadingFormXHR($frm, false);
-                                $tablaDenuncias.bootstrapTable('refresh');
-                                showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
-                            },
-                            error: function (xhr) {
-                                loadingFormXHR($frm, false);
-                                if (xhr.status === 409) {
-                                    const response = JSON.parse(xhr.responseText);
-                                    showToast(response.message, 'error');
-                                }
-                            }
-                        });
-                    }
-                });
-
-                // Cargar dinámicamente las subcategorías según la categoría seleccionada
-                $detail.find(`#categoria-${row.id}`).change(function () {
-                    const categoriaId = $(this).val();
-                    loadSubcategorias(categoriaId, `#subcategoria-${row.id}`);
-                });
-
-                // Cargar dinámicamente las sucursales según el cliente seleccionado
-                $detail.find(`#id_cliente-${row.id}`).change(function () {
-                    const clienteId = $(this).val();
-                    loadSucursales(clienteId, `#id_sucursal-${row.id}`);
-                });
-
-                // Inicializar Dropzone para subir nuevos archivos
-                initializeDropzone(`dropzoneArchivos-${row.id}`, `formActualizarAnexos-${row.id}`);
-
-                // Manejo de la eliminación de anexos
-                $detail.on('click', '.delete-anexo', function () {
-                    const anexoId = $(this).data('id');
-                    eliminarAnexo(anexoId, row.id);
-                });
-
-                // Manejo del formulario de actualización de anexos
-                $detail.find(`#formActualizarAnexos-${row.id}`).submit(function (e) {
-                    e.preventDefault();
-                    const formData = new FormData(this);
-                    actualizarAnexos(formData, row.id);
-                });
-            });
-        }
+        ]
     });
 
     // Enviar nuevo comentario
@@ -426,76 +230,6 @@ $(function () {
         });
     });
 });
-
-// Función para inicializar Dropzone
-function initializeDropzone(elementId, formId) {
-    const dropzoneElement = $(`#${elementId}`);
-    const formElement = $(`#${formId}`);
-
-    const myDropzone = new Dropzone(`#${elementId}`, {
-        url: `${Server}denuncias/subirAnexo`,
-        maxFiles: 5,
-        acceptedFiles: 'image/*,application/pdf',
-        addRemoveLinks: true,
-        dictDefaultMessage: 'Arrastra los archivos aquí para subirlos',
-        dictRemoveFile: 'Eliminar archivo',
-        init: function () {
-            this.on('success', function (file, response) {
-                formElement.append(`<input type="hidden" name="archivos[]" value="assets/denuncias/${response.filename}">`);
-            });
-            this.on('removedfile', function (file) {
-                const name = file.upload.filename;
-                formElement.find(`input[value="assets/denuncias/${name}"]`).remove();
-            });
-        }
-    });
-
-    dropzones[elementId] = myDropzone;
-}
-
-// Función para eliminar un anexo con confirmación usando SweetAlert2
-function eliminarAnexo(anexoId, denunciaId) {
-    // Llamar a la función de confirmación
-    confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
-        // Si el usuario confirma la acción
-        if (result.isConfirmed) {
-            // Proceder con la eliminación
-            $.ajax({
-                url: `${Server}denuncias/anexos/eliminar/${anexoId}`,
-                method: 'POST',
-                success: function (response) {
-                    showToast('Anexo eliminado correctamente.', 'success');
-                    $(`#formActualizarAnexos-${denunciaId}`).find(`.delete-anexo[data-id="${anexoId}"]`).closest('.card').remove();
-                },
-                error: function (xhr) {
-                    showToast('Error al eliminar el anexo.', 'error');
-                }
-            });
-        }
-    });
-}
-
-// Función para actualizar anexos
-function actualizarAnexos(formData, denunciaId) {
-    loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), true);
-
-    $.ajax({
-        url: `${Server}denuncias/actualizarAnexos`,
-        method: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (response) {
-            loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
-            showToast('Archivos actualizados correctamente.', 'success');
-            $tablaDenuncias.bootstrapTable('refresh');
-        },
-        error: function (xhr) {
-            loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
-            showToast('Error al actualizar los archivos.', 'error');
-        }
-    });
-}
 
 // Función para cargar subcategorías
 function loadSubcategorias(categoriaId, selectSelector) {

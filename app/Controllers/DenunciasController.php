@@ -100,6 +100,41 @@ class DenunciasController extends Controller
         return view('denuncias/gestion_supervisor', $data);
     }
 
+    public function misDenunciasCliente()
+    {
+        $clienteId = session()->get('id_cliente'); // Asegurándote que 'id_cliente' esté en la sesión
+
+        // Verifica que haya un cliente autenticado
+        if (!$clienteId) {
+            return redirect()->to('/login')->with('error', 'Debe iniciar sesión para ver sus denuncias');
+        }
+
+        // Instancias de los modelos
+        $clienteModel = new ClienteModel();
+        $denunciaModel = new DenunciaModel();
+        $estadoModel = new EstadoDenunciaModel();
+        $categoriaModel = new CategoriaDenunciaModel();
+        $subcategoriaModel = new SubcategoriaDenunciaModel();
+
+        // Obtener la información del cliente
+        $cliente = $clienteModel->getClienteById($clienteId);
+
+        // Obtener las denuncias solo relacionadas con el cliente actual
+        $denuncias = $denunciaModel->getDenunciasByCliente($clienteId);
+
+        $data = [
+            'title' => 'Mis Denuncias',
+            'controlador' => 'Denuncias',
+            'vista' => 'Mis Denuncias Cliente',
+            'cliente' => $cliente,  // Información del cliente
+            'estados' => $estadoModel->findAll(),
+            'categorias' => $categoriaModel->findAll(),
+            'subcategorias' => $subcategoriaModel->findAll(),
+            'denuncias' => $denuncias,  // Pasar las denuncias del cliente a la vista
+        ];
+
+        return view('denuncias/mis_denuncias_cliente', $data);
+    }
 
     public function listar()
     {
@@ -128,7 +163,20 @@ class DenunciasController extends Controller
         return $this->response->setJSON($denuncias);
     }
 
+    public function listarDenunciasCliente()
+    {
+        $denunciaModel = new DenunciaModel();
+        $clienteId = session()->get('id_cliente'); // Asegúrate de que 'id_cliente' esté en la sesión
 
+        if (!$clienteId) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Acceso denegado. Cliente no autenticado.']);
+        }
+
+        // Filtra las denuncias según el cliente autenticado
+        $denuncias = $denunciaModel->getDenunciasByCliente($clienteId);
+
+        return $this->response->setJSON($denuncias);
+    }
 
     public function detalle($id)
     {
