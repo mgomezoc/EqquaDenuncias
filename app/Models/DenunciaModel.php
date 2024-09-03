@@ -153,6 +153,10 @@ class DenunciaModel extends Model
             // Eliminar los registros de anexos relacionados con la denuncia
             $anexosModel->where('id_denuncia', $id)->delete();
 
+            // Eliminar los registros de comentarios relacionados con la denuncia
+            $comentariosModel = new \App\Models\ComentarioDenunciaModel();
+            $comentariosModel->where('id_denuncia', $id)->delete();
+
             // Eliminar los registros de seguimiento de la denuncia
             $seguimientoModel = new \App\Models\SeguimientoDenunciaModel();
             $seguimientoModel->where('id_denuncia', $id)->delete();
@@ -176,6 +180,7 @@ class DenunciaModel extends Model
             return false;
         }
     }
+
 
     public function getDenunciasByAgente($agenteId)
     {

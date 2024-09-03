@@ -65,9 +65,6 @@
     </div>
 </template>
 
-
-
-
 <template id="tplDetalleTabla">
     <div class="">
         <!-- Formulario para editar la denuncia -->
@@ -140,12 +137,13 @@
 
                 <!-- Botón de Actualizar -->
                 <div class="mt-5">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary btn-actualizar-denuncia">
                         <i class="fa fa-save"></i> Actualizar
                     </button>
                 </div>
             </div>
         </form>
+
         <!-- Formulario para actualizar imágenes -->
         <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card" enctype="multipart/form-data">
             <input type="hidden" name="id" value="{{id}}">
@@ -199,6 +197,7 @@
         </form>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 

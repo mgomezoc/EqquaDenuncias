@@ -417,6 +417,13 @@ $(function () {
                 // Renderizar y mostrar el detalle
                 $detail.html(renderData);
 
+                // Si la denuncia está cerrada, deshabilitar los campos y ocultar el botón de actualización
+                if (row.estado_actual == 6) {
+                    // 6 es el ID del estado "Cerrada"
+                    $detail.find('input, select, textarea').prop('disabled', true);
+                    $detail.find('.btn-actualizar-denuncia').hide();
+                }
+
                 // Inicializar select2 para los nuevos selectores
                 $detail.find('select').select2();
                 // Aplicar flatpickr a "Fecha del Incidente" en la edición
