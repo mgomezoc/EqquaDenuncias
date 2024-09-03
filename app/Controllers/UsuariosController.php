@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\UsuarioModel;
 use App\Models\RolModel;
 use App\Models\ClienteModel;
+use App\Models\RelacionClientesUsuariosModel; // Añadir el modelo para manejar la relación usuario-cliente
 use CodeIgniter\Controller;
 
 class UsuariosController extends Controller
@@ -43,6 +44,7 @@ class UsuariosController extends Controller
     {
         $usuarioModel = new UsuarioModel();
         $clienteModel = new ClienteModel();
+        $relacionModel = new RelacionClientesUsuariosModel(); // Instanciar el modelo de relación
         $id = $this->request->getVar('id');
 
         $id_cliente = $this->request->getVar('id_cliente');
@@ -92,10 +94,24 @@ class UsuariosController extends Controller
 
         if ($id) {
             $usuarioModel->update($id, $data);
+            $idUsuario = $id; // Mantener el ID del usuario actualizado
             registrarAccion(session()->get('id'), 'Actualización de usuario', 'ID: ' . $id);
         } else {
             $usuarioModel->save($data);
+            $idUsuario = $usuarioModel->insertID(); // Obtener el ID del nuevo usuario
             registrarAccion(session()->get('id'), 'Creación de usuario', 'Nombre de usuario: ' . $this->request->getVar('nombre_usuario'));
+        }
+
+        // Actualizar la relación en la tabla `relacion_clientes_usuarios`
+        if (in_array($this->request->getVar('rol_id'), [4, 5]) && $id_cliente) {  // 4 y 5 son roles de Agente y Supervisor de Calidad
+            // Borrar relación existente
+            $relacionModel->where('id_usuario', $idUsuario)->delete();
+
+            // Guardar la nueva relación
+            $relacionModel->insert([
+                'id_usuario' => $idUsuario,
+                'id_cliente' => $id_cliente,
+            ]);
         }
 
         return $this->response->setJSON(['message' => 'Usuario guardado correctamente']);
@@ -114,6 +130,12 @@ class UsuariosController extends Controller
     public function eliminar($id)
     {
         $usuarioModel = new UsuarioModel();
+        $relacionModel = new RelacionClientesUsuariosModel();
+
+        // Eliminar la relación en `relacion_clientes_usuarios`
+        $relacionModel->where('id_usuario', $id)->delete();
+
+        // Eliminar el usuario
         $usuarioModel->delete($id);
 
         registrarAccion(session()->get('id'), 'Eliminación de usuario', 'ID: ' . $id);

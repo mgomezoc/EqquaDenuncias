@@ -32,14 +32,7 @@ $(function () {
     });
 
     $('#rol_id').on('change', function () {
-        const selectedRole = $(this).val();
-        if (selectedRole == 4) {
-            $('#clienteContainer').show();
-            $('#id_cliente').prop('required', true);
-        } else {
-            $('#clienteContainer').hide();
-            $('#id_cliente').prop('required', false);
-        }
+        handleRoleChange($(this).val(), '#clienteContainer', '#id_cliente');
     });
 
     $tablaUsuarios = $('#tablaUsuarios').bootstrapTable({
@@ -90,17 +83,10 @@ $(function () {
             $detail.find('select').select2();
             const rolSelect = $detail.find('[name="rol_id"]');
             rolSelect.on('change', function () {
-                const selectedRole = $(this).val();
-                const clienteContainer = $detail.find('#clienteContainer-' + row.id);
-                if (selectedRole == 4) {
-                    clienteContainer.show();
-                    $detail.find('[name="id_cliente"]').prop('required', true);
-                } else {
-                    clienteContainer.hide();
-                    $detail.find('[name="id_cliente"]').prop('required', false);
-                }
+                handleRoleChange($(this).val(), '#clienteContainer-' + row.id, '[name="id_cliente"]');
             });
-            rolSelect.trigger('change');
+            rolSelect.trigger('change'); // Ejecutar en la carga para mostrar correctamente el select de cliente
+
             $detail.find('.formEditarUsuario').validate({
                 rules: {
                     nombre_usuario: {
@@ -143,7 +129,7 @@ $(function () {
                     },
                     id_cliente: {
                         required: function () {
-                            return $detail.find('[name="rol_id"]').val() == 4;
+                            return $detail.find('[name="rol_id"]').val() == 4 || $detail.find('[name="rol_id"]').val() == 5; // Verifica si el rol es Agente o Supervisor de Calidad
                         }
                     }
                 },
@@ -209,7 +195,8 @@ $(function () {
             },
             id_cliente: {
                 required: function () {
-                    return $('#formCrearUsuario [name="rol_id"]').val() == 4;
+                    const selectedRole = $('#formCrearUsuario [name="rol_id"]').val();
+                    return selectedRole == 4 || selectedRole == 5; // Agente o Supervisor de Calidad
                 }
             }
         },
@@ -342,5 +329,22 @@ async function eliminarUsuario(id) {
                 showToast('¡Usuario eliminado correctamente!', 'success');
             }
         });
+    }
+}
+
+/**
+ * Muestra u oculta el contenedor de selección de cliente según el rol seleccionado
+ * @param {number} rolId - ID del rol seleccionado
+ * @param {string} clienteContainerSelector - Selector del contenedor del campo de cliente
+ * @param {string} clienteFieldSelector - Selector del campo de cliente
+ */
+function handleRoleChange(rolId, clienteContainerSelector, clienteFieldSelector) {
+    if (rolId == 2 || rolId == 3 || rolId == 4) {
+        // 2 = Agente, 3 = Supervisor de Calidad, 4 = Cliente
+        $(clienteContainerSelector).show();
+        $(clienteFieldSelector).prop('required', true);
+    } else {
+        $(clienteContainerSelector).hide();
+        $(clienteFieldSelector).prop('required', false);
     }
 }
