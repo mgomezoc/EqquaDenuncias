@@ -147,6 +147,13 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
     });
 });
 
+// Grupo de rutas para la gestión de comentarios
+$routes->group('comentarios', function ($routes) {
+    $routes->get('listar/(:num)', 'ComentariosController::listar/$1'); // Listar comentarios
+    $routes->post('guardar', 'ComentariosController::guardar'); // Guardar nuevo comentario
+});
+
+
 // Cargar rutas adicionales basadas en el entorno
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';

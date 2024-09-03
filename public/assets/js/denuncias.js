@@ -293,6 +293,17 @@ $(function () {
                     });
                 modal.show();
             });
+        },
+
+        'click .view-comments': function (e, value, row, index) {
+            // Cargar comentarios de la denuncia
+            cargarComentarios(row.id);
+
+            // Establecer la ID de la denuncia en el formulario
+            $('#id_denuncia').val(row.id);
+
+            // Mostrar el modal
+            $('#modalVerComentarios').modal('show');
         }
     };
 
@@ -564,6 +575,21 @@ $(function () {
 
     // Inicializar Dropzone para los archivos adjuntos en la creación de denuncia
     initializeDropzone('dropzoneArchivos', 'formCrearDenuncia');
+
+    // Enviar nuevo comentario
+    $('#formAgregarComentario').submit(function (e) {
+        e.preventDefault();
+
+        const formData = $(this).serialize();
+
+        $.post(`${Server}comentarios/guardar`, formData, function (response) {
+            cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
+            $('#contenido').val(''); // Limpiar el campo de texto
+            showToast('Comentario agregado exitosamente.', 'success');
+        }).fail(function () {
+            showToast('Error al agregar el comentario.', 'error');
+        });
+    });
 });
 
 // Función para inicializar Dropzone
@@ -731,4 +757,27 @@ function operateFormatterEstado(value, row, index) {
     }
 
     return `<span class="badge ${badgeClass}">${estado}</span>`;
+}
+
+function cargarComentarios(denunciaId) {
+    $.get(`${Server}comentarios/listar/${denunciaId}`, function (data) {
+        let comentariosHtml = '';
+        if (data.length > 0) {
+            data.forEach(comentario => {
+                comentariosHtml += `
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <h6>${comentario.usuario_nombre}</h6>
+                            <small class="text-muted">${comentario.fecha_comentario}</small>
+                        </div>
+                        <p>${comentario.contenido}</p>
+                    </div>
+                    <hr>
+                `;
+            });
+        } else {
+            comentariosHtml = '<p class="text-muted">No hay comentarios aún.</p>';
+        }
+        $('#comentariosContainer').html(comentariosHtml);
+    });
 }

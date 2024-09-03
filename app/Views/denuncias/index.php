@@ -47,6 +47,11 @@
                 </a>
             </li>
             <li>
+                <a class="dropdown-item view-comments" href="#">
+                    <i class="fas fa-comments me-2"></i> Ver Comentarios
+                </a>
+            </li>
+            <li>
                 <a class="dropdown-item change-status" href="#">
                     <i class="fas fa-exchange-alt me-2"></i> Cambiar Estado
                 </a>
@@ -215,6 +220,37 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para Ver Comentarios -->
+<div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="modalVerComentariosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalVerComentariosLabel">Comentarios de la Denuncia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="comentariosContainer" class="mb-4">
+                    <!-- Aquí se cargarán los comentarios -->
+                </div>
+                <hr>
+                <form id="formAgregarComentario">
+                    <input type="hidden" name="id_denuncia" id="id_denuncia">
+                    <div class="mb-3">
+                        <label for="contenido" class="form-label">Agregar Comentario</label>
+                        <textarea id="contenido" name="contenido" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <!-- Modal Cambiar Estado -->
