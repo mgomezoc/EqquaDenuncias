@@ -98,6 +98,12 @@
                     </select>
                 </div>
                 <div class="col-md-4">
+                    <label for="id_departamento-{{id}}" class="form-label">Departamento</label>
+                    <select class="form-select select2" id="id_departamento-{{id}}" name="id_departamento">
+                        {{{selectOptions departamentos id_departamento}}}
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label for="estado_actual-{{id}}" class="form-label">Estado</label>
                     <select id="estado_actual-{{id}}" name="estado_actual" class="form-select select2">
                         {{{selectOptions estados estado_actual}}}
@@ -198,6 +204,7 @@
         </form>
     </div>
 </template>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
@@ -353,7 +360,7 @@
                         </div>
                         <div class="col-md-12">
                             <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia"></textarea>
+                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="7"></textarea>
                         </div>
 
                         <!-- Sección 4: Opciones de Denuncia -->

@@ -389,16 +389,18 @@ $(function () {
                 $.get(`${Server}categorias/listarCategorias`),
                 $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
                 $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
+                $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`), // <-- Añadido aquí
                 $.get(`${Server}denuncias/detalle/${row.id}`),
                 $.get(`${Server}denuncias/obtenerEstados`),
                 $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados, anexos) {
+            ).done(function (clientes, categorias, subcategorias, sucursales, departamentos, denunciaDetalles, estados, anexos) {
                 const data = {
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
                     subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
+                    departamentos: departamentos[0].map(departamento => ({ id: departamento.id, name: departamento.nombre })), // <-- Añadido aquí
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
                     anexos: anexos[0], // Añadir los anexos a los datos
                     id_cliente: row.id_cliente,
@@ -409,6 +411,7 @@ $(function () {
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
                     departamento_nombre: row.departamento_nombre,
+                    id_departamento: row.id_departamento, // <-- Añadido aquí
                     fecha_incidente: denunciaDetalles[0].fecha_incidente,
                     como_se_entero: denunciaDetalles[0].como_se_entero,
                     area_incidente: denunciaDetalles[0].area_incidente,
@@ -475,6 +478,10 @@ $(function () {
                         subcategoria: {
                             required: true
                         },
+                        id_departamento: {
+                            // <-- Añadido aquí
+                            required: true
+                        },
                         estado_actual: {
                             required: true
                         },
@@ -494,6 +501,10 @@ $(function () {
                         },
                         subcategoria: {
                             required: 'Por favor seleccione una subcategoría'
+                        },
+                        id_departamento: {
+                            // <-- Añadido aquí
+                            required: 'Por favor seleccione un departamento'
                         },
                         estado_actual: {
                             required: 'Por favor seleccione un estado'
@@ -539,6 +550,12 @@ $(function () {
                 $detail.find(`#id_cliente-${row.id}`).change(function () {
                     const clienteId = $(this).val();
                     loadSucursales(clienteId, `#id_sucursal-${row.id}`);
+                });
+
+                // Cargar dinámicamente los departamentos según la sucursal seleccionada
+                $detail.find(`#id_sucursal-${row.id}`).change(function () {
+                    const sucursalId = $(this).val();
+                    loadDepartamentos(sucursalId, `#id_departamento-${row.id}`); // <-- Añadido aquí
                 });
 
                 // Inicializar Dropzone para subir nuevos archivos
