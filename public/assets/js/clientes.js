@@ -423,7 +423,7 @@ window.operateEvents = {
         eliminarCliente(row.id);
     },
     'click .view-public': function (e, value, row, index) {
-        window.open(`${Server}cliente/${row.slug}`, '_blank');
+        window.open(`${Server}public/cliente/${row.slug}`, '_blank');
     }
 };
 
