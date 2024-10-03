@@ -6,6 +6,7 @@ use App\Models\UsuarioModel;
 use App\Models\RolModel;
 use App\Models\ClienteModel;
 use App\Models\RelacionClientesUsuariosModel; // Añadir el modelo para manejar la relación usuario-cliente
+use App\Services\EmailService;
 use CodeIgniter\Controller;
 
 class UsuariosController extends Controller
@@ -44,12 +45,13 @@ class UsuariosController extends Controller
     {
         $usuarioModel = new UsuarioModel();
         $clienteModel = new ClienteModel();
-        $relacionModel = new RelacionClientesUsuariosModel(); // Instanciar el modelo de relación
-        $id = $this->request->getVar('id');
+        $relacionModel = new RelacionClientesUsuariosModel();
+        $emailService = new EmailService(); // Instanciar el servicio de correo
 
+        $id = $this->request->getVar('id');
         $id_cliente = $this->request->getVar('id_cliente');
 
-        // Verificar si el id_cliente existe en la tabla clientes si se proporciona
+        // Verificar si el cliente existe
         if ($id_cliente && !$clienteModel->find($id_cliente)) {
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Cliente no válido']);
         }
@@ -58,14 +60,16 @@ class UsuariosController extends Controller
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
             'rol_id' => $this->request->getVar('rol_id'),
-            'id_cliente' => $id_cliente ?: null  // Si id_cliente no está presente, asignar null
+            'id_cliente' => $id_cliente ?: null,
         ];
 
+        // Si se proporciona una contraseña, actualizarla
         if ($contrasena = $this->request->getVar('contrasena')) {
             $data['contrasena'] = password_hash($contrasena, PASSWORD_DEFAULT);
         }
 
-        // Validar unicidad del nombre de usuario y correo electrónico
+        // Validar la unicidad del nombre de usuario y correo electrónico
+        $usuarioExistente = null;
         if ($id) {
             $usuarioExistente = $usuarioModel->where('id !=', $id)
                 ->groupStart()
@@ -92,6 +96,7 @@ class UsuariosController extends Controller
             return $this->response->setStatusCode(409)->setJSON(['message' => implode(', ', $message)]);
         }
 
+        // Guardar o actualizar el usuario
         if ($id) {
             $usuarioModel->update($id, $data);
             $idUsuario = $id; // Mantener el ID del usuario actualizado
@@ -100,14 +105,18 @@ class UsuariosController extends Controller
             $usuarioModel->save($data);
             $idUsuario = $usuarioModel->insertID(); // Obtener el ID del nuevo usuario
             registrarAccion(session()->get('id'), 'Creación de usuario', 'Nombre de usuario: ' . $this->request->getVar('nombre_usuario'));
+
+            // Enviar correo de bienvenida después de la creación
+            $this->enviarCorreoBienvenida(
+                $data['correo_electronico'],
+                $data['nombre_usuario'],
+                $contrasena // Solo si se proporciona una contraseña
+            );
         }
 
         // Actualizar la relación en la tabla `relacion_clientes_usuarios`
-        if (in_array($this->request->getVar('rol_id'), [2, 3, 4]) && $id_cliente) {  // 4 y 5 son roles de Agente y Supervisor de Calidad
-            // Borrar relación existente
+        if (in_array($this->request->getVar('rol_id'), [2, 3, 4]) && $id_cliente) {
             $relacionModel->where('id_usuario', $idUsuario)->delete();
-
-            // Guardar la nueva relación
             $relacionModel->insert([
                 'id_usuario' => $idUsuario,
                 'id_cliente' => $id_cliente,
@@ -115,6 +124,34 @@ class UsuariosController extends Controller
         }
 
         return $this->response->setJSON(['message' => 'Usuario guardado correctamente']);
+    }
+
+    /**
+     * Enviar correo de bienvenida al nuevo usuario
+     *
+     * @param string $email Dirección de correo del usuario
+     * @param string $nombreUsuario Nombre de usuario
+     * @param string|null $contrasena Contraseña del usuario
+     * @return void
+     */
+    protected function enviarCorreoBienvenida($email, $nombreUsuario, $contrasena = null)
+    {
+        $emailService = new EmailService();
+
+        // Crear el mensaje
+        $mensaje = "<p>Estimado/a <strong>{$nombreUsuario}</strong>,</p>";
+        $mensaje .= "<p>Su cuenta ha sido creada exitosamente en nuestra plataforma de Eqqua Denuncias.</p>";
+        $mensaje .= "<p>Sus credenciales de acceso son:</p>";
+        $mensaje .= "<p><strong>Nombre de usuario:</strong> {$nombreUsuario}</p>";
+        if ($contrasena) {
+            $mensaje .= "<p><strong>Contraseña:</strong> {$contrasena}</p>";
+        }
+        $mensaje .= "<p>Puede acceder a su cuenta utilizando el siguiente enlace: <a href='" . base_url() . "'>Iniciar Sesión</a></p>";
+        $mensaje .= "<p>Saludos cordiales,</p>";
+        $mensaje .= "<p><strong>Eqqua Denuncias</strong></p>";
+
+        // Enviar el correo
+        $emailService->sendEmail($email, 'Bienvenido a Eqqua Denuncias', $mensaje);
     }
 
     public function obtener($id)
