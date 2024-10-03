@@ -10,6 +10,8 @@ use CodeIgniter\Router\RouteCollection;
  * Rutas públicas para cualquier usuario
  * Estas rutas no requieren autenticación y son accesibles por cualquier persona
  */
+$routes->get('send-email', 'MailController::sendEmail');
+
 $routes->group('public', function ($routes) {
     // Rutas para la página pública de denuncias
     $routes->get('cliente/(:segment)', 'Publico::verCliente/$1');

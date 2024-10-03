@@ -6,116 +6,59 @@ use CodeIgniter\Config\BaseConfig;
 
 class Email extends BaseConfig
 {
-    public string $fromEmail  = '';
-    public string $fromName   = '';
-    public string $recipients = '';
+    // Remitente del correo
+    public string $fromEmail  = 'denuncias@eqqua.mx';  // Correo de remitente
+    public string $fromName   = 'Eqqua Denuncias';     // Nombre de remitente
+    public string $recipients = '';                    // Opcional, destinatarios generales
 
-    /**
-     * The "user agent"
-     */
+    // Agente de usuario
     public string $userAgent = 'CodeIgniter';
 
-    /**
-     * The mail sending protocol: mail, sendmail, smtp
-     */
-    public string $protocol = 'mail';
+    // Protocolo de correo
+    public string $protocol = 'smtp';                 // Cambiado a SMTP para usar Mailtrap
 
-    /**
-     * The server path to Sendmail.
-     */
+    // Ruta de sendmail (no es necesaria para SMTP, pero se deja por si cambias en el futuro)
     public string $mailPath = '/usr/sbin/sendmail';
 
-    /**
-     * SMTP Server Hostname
-     */
-    public string $SMTPHost = '';
+    // Configuración del servidor SMTP (Mailtrap)
+    public string $SMTPHost = 'sandbox.smtp.mailtrap.io';
+    public string $SMTPUser = 'a73fbb37618f88';        // Tu usuario de Mailtrap
+    public string $SMTPPass = '0d353759a87d0a';        // Tu contraseña de Mailtrap
+    public int $SMTPPort = 2525;                       // Puerto SMTP de Mailtrap
 
-    /**
-     * SMTP Username
-     */
-    public string $SMTPUser = '';
+    // Timeout del SMTP
+    public int $SMTPTimeout = 10;                      // Tiempo de espera ajustado a 10 segundos
 
-    /**
-     * SMTP Password
-     */
-    public string $SMTPPass = '';
-
-    /**
-     * SMTP Port
-     */
-    public int $SMTPPort = 25;
-
-    /**
-     * SMTP Timeout (in seconds)
-     */
-    public int $SMTPTimeout = 5;
-
-    /**
-     * Enable persistent SMTP connections
-     */
+    // Conexiones persistentes
     public bool $SMTPKeepAlive = false;
 
-    /**
-     * SMTP Encryption.
-     *
-     * @var string '', 'tls' or 'ssl'. 'tls' will issue a STARTTLS command
-     *             to the server. 'ssl' means implicit SSL. Connection on port
-     *             465 should set this to ''.
-     */
-    public string $SMTPCrypto = 'tls';
+    // Cifrado SMTP
+    public string $SMTPCrypto = 'tls';                 // Cifrado TLS
 
-    /**
-     * Enable word-wrap
-     */
+    // Configuración de WordWrap
     public bool $wordWrap = true;
-
-    /**
-     * Character count to wrap at
-     */
     public int $wrapChars = 76;
 
-    /**
-     * Type of mail, either 'text' or 'html'
-     */
-    public string $mailType = 'text';
+    // Tipo de correo: Enviar correos como HTML
+    public string $mailType = 'html';                  // Envío en formato HTML
 
-    /**
-     * Character set (utf-8, iso-8859-1, etc.)
-     */
-    public string $charset = 'UTF-8';
+    // Charset
+    public string $charset = 'UTF-8';                  // UTF-8 para compatibilidad
 
-    /**
-     * Whether to validate the email address
-     */
-    public bool $validate = false;
+    // Validar correos
+    public bool $validate = true;                      // Habilitar validación de correos
 
-    /**
-     * Email Priority. 1 = highest. 5 = lowest. 3 = normal
-     */
-    public int $priority = 3;
+    // Prioridad del correo
+    public int $priority = 3;                          // Prioridad estándar
 
-    /**
-     * Newline character. (Use “\r\n” to comply with RFC 822)
-     */
+    // Caracteres para nueva línea
     public string $CRLF = "\r\n";
+    public string $newline = "\r\n";                   // Ajuste importante para SMTP
 
-    /**
-     * Newline character. (Use “\r\n” to comply with RFC 822)
-     */
-    public string $newline = "\r\n";
-
-    /**
-     * Enable BCC Batch Mode.
-     */
+    // Modo BCC por lotes
     public bool $BCCBatchMode = false;
-
-    /**
-     * Number of emails in each BCC batch
-     */
     public int $BCCBatchSize = 200;
 
-    /**
-     * Enable notify message from server
-     */
+    // Notificación del servidor (DSN)
     public bool $DSN = false;
 }
