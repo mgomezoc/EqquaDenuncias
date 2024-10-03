@@ -1,7 +1,7 @@
 /**
  * Script para manejar la lógica del formulario de denuncias públicas.
- * Incluye carga dinámica de subcategorías y departamentos, manejo de Dropzone
- * para archivos adjuntos y la grabación de audio usando MediaRecorder API.
+ * Incluye validación con jquery-validate, carga dinámica de subcategorías y departamentos,
+ * manejo de Dropzone para archivos adjuntos y grabación de audio usando MediaRecorder API.
  */
 
 // Deshabilitar la autodetección de Dropzone
@@ -23,6 +23,7 @@ $(document).ready(function () {
         initializeSelect2();
         initializeFlatpickr();
         initializeDropzone();
+        initializeValidation();
         initializeEventListeners();
     }
 
@@ -32,7 +33,8 @@ $(document).ready(function () {
     function initializeSelect2() {
         $('.select2').select2({
             theme: 'bootstrap-5',
-            placeholder: 'Seleccione una opción'
+            placeholder: 'Seleccione una opción',
+            allowClear: true
         });
     }
 
@@ -72,6 +74,72 @@ $(document).ready(function () {
         };
 
         new Dropzone('#dropzoneArchivos', dropzoneOptions);
+    }
+
+    /**
+     * Inicializa la validación del formulario con jquery-validate.
+     */
+    function initializeValidation() {
+        $('#formCrearDenuncia').validate({
+            errorClass: 'is-invalid',
+            validClass: 'is-valid',
+            ignore: ':hidden:not(.select2)', // Permitir validar select2
+            errorPlacement: function (error, element) {
+                if (element.hasClass('select2')) {
+                    error.insertAfter(element.next('.select2-container')); // Insertar el error debajo de select2
+                } else {
+                    error.insertAfter(element);
+                }
+            },
+            rules: {
+                id_sucursal: {
+                    required: true
+                },
+                categoria: {
+                    required: true
+                },
+                subcategoria: {
+                    required: true
+                },
+                id_departamento: {
+                    required: true
+                },
+                fecha_incidente: {
+                    required: true,
+                    date: true
+                },
+                como_se_entero: {
+                    required: true
+                },
+                area_incidente: {
+                    required: true,
+                    minlength: 5
+                },
+                descripcion: {
+                    required: true,
+                    minlength: 10
+                },
+                anonimo: {
+                    required: true
+                }
+            },
+            messages: {
+                id_sucursal: 'Seleccione una sucursal.',
+                categoria: 'Seleccione una categoría.',
+                subcategoria: 'Seleccione una subcategoría.',
+                id_departamento: 'Seleccione un departamento.',
+                fecha_incidente: 'Ingrese una fecha válida.',
+                como_se_entero: 'Seleccione cómo se enteró.',
+                area_incidente: 'Ingrese el área donde sucedió el incidente (mínimo 5 caracteres).',
+                descripcion: 'Describa la denuncia (mínimo 10 caracteres).',
+                anonimo: 'Indique si la denuncia es anónima.'
+            }
+        });
+
+        // Soporte para validación de select2
+        $('.select2').on('change', function () {
+            $(this).valid();
+        });
     }
 
     /**
@@ -234,6 +302,10 @@ $(document).ready(function () {
      */
     function handleFormSubmit(e) {
         e.preventDefault();
+
+        if (!$('#formCrearDenuncia').valid()) {
+            return;
+        }
 
         const formData = new FormData(this);
 
