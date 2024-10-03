@@ -6,6 +6,7 @@
 
     <!-- Formulario para buscar denuncia -->
     <form id="formBuscarDenuncia" class="mb-5">
+        <input type="hidden" id="id_cliente" name="id_cliente" value="<?= $cliente['id'] ?>">
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <label for="folio" class="form-label">Número de Folio</label>

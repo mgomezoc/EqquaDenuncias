@@ -186,25 +186,38 @@ class Publico extends BaseController
 
     public function consultarDenuncia()
     {
-        // Obtener el folio de la solicitud GET
+        // Obtener el folio y el id_cliente de la solicitud GET
         $folio = $this->request->getGet('folio');
+        $id_cliente = $this->request->getGet('id_cliente');
 
         // Validar si se proporcionó un folio
         if (!$folio) {
             return $this->response->setStatusCode(400)
-                ->setJSON(['message' => 'Debe proporcionar un número de folio.']);
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Debe proporcionar un número de folio.'
+                ]);
         }
 
-        // Buscar la denuncia en la base de datos por el folio, usando joins para traer nombres asociados
+        // Validar si se proporcionó un id_cliente
+        if (!$id_cliente) {
+            return $this->response->setStatusCode(400)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Debe proporcionar un ID de cliente.'
+                ]);
+        }
+
+        // Buscar la denuncia por el folio y validar que pertenezca al cliente con $id_cliente
         $denunciaModel = new DenunciaModel();
         $denuncia = $denunciaModel
             ->select('denuncias.*, 
-                  clientes.nombre_empresa AS cliente_nombre, 
-                  sucursales.nombre AS sucursal_nombre, 
-                  categorias_denuncias.nombre AS categoria_nombre, 
-                  subcategorias_denuncias.nombre AS subcategoria_nombre, 
-                  departamentos.nombre AS departamento_nombre, 
-                  estados_denuncias.nombre AS estado_nombre')
+              clientes.nombre_empresa AS cliente_nombre, 
+              sucursales.nombre AS sucursal_nombre, 
+              categorias_denuncias.nombre AS categoria_nombre, 
+              subcategorias_denuncias.nombre AS subcategoria_nombre, 
+              departamentos.nombre AS departamento_nombre, 
+              estados_denuncias.nombre AS estado_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
             ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
@@ -212,12 +225,16 @@ class Publico extends BaseController
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
             ->where('denuncias.folio', $folio)
+            ->where('denuncias.id_cliente', $id_cliente)  // Validar que la denuncia pertenece al cliente
             ->first();
 
-        // Verificar si se encontró la denuncia
+        // Verificar si se encontró la denuncia para ese cliente
         if (!$denuncia) {
             return $this->response->setStatusCode(404)
-                ->setJSON(['message' => 'Denuncia no encontrada.']);
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Denuncia no encontrada o no pertenece al cliente proporcionado.'
+                ]);
         }
 
         // Obtener los comentarios visibles para el cliente (en estados 4, 5 y 6)
@@ -235,6 +252,8 @@ class Publico extends BaseController
 
         // Responder con los detalles de la denuncia, los comentarios y los archivos adjuntos
         return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Denuncia encontrada con éxito.',
             'denuncia' => $denuncia,
             'comentarios' => $comentariosVisibles,
             'archivos' => $archivos
