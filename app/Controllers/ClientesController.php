@@ -40,7 +40,12 @@ class ClientesController extends Controller
             'direccion' => $this->request->getVar('direccion'),
             'slug' => $this->request->getVar('slug'),
             'logo' => $this->request->getVar('logo'),
-            'banner' => $this->request->getVar('banner')
+            'banner' => $this->request->getVar('banner'),
+            'saludo' => $this->request->getVar('saludo'),
+            'whatsapp' => $this->request->getVar('whatsapp'),
+            'primary_color' => $this->request->getVar('primary_color'),
+            'secondary_color' => $this->request->getVar('secondary_color'),
+            'link_color' => $this->request->getVar('link_color')
         ];
 
         if ($id) {

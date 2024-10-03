@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 <section class="container my-5">
-    <h1 class="text-center text-success animate__animated animate__fadeIn">Registrar una Denuncia</h1>
+    <h1 class="text-center text-primary animate__animated animate__fadeIn">Registrar una Denuncia</h1>
     <p class="text-center text-muted">Complete el formulario para reportar una denuncia. Todos los campos son obligatorios.</p>
 
     <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
@@ -134,7 +134,7 @@
 
         <!-- Botón de envío -->
         <div class="mt-5 text-center">
-            <button type="submit" class="btn btn-primary btn-lg px-5">
+            <button type="submit" class="btn btn-secondary btn-lg px-5">
                 <i class="fa fa-paper-plane me-1"></i> Enviar Denuncia
             </button>
         </div>

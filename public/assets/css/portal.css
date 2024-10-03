@@ -1,7 +1,21 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 body {
   font-family: 'Roboto', sans-serif;
   color: #000000;
   background-color: #f9f9f9;
+}
+.text-primary {
+  color: var(--primary-color, #0047ba) !important;
+}
+.btn-secondary {
+  background-color: var(--secondary-color, #003a9c) !important;
+}
+.btn-secondary:hover {
+  filter: brightness(0.9);
 }
 p {
   font-size: 1rem;
@@ -15,7 +29,8 @@ p {
 .navbar .navbar-brand {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0047ba;
+  color: #333;
+  text-decoration: none;
 }
 .navbar .navbar-brand-client {
   font-size: 1rem;
@@ -25,18 +40,17 @@ p {
   color: #333;
   margin-right: 20px;
   font-weight: 500;
+  text-decoration: none;
   transition: color 0.3s ease, background-color 0.3s ease;
 }
 .navbar .nav-link.active {
   color: #fff;
-  background-color: #0047ba;
+  background-color: var(--primary-color, #0047ba);
   border-radius: 5px;
   padding: 10px 15px;
 }
-.navbar .nav-link:hover {
-  color: #0047ba;
-  background-color: #87b5ff;
-  border-radius: 5px;
+.navbar .nav-link:hover:not(.active) {
+  color: var(--primary-color, #0047ba);
 }
 .hero-section {
   background-size: cover;
@@ -52,7 +66,7 @@ p {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
   z-index: -1;
 }
 .hero-section h1 {
@@ -68,7 +82,7 @@ p {
   margin: 0 auto 20px;
 }
 .hero-section .btn-custom {
-  background-color: #0047ba;
+  background-color: var(--primary-color, #0047ba);
   color: #fff;
   padding: 12px 25px;
   border-radius: 5px;
@@ -76,8 +90,14 @@ p {
   font-weight: 700;
   transition: background-color 0.3s ease;
 }
+@media only screen and (min-width: 320px) and (max-width: 575px) {
+  .hero-section .btn-custom {
+    width: 90%;
+    margin-bottom: 1rem;
+  }
+}
 .hero-section .btn-custom:hover {
-  background-color: #003487;
+  filter: brightness(0.9);
 }
 .hero-section .logo-container {
   text-align: center;
@@ -112,7 +132,7 @@ p {
 }
 .service-box i {
   font-size: 2rem;
-  color: #0047ba;
+  color: var(--secondary-color, #003a9c);
   margin-bottom: 15px;
 }
 .service-box h4 {
@@ -127,20 +147,20 @@ p {
   margin-bottom: 0;
 }
 .contact-section {
-  padding: 60px 0;
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background-color: var(--secondary-color, #003a9c);
+}
+@media only screen and (min-width: 320px) and (max-width: 575px) {
+  .contact-section {
+    grid-template-columns: 1fr;
+  }
 }
 .contact-section .contact-item {
-  background-color: #0047ba;
-  background: #0047ba;
+  background-color: var(--secondary-color, #003a9c);
   color: #fff;
   padding: 20px;
-  border-radius: 10px;
   text-align: center;
-  margin-bottom: 20px;
-  flex-basis: 30%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -148,7 +168,8 @@ p {
 }
 .contact-section .contact-item:hover {
   transform: translateY(-10px);
-  background-color: #003a9c;
+  background-color: var(--secondary-color);
+  filter: brightness(0.9);
 }
 .contact-section .contact-item i {
   font-size: 2rem;
@@ -181,10 +202,10 @@ footer p {
   color: #999999;
 }
 footer a {
-  color: #0047ba;
+  color: var(--primary-color, #0047ba);
 }
 footer a:hover {
-  color: #003487;
+  color: var(--link-color, #0047ba);
   text-decoration: underline;
 }
 footer .footer-logo {
@@ -200,22 +221,14 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #0047ba;
-  box-shadow: 0 0 5px #5495ff;
-}
-.btn {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-.btn:hover {
-  background-color: #005aed;
-  color: #fff;
-  border-color: #003487;
+  border-color: var(--primary-color, #0047ba);
+  box-shadow: 0 0 5px var(--link-color, #0047ba);
 }
 a {
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-  color: #0047ba;
+  transition: all 0.3s ease, text-decoration 0.3s ease;
+  color: var(--link-color, #0047ba);
 }
 a:hover {
-  color: #003487;
+  color: var(--link-color, #0047ba);
   text-decoration: underline;
 }

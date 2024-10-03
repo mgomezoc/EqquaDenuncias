@@ -8,7 +8,22 @@ class ClienteModel extends Model
 {
     protected $table = 'clientes';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['nombre_empresa', 'numero_identificacion', 'correo_contacto', 'telefono_contacto', 'direccion', 'slug', 'logo', 'banner', 'created_at'];
+    protected $allowedFields = [
+        'nombre_empresa',
+        'numero_identificacion',
+        'correo_contacto',
+        'telefono_contacto',
+        'direccion',
+        'slug',
+        'logo',
+        'banner',
+        'saludo',
+        'whatsapp',
+        'primary_color',
+        'secondary_color',
+        'link_color',
+        'created_at'
+    ];
 
     public function getClientes()
     {

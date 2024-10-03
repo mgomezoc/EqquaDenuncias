@@ -12,6 +12,13 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: <?= $cliente['primary_color'] ?>;
+            --secondary-color: <?= $cliente['secondary_color'] ?>;
+            --link-color: <?= $cliente['link_color'] ?>;
+        }
+    </style>
     <link rel="stylesheet" href="<?= base_url('assets/css/portal.css') ?>">
 
     <?= $this->renderSection('styles') ?>
@@ -53,7 +60,7 @@
     <?= $this->renderSection('content') ?>
 
     <!-- Footer -->
-    <footer class="footer mt-5">
+    <footer class="footer">
         <div class="container">
             <img src="<?= base_url("assets/images/eqqua logos-09.png") ?>" alt="Eqqua Logo" class="footer-logo">
             <p>&copy; <?= date('Y') ?> Sistema de Denuncias. Todos los derechos reservados.</p>

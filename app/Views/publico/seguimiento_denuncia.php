@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 <section class="container my-5">
-    <h1 class="text-center text-success animate__animated animate__fadeIn">Seguimiento a mi Denuncia</h1>
+    <h1 class="text-center text-primary animate__animated animate__fadeIn">Seguimiento a mi Denuncia</h1>
 
     <!-- Formulario para buscar denuncia -->
     <form id="formBuscarDenuncia" class="mb-5">
@@ -13,7 +13,7 @@
                 <input type="text" class="form-control" id="folio" name="folio" value="<?= $folio ?>" placeholder="Ingrese su número de folio" required autofocus>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-success w-100"><i class="fas fa-search"></i> Consultar</button>
+                <button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Consultar</button>
             </div>
         </div>
     </form>

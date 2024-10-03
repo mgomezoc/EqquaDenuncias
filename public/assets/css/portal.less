@@ -1,6 +1,8 @@
 // Variables
-@primary-color: #0047ba;
-@secondary-color: #003a9c;
+@primary-color: var(--primary-color, #0047ba);
+@secondary-color: var(--secondary-color, #003a9c);
+@link-color: var(--link-color, #0047ba);
+
 @light-color: #fff;
 @dark-color: #333;
 @background-color: #f9f9f9;
@@ -9,11 +11,32 @@
 @font-weight-normal: 400;
 @transition-ease: 0.3s ease;
 
+@desktop: ~'only screen and (min-width: 960px) and (max-width: 1199px)';
+@tablet: ~'only screen and (min-width: 576px) and (max-width: 959px)';
+@mobile: ~'only screen and (min-width: 320px) and (max-width: 575px)';
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 // Global styles
 body {
     font-family: @font-family-base;
-    color: darken(@dark-color, 20%); // Ajuste de color para mayor contraste
+    color: darken(@dark-color, 20%);
     background-color: @background-color;
+}
+
+.text-primary {
+    color: @primary-color !important;
+}
+
+.btn-secondary {
+    background-color: @secondary-color !important;
+    &:hover {
+        filter: brightness(0.9);
+    }
 }
 
 p {
@@ -30,7 +53,8 @@ p {
     .navbar-brand {
         font-size: 1.75rem;
         font-weight: @font-weight-bold;
-        color: @primary-color;
+        color: #333;
+        text-decoration: none;
         &-client {
             font-size: 1rem;
             margin-left: 1rem;
@@ -41,19 +65,18 @@ p {
         color: @dark-color;
         margin-right: 20px;
         font-weight: 500;
+        text-decoration: none;
         transition: color @transition-ease, background-color @transition-ease;
 
         &.active {
-            color: @light-color; // Cambiar color de texto para mayor contraste
-            background-color: @primary-color; // Fondo visible para el enlace activo
+            color: @light-color;
+            background-color: @primary-color;
             border-radius: 5px;
-            padding: 10px 15px; // Aumentar padding para resaltar más
+            padding: 10px 15px;
         }
 
-        &:hover {
+        &:hover:not(.active) {
             color: @primary-color;
-            background-color: lighten(@primary-color, 40%); // Efecto hover suave
-            border-radius: 5px;
         }
     }
 }
@@ -73,7 +96,7 @@ p {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.8);
         z-index: -1;
     }
 
@@ -100,8 +123,13 @@ p {
         font-weight: @font-weight-bold;
         transition: background-color @transition-ease;
 
+        @media @mobile {
+            width: 90%;
+            margin-bottom: 1rem;
+        }
+
         &:hover {
-            background-color: darken(@primary-color, 10%);
+            filter: brightness(0.9);
         }
     }
 
@@ -145,7 +173,7 @@ p {
 
     i {
         font-size: 2rem;
-        color: @primary-color;
+        color: @secondary-color;
         margin-bottom: 15px;
     }
 
@@ -165,20 +193,17 @@ p {
 
 // Contact section styles
 .contact-section {
-    padding: 60px 0;
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background-color: @secondary-color;
+    @media @mobile {
+        grid-template-columns: 1fr;
+    }
     .contact-item {
-        background-color: @primary-color;
-        background: @primary-color;
+        background-color: @secondary-color;
         color: @light-color;
         padding: 20px;
-        border-radius: 10px;
         text-align: center;
-        margin-bottom: 20px;
-        flex-basis: 30%;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -186,7 +211,8 @@ p {
 
         &:hover {
             transform: translateY(-10px);
-            background-color: @secondary-color;
+            background-color: var(--secondary-color);
+            filter: brightness(0.9);
         }
 
         i {
@@ -231,7 +257,7 @@ footer {
         color: @primary-color;
 
         &:hover {
-            color: darken(@primary-color, 10%);
+            color: @link-color;
             text-decoration: underline;
         }
     }
@@ -251,28 +277,17 @@ textarea {
 
     &:focus {
         border-color: @primary-color;
-        box-shadow: 0 0 5px lighten(@primary-color, 30%);
-    }
-}
-
-// Button hover and focus improvements
-.btn {
-    transition: background-color @transition-ease, color @transition-ease, border-color @transition-ease;
-
-    &:hover {
-        background-color: lighten(@primary-color, 10%);
-        color: @light-color;
-        border-color: darken(@primary-color, 10%);
+        box-shadow: 0 0 5px @link-color;
     }
 }
 
 // Link hover effect
 a {
-    transition: color @transition-ease, text-decoration @transition-ease;
-    color: @primary-color;
+    transition: all @transition-ease, text-decoration @transition-ease;
+    color: @link-color;
 
     &:hover {
-        color: darken(@primary-color, 10%);
+        color: @link-color;
         text-decoration: underline;
     }
 }
