@@ -8,7 +8,7 @@ class DenunciaModel extends Model
 {
     protected $table            = 'denuncias';
     protected $primaryKey       = 'id';
-    protected $allowedFields    = [
+    protected $allowedFields = [
         'id_cliente',
         'folio',
         'fecha_hora_reporte',
@@ -18,12 +18,15 @@ class DenunciaModel extends Model
         'subcategoria',
         'id_departamento',
         'anonimo',
+        'nombre_completo',
+        'correo_electronico',
+        'telefono',
         'fecha_incidente',
         'como_se_entero',
         'denunciar_a_alguien',
+        'medio_recepcion',
         'area_incidente',
         'descripcion',
-        'medio_recepcion', // Nueva columna añadida aquí
         'estado_actual',
         'id_creador',
         'visible_para_agente',

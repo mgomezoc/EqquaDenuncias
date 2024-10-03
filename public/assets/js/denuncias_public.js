@@ -44,7 +44,8 @@ $(document).ready(function () {
     function initializeFlatpickr() {
         $('.flatpickr').flatpickr({
             dateFormat: 'Y-m-d',
-            maxDate: 'today'
+            maxDate: 'today',
+            defaultDate: 'today' // Fecha seleccionada por defecto: hoy
         });
     }
 
@@ -146,6 +147,14 @@ $(document).ready(function () {
      * Asigna los manejadores de eventos a los elementos del DOM.
      */
     function initializeEventListeners() {
+        $('input[name="anonimo"]').on('change', function () {
+            if ($(this).val() == '0') {
+                $('#infoAdicional').show(); // Mostrar los campos adicionales si no es anónimo
+            } else {
+                $('#infoAdicional').hide(); // Ocultar los campos adicionales si es anónimo
+            }
+        });
+
         $('#categoria').on('change', function () {
             const categoriaId = $(this).val();
             loadSubcategorias(categoriaId);
@@ -164,8 +173,6 @@ $(document).ready(function () {
 
     /**
      * Función que carga dinámicamente las subcategorías al seleccionar una categoría.
-     *
-     * @param {number} categoriaId - ID de la categoría seleccionada.
      */
     function loadSubcategorias(categoriaId) {
         $.ajax({
@@ -186,8 +193,6 @@ $(document).ready(function () {
 
     /**
      * Función que carga dinámicamente los departamentos al seleccionar una sucursal.
-     *
-     * @param {number} sucursalId - ID de la sucursal seleccionada.
      */
     function loadDepartamentos(sucursalId) {
         $.ajax({
@@ -207,9 +212,6 @@ $(document).ready(function () {
 
     /**
      * Manejador del evento de éxito al subir un archivo con Dropzone.
-     *
-     * @param {Object} file - El archivo subido.
-     * @param {Object} response - Respuesta del servidor.
      */
     function handleFileUploadSuccess(file, response) {
         $('<input>')
@@ -223,8 +225,6 @@ $(document).ready(function () {
 
     /**
      * Manejador del evento de eliminación de archivo en Dropzone.
-     *
-     * @param {Object} file - El archivo eliminado.
      */
     function handleFileRemove(file) {
         const filename = file.upload.filename;
@@ -243,7 +243,7 @@ $(document).ready(function () {
      */
     function startAudioRecording() {
         if (!checkMicrophoneSupport()) {
-            alert('El navegador no soporta la grabación de audio o no tiene permisos.');
+            Swal.fire('Error', 'El navegador no soporta la grabación de audio o no tiene permisos.', 'error');
             return;
         }
 
@@ -265,7 +265,7 @@ $(document).ready(function () {
             })
             .catch(error => {
                 console.error('Error al acceder al micrófono: ', error);
-                alert('Error al acceder al micrófono. Verifique los permisos.');
+                Swal.fire('Error', 'Error al acceder al micrófono. Verifique los permisos.', 'error');
             });
     }
 
@@ -297,8 +297,6 @@ $(document).ready(function () {
 
     /**
      * Manejador para enviar el formulario de creación de denuncia.
-     *
-     * @param {Event} e - Evento de envío del formulario.
      */
     function handleFormSubmit(e) {
         e.preventDefault();
@@ -315,13 +313,23 @@ $(document).ready(function () {
             data: formData,
             processData: false,
             contentType: false,
-            success: function () {
-                alert('Denuncia guardada correctamente.');
-                window.location.reload();
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Denuncia guardada',
+                        text: `Tu denuncia ha sido registrada con éxito. El número de folio es: ${response.folio}`,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location = `${Server}public/cliente/${slug}/seguimiento-denuncia?${response.folio}`;
+                    });
+                } else {
+                    Swal.fire('Error', 'Ocurrió un error al guardar la denuncia. Por favor, intenta de nuevo.', 'error');
+                }
             },
             error: function () {
                 console.error('Error al guardar la denuncia.');
-                alert('Ocurrió un error al guardar la denuncia. Por favor, intente de nuevo.');
+                Swal.fire('Error', 'Ocurrió un error al guardar la denuncia. Por favor, intenta de nuevo.', 'error');
             }
         });
     }

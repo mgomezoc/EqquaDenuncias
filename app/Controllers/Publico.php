@@ -63,46 +63,54 @@ class Publico extends BaseController
      */
     public function guardarDenunciaPublica()
     {
-        // Instanciar el modelo de Denuncia
         $denunciaModel = new DenunciaModel();
+        // Recoger si la denuncia es anónima o no
+        $anonimo = $this->request->getPost('anonimo');
 
-        // Determinar el valor de 'id_creador'. Si es anónimo, usar NULL.
-        $id_creador = ($this->request->getPost('anonimo') == 1) ? null : 0; // Ajusta el valor 0 si tienes un usuario especial, o usa null.
+        // Recoger información adicional si no es anónimo
+        $nombre_completo = $anonimo == 0 ? $this->request->getPost('nombre_completo') : null;
+        $correo_electronico = $anonimo == 0 ? $this->request->getPost('correo_electronico') : null;
+        $telefono = $anonimo == 0 ? $this->request->getPost('telefono') : null;
 
-        // Recoger datos del formulario
+        // Datos para guardar la denuncia
         $data = [
             'id_cliente' => $this->request->getPost('id_cliente'),
             'id_sucursal' => $this->request->getPost('id_sucursal'),
-            'tipo_denunciante' => 'Anonimo', // Fijo para la parte pública
+            'tipo_denunciante' => $anonimo ? 'Anonimo' : 'No Anonimo',
             'categoria' => $this->request->getPost('categoria'),
             'subcategoria' => $this->request->getPost('subcategoria'),
             'id_departamento' => $this->request->getPost('id_departamento'),
-            'anonimo' => $this->request->getPost('anonimo'),
+            'anonimo' => $anonimo,
+            'nombre_completo' => $nombre_completo,
+            'correo_electronico' => $correo_electronico,
+            'telefono' => $telefono,
             'fecha_incidente' => $this->request->getPost('fecha_incidente'),
             'como_se_entero' => $this->request->getPost('como_se_entero'),
             'denunciar_a_alguien' => $this->request->getPost('denunciar_a_alguien'),
             'area_incidente' => $this->request->getPost('area_incidente'),
             'descripcion' => $this->request->getPost('descripcion'),
-            'medio_recepcion' => 'Plataforma Pública', // Medio de recepción público
+            'medio_recepcion' => 'Plataforma Pública',
             'estado_actual' => 1, // Estado inicial (Recepción)
-            'id_creador' => $id_creador, // Ajuste en la creación del ID
+            'id_creador' => null
         ];
 
         // Guardar la denuncia
         if (!$denunciaModel->save($data)) {
             return $this->response->setStatusCode(400)
-                ->setJSON(['message' => 'Error al guardar la denuncia']);
+                ->setJSON(['success' => false, 'message' => 'Error al guardar la denuncia']);
         }
 
         // Obtener el ID de la denuncia recién creada
         $denunciaId = $denunciaModel->getInsertID();
+
+        // Obtener el folio generado para esta denuncia
+        $folio = $denunciaModel->find($denunciaId)['folio'];
 
         // Procesar archivos adjuntos (si existen)
         $anexos = $this->request->getPost('archivos');
         if ($anexos && is_array($anexos)) {
             $anexoModel = new AnexoDenunciaModel();
             foreach ($anexos as $rutaArchivo) {
-                // Guardar cada anexo en la base de datos
                 $anexoModel->save([
                     'id_denuncia' => $denunciaId,
                     'nombre_archivo' => basename($rutaArchivo),
@@ -112,8 +120,14 @@ class Publico extends BaseController
             }
         }
 
-        return $this->response->setJSON(['message' => 'Denuncia guardada correctamente']);
+        // Retornar el folio en la respuesta JSON
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Denuncia guardada correctamente',
+            'folio' => $folio // Retornar el folio generado
+        ]);
     }
+
 
 
     /**

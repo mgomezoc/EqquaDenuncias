@@ -38,8 +38,8 @@
         <div class="logo-container">
             <img src="<?= base_url($cliente['logo']) ?>" alt="<?= esc($cliente['nombre_empresa']) ?> Logo" class="animate__animated animate__zoomIn">
         </div>
-        <a href="<?= base_url('eqqua-formulario') ?>" class="btn btn-custom animate__animated animate__fadeInLeft">Reportar Denuncia</a>
-        <a href="<?= base_url('eqqua-seguimiento') ?>" class="btn btn-custom animate__animated animate__fadeInRight">Seguimiento a mi Denuncia</a>
+        <a href="<?= base_url("public/cliente/" . esc($cliente['slug']) . "/formulario-denuncia") ?>" class="btn btn-custom animate__animated animate__fadeInLeft">Reportar Denuncia</a>
+        <a href="<?= base_url("public/cliente/" . esc($cliente['slug']) . "/seguimiento-denuncia") ?>" class="btn btn-custom animate__animated animate__fadeInRight">Seguimiento a mi Denuncia</a>
     </div>
 </section>
 

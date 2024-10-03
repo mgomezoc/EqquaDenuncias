@@ -82,10 +82,9 @@
                 <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="5"></textarea>
             </div>
 
-            <!-- Denuncia anónima -->
             <div class="col-md-6">
                 <label class="form-label">¿Es anónimo?</label>
-                <div class="d-flex gap-4">
+                <div class="d-flex gap-3">
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" checked required>
                         <label class="form-check-label" for="anonimo-si">Sí</label>
@@ -94,6 +93,24 @@
                         <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
                         <label class="form-check-label" for="anonimo-no">No</label>
                     </div>
+                </div>
+            </div>
+
+            <!-- Información adicional cuando no es anónimo -->
+            <div id="infoAdicional" class="row g-3" style="display: none;">
+                <div class="col-md-6">
+                    <label for="nombre_completo" class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" placeholder="Ingrese su nombre completo">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="correo_electronico" class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="correo_electronico" name="correo_electronico" placeholder="Ingrese su correo electrónico">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="telefono" class="form-label">Teléfono (opcional)</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su teléfono (opcional)">
                 </div>
             </div>
 
@@ -137,5 +154,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+<script>
+    const slug = '<?= $cliente['slug'] ?>';
+</script>
 <script src="<?= base_url("assets/js/denuncias_public.js") ?>"></script>
 <?= $this->endSection() ?>

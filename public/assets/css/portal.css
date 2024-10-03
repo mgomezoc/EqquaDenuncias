@@ -17,6 +17,10 @@ p {
   font-weight: 700;
   color: #0047ba;
 }
+.navbar .navbar-brand-client {
+  font-size: 1rem;
+  margin-left: 1rem;
+}
 .navbar .nav-link {
   color: #333;
   margin-right: 20px;
