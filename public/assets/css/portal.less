@@ -12,10 +12,13 @@
 // Global styles
 body {
     font-family: @font-family-base;
-    color: @dark-color;
+    color: darken(@dark-color, 20%); // Ajuste de color para mayor contraste
     background-color: @background-color;
-    background: #dbdbdb url(../images/imagenes/poly-bg-white-01.svg) no-repeat center center fixed;
-    background-size: cover;
+}
+
+p {
+    font-size: 1rem;
+    color: darken(@dark-color, 15%); // Texto más oscuro para mejorar la legibilidad
 }
 
 // Navbar styles
@@ -31,9 +34,23 @@ body {
     }
 
     .nav-link {
-        color: @dark-color !important;
+        color: @dark-color;
         margin-right: 20px;
         font-weight: 500;
+        transition: color @transition-ease, background-color @transition-ease;
+
+        &.active {
+            color: @light-color; // Cambiar color de texto para mayor contraste
+            background-color: @primary-color; // Fondo visible para el enlace activo
+            border-radius: 5px;
+            padding: 10px 15px; // Aumentar padding para resaltar más
+        }
+
+        &:hover {
+            color: @primary-color;
+            background-color: lighten(@primary-color, 40%); // Efecto hover suave
+            border-radius: 5px;
+        }
     }
 }
 
@@ -57,33 +74,30 @@ body {
     }
 
     h1 {
-        font-size: 3.5rem;
+        font-size: 3rem; // Ajustado para mejorar el diseño responsive
         font-weight: @font-weight-bold;
+        color: lighten(@light-color, 15%);
         margin-bottom: 20px;
-        color: @light-color;
     }
 
     p {
-        font-size: 1.25rem;
-        margin-bottom: 30px;
-        max-width: 800px;
-        color: lighten(@light-color, 30%);
-        margin-left: auto;
-        margin-right: auto;
+        font-size: 1.2rem;
+        max-width: 700px; // Más compacto para mejor enfoque
+        color: lighten(@light-color, 20%);
+        margin: 0 auto 20px;
     }
 
     .btn-custom {
         background-color: @primary-color;
         color: @light-color;
-        padding: 12px 30px;
+        padding: 12px 25px; // Ajuste de padding
         border-radius: 5px;
         text-transform: uppercase;
         font-weight: @font-weight-bold;
         transition: background-color @transition-ease;
-        margin-right: 10px;
 
         &:hover {
-            background-color: @secondary-color;
+            background-color: darken(@primary-color, 10%);
         }
     }
 
@@ -154,8 +168,7 @@ body {
 
     .contact-item {
         background-color: @primary-color;
-        background: @primary-color url(../images/imagenes/crafto-landing-page-bg-01.png) no-repeat center center fixed;
-        background-size: cover;
+        background: @primary-color;
         color: @light-color;
         padding: 20px;
         border-radius: 10px;
@@ -188,13 +201,17 @@ body {
             font-weight: @font-weight-bold;
             text-decoration: none;
             font-size: 1rem;
+
+            &:hover {
+                text-decoration: underline;
+            }
         }
     }
 }
 
 // Footer styles
 footer {
-    background-color: @dark-color;
+    background-color: darken(@dark-color, 10%);
     background: #dfdfdf url(../images/imagenes/demo-branding-agency-bg-01.png) no-repeat center center;
     background-size: cover;
     color: #696969;
@@ -203,19 +220,55 @@ footer {
 
     p {
         margin-bottom: 0;
+        color: lighten(@dark-color, 40%); // Texto del footer más claro para contraste
     }
 
     a {
         color: @primary-color;
-        text-decoration: none;
 
         &:hover {
+            color: darken(@primary-color, 10%);
             text-decoration: underline;
         }
     }
 
     .footer-logo {
-        max-width: 150px;
+        max-width: 160px; // Tamaño de logo ajustado
         margin-bottom: 20px;
+    }
+}
+
+// Form styles (improving accessibility and focus states)
+input,
+select,
+textarea {
+    transition: border-color @transition-ease, box-shadow @transition-ease;
+    border: 1px solid darken(@background-color, 10%);
+
+    &:focus {
+        border-color: @primary-color;
+        box-shadow: 0 0 5px lighten(@primary-color, 30%);
+    }
+}
+
+// Button hover and focus improvements
+.btn {
+    transition: background-color @transition-ease, color @transition-ease, border-color @transition-ease;
+
+    &:hover {
+        background-color: lighten(@primary-color, 10%);
+        color: @light-color;
+        border-color: darken(@primary-color, 10%);
+    }
+}
+
+// Link hover effect
+a {
+    transition: color @transition-ease, text-decoration @transition-ease;
+    color: @primary-color;
+
+    &:hover {
+        color: darken(@primary-color, 10%);
+        text-decoration: underline;
     }
 }

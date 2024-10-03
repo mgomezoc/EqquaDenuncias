@@ -34,23 +34,20 @@
             </div>
         </div>
 
-        <!-- Comentarios como conversación -->
-        <h3>Comentarios del Cliente</h3>
-        <div id="contenedorComentarios" class="mb-4"></div>
+        <!-- Comentarios estilo chat -->
+        <h3>Comentarios</h3>
+        <div id="contenedorComentarios" class="mb-4" style="max-height: 400px; overflow-y: auto;"></div>
 
-        <!-- Sección para mostrar archivos -->
+        <!-- Archivos Adjuntos -->
         <div id="archivosAdjuntos" style="display: none;">
             <h3>Archivos Adjuntos</h3>
-            <ul id="listaArchivos" class="list-unstyled row">
-                <!-- Aquí se agregarán los archivos dinámicamente -->
-            </ul>
+            <ul id="listaArchivos" class="list-unstyled row"></ul>
         </div>
 
-        <!-- Formulario para agregar un comentario -->
+        <!-- Formulario para agregar comentarios -->
         <form id="formAgregarComentario" style="display: none;">
             <div class="mb-3">
-                <label for="nuevo_comentario" class="form-label">Agregar un nuevo comentario</label>
-                <textarea class="form-control" id="nuevo_comentario" name="contenido" rows="3" required></textarea>
+                <textarea class="form-control" id="nuevo_comentario" name="contenido" rows="3" placeholder="Escribe tu comentario..." required></textarea>
             </div>
             <input type="hidden" id="id_denuncia" name="id_denuncia">
             <button type="submit" class="btn btn-success"><i class="fas fa-comment-dots"></i> Enviar Comentario</button>

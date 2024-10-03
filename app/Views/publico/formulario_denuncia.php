@@ -2,38 +2,39 @@
 
 <?= $this->section('content') ?>
 <section class="container my-5">
-    <h1>Registrar una Denuncia</h1>
-    <p>Por favor, complete el formulario para reportar una nueva denuncia. Todos los campos son obligatorios.</p>
+    <h1 class="text-center text-success animate__animated animate__fadeIn">Registrar una Denuncia</h1>
+    <p class="text-center text-muted">Complete el formulario para reportar una denuncia. Todos los campos son obligatorios.</p>
 
     <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
         <!-- Dato oculto: Cliente -->
         <input type="hidden" name="id_cliente" value="<?= esc($cliente['id']) ?>">
-        <input type="hidden" name="tipo_denunciante" value="Cliente"> <!-- Tipo de denunciante predefinido -->
+        <input type="hidden" name="tipo_denunciante" value="Cliente">
 
+        <!-- Agrupación de campos en secciones lógicas -->
         <div class="row g-4">
-            <!-- Sucursal -->
+
+            <!-- Información de sucursal y categoría -->
             <div class="col-md-6">
                 <label for="id_sucursal" class="form-label">Sucursal</label>
                 <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
                     <option value="">Seleccione una sucursal</option>
-                    <?php foreach ($sucursales as $sucursal) : ?>
+                    <?php foreach ($sucursales as $sucursal): ?>
                         <option value="<?= $sucursal['id'] ?>"><?= $sucursal['nombre'] ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
-            <!-- Categoría -->
             <div class="col-md-6">
                 <label for="categoria" class="form-label">Categoría</label>
                 <select class="form-select select2" id="categoria" name="categoria" required>
                     <option value="">Seleccione una categoría</option>
-                    <?php foreach ($categorias as $categoria) : ?>
+                    <?php foreach ($categorias as $categoria): ?>
                         <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
-            <!-- Subcategoría -->
+            <!-- Subcategoría y Departamento -->
             <div class="col-md-6">
                 <label for="subcategoria" class="form-label">Subcategoría</label>
                 <select class="form-select select2" id="subcategoria" name="subcategoria" required>
@@ -41,7 +42,6 @@
                 </select>
             </div>
 
-            <!-- Departamento -->
             <div class="col-md-6">
                 <label for="id_departamento" class="form-label">Departamento</label>
                 <select class="form-select select2" id="id_departamento" name="id_departamento">
@@ -49,16 +49,15 @@
                 </select>
             </div>
 
-            <!-- Fecha del Incidente -->
+            <!-- Información del incidente -->
             <div class="col-md-6">
                 <label for="fecha_incidente" class="form-label">Fecha del Incidente</label>
                 <input type="text" class="form-control flatpickr" id="fecha_incidente" name="fecha_incidente" required>
             </div>
 
-            <!-- ¿Cómo se Enteró? -->
             <div class="col-md-6">
                 <label for="como_se_entero" class="form-label">¿Cómo se Enteró?</label>
-                <select name="como_se_entero" id="como_se_entero" class="form-select select2" required>
+                <select class="form-select select2" id="como_se_entero" name="como_se_entero" required>
                     <option value="Fui víctima">Fui víctima</option>
                     <option value="Fui testigo">Fui testigo</option>
                     <option value="Estaba involucrado">Estaba involucrado</option>
@@ -66,30 +65,29 @@
                 </select>
             </div>
 
-            <!-- Área del Incidente -->
+            <!-- Descripción del área y la denuncia -->
             <div class="col-md-6">
                 <label for="area_incidente" class="form-label">Área del Incidente</label>
                 <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
             </div>
 
-            <!-- Denunciar a Alguien -->
             <div class="col-md-6">
                 <label for="denunciar_a_alguien" class="form-label">Denunciar a Alguien</label>
                 <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien" placeholder="Describa a la persona involucrada"></textarea>
             </div>
 
-            <!-- Descripción -->
+            <!-- Descripción completa del incidente -->
             <div class="col-md-12">
                 <label for="descripcion" class="form-label">Descripción</label>
-                <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="7"></textarea>
+                <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="5"></textarea>
             </div>
 
-            <!-- ¿Es Anónimo? -->
+            <!-- Denuncia anónima -->
             <div class="col-md-6">
-                <label class="form-label">Anónimo</label>
-                <div class="d-flex gap-3">
+                <label class="form-label">¿Es anónimo?</label>
+                <div class="d-flex gap-4">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" required>
+                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" checked required>
                         <label class="form-check-label" for="anonimo-si">Sí</label>
                     </div>
                     <div class="form-check">
@@ -99,31 +97,29 @@
                 </div>
             </div>
 
-            <!-- Archivos Adjuntos -->
+            <!-- Adjuntos -->
             <div class="col-md-12">
                 <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
-                <div id="dropzoneArchivos" class="dropzone"></div>
+                <div id="dropzoneArchivos" class="dropzone border p-3" style="border-radius: 10px;"></div>
             </div>
 
-            <!-- Audio Input Section -->
+            <!-- Audio -->
             <div class="col-md-12">
                 <label for="audio_input" class="form-label">¿Nos quieres dejar un audio?</label>
                 <div class="input-group">
-                    <!-- Botones de grabación -->
                     <button id="startRecording" type="button" class="btn btn-outline-secondary"><i class="fa fa-microphone"></i> Iniciar Grabación</button>
                     <button id="stopRecording" type="button" class="btn btn-outline-secondary" disabled><i class="fa fa-stop"></i> Detener Grabación</button>
-
-                    <!-- Campo para subir archivos de audio -->
                     <input type="file" name="audio_file" id="audio_input" class="form-control" accept="audio/*">
                 </div>
-                <!-- Contenedor de la grabación -->
-                <audio id="audioPlayback" controls style="display: none;"></audio>
+                <audio id="audioPlayback" controls style="display: none;" class="mt-3"></audio>
             </div>
-
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Enviar Denuncia</button>
+        <!-- Botón de envío -->
+        <div class="mt-5 text-center">
+            <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="fa fa-paper-plane me-1"></i> Enviar Denuncia
+            </button>
         </div>
     </form>
 </section>
@@ -134,15 +130,12 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
 <script src="<?= base_url("assets/js/denuncias_public.js") ?>"></script>
 <?= $this->endSection() ?>

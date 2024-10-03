@@ -1,9 +1,11 @@
 body {
   font-family: 'Roboto', sans-serif;
-  color: #333;
+  color: #000000;
   background-color: #f9f9f9;
-  background: #dbdbdb url(../images/imagenes/poly-bg-white-01.svg) no-repeat center center fixed;
-  background-size: cover;
+}
+p {
+  font-size: 1rem;
+  color: #0d0d0d;
 }
 .navbar {
   background-color: #fff;
@@ -16,9 +18,21 @@ body {
   color: #0047ba;
 }
 .navbar .nav-link {
-  color: #333 !important;
+  color: #333;
   margin-right: 20px;
   font-weight: 500;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+.navbar .nav-link.active {
+  color: #fff;
+  background-color: #0047ba;
+  border-radius: 5px;
+  padding: 10px 15px;
+}
+.navbar .nav-link:hover {
+  color: #0047ba;
+  background-color: #87b5ff;
+  border-radius: 5px;
 }
 .hero-section {
   background-size: cover;
@@ -38,31 +52,28 @@ body {
   z-index: -1;
 }
 .hero-section h1 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 700;
+  color: #ffffff;
   margin-bottom: 20px;
-  color: #fff;
 }
 .hero-section p {
-  font-size: 1.25rem;
-  margin-bottom: 30px;
-  max-width: 800px;
+  font-size: 1.2rem;
+  max-width: 700px;
   color: #ffffff;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto 20px;
 }
 .hero-section .btn-custom {
   background-color: #0047ba;
   color: #fff;
-  padding: 12px 30px;
+  padding: 12px 25px;
   border-radius: 5px;
   text-transform: uppercase;
   font-weight: 700;
   transition: background-color 0.3s ease;
-  margin-right: 10px;
 }
 .hero-section .btn-custom:hover {
-  background-color: #003a9c;
+  background-color: #003487;
 }
 .hero-section .logo-container {
   text-align: center;
@@ -119,8 +130,7 @@ body {
 }
 .contact-section .contact-item {
   background-color: #0047ba;
-  background: #0047ba url(../images/imagenes/crafto-landing-page-bg-01.png) no-repeat center center fixed;
-  background-size: cover;
+  background: #0047ba;
   color: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -151,8 +161,11 @@ body {
   text-decoration: none;
   font-size: 1rem;
 }
+.contact-section .contact-item a:hover {
+  text-decoration: underline;
+}
 footer {
-  background-color: #333;
+  background-color: #1a1a1a;
   background: #dfdfdf url(../images/imagenes/demo-branding-agency-bg-01.png) no-repeat center center;
   background-size: cover;
   color: #696969;
@@ -161,15 +174,44 @@ footer {
 }
 footer p {
   margin-bottom: 0;
+  color: #999999;
 }
 footer a {
   color: #0047ba;
-  text-decoration: none;
 }
 footer a:hover {
+  color: #003487;
   text-decoration: underline;
 }
 footer .footer-logo {
-  max-width: 150px;
+  max-width: 160px;
   margin-bottom: 20px;
+}
+input,
+select,
+textarea {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #0047ba;
+  box-shadow: 0 0 5px #5495ff;
+}
+.btn {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+.btn:hover {
+  background-color: #005aed;
+  color: #fff;
+  border-color: #003487;
+}
+a {
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+  color: #0047ba;
+}
+a:hover {
+  color: #003487;
+  text-decoration: underline;
 }
