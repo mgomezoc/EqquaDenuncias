@@ -321,7 +321,7 @@ $(document).ready(function () {
                         text: `Tu denuncia ha sido registrada con éxito. El número de folio es: ${response.folio}`,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        window.location = `${Server}public/cliente/${slug}/seguimiento-denuncia?${response.folio}`;
+                        window.location = `${Server}public/cliente/${slug}/seguimiento-denuncia?folio=${response.folio}`;
                     });
                 } else {
                     Swal.fire('Error', 'Ocurrió un error al guardar la denuncia. Por favor, intenta de nuevo.', 'error');

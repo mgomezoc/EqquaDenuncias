@@ -10,7 +10,7 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <label for="folio" class="form-label">Número de Folio</label>
-                <input type="text" class="form-control" id="folio" name="folio" placeholder="Ingrese su número de folio" required autofocus>
+                <input type="text" class="form-control" id="folio" name="folio" value="<?= $folio ?>" placeholder="Ingrese su número de folio" required autofocus>
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-success w-100"><i class="fas fa-search"></i> Consultar</button>

@@ -168,9 +168,12 @@ class Publico extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
+        $folio = $this->request->getGet('folio');
+
         $data = [
             'title' => 'Seguimiento de Denuncia - ' . esc($cliente['nombre_empresa']),
-            'cliente' => $cliente
+            'cliente' => $cliente,
+            'folio' => $folio
         ];
 
         return view('publico/seguimiento_denuncia', $data);
