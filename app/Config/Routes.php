@@ -49,7 +49,7 @@ $routes->get('/noautorizado', 'Error::noautorizado'); // Página de error para a
  * Rutas para el dashboard
  * Accesible para todos los usuarios autenticados
  */
-$routes->get('/dashboard', 'Dashboard::index', ['filter' => 'authFilter']); // Dashboard principal
+$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']); // Dashboard principal
 
 /**
  * Grupo de rutas accesibles solo por ADMIN y otros roles específicos
