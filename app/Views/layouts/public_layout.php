@@ -57,7 +57,9 @@
     </nav>
 
     <!-- Main content -->
-    <?= $this->renderSection('content') ?>
+    <div id="content" class="content">
+        <?= $this->renderSection('content') ?>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

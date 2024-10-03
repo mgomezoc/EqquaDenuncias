@@ -67,7 +67,7 @@
                     <label for="slug" class="form-label">Slug</label>
                     <input type="text" class="form-control" id="slug" name="slug" value="{{slug}}" required>
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-8">
                     <label for="saludo" class="form-label">Saludo</label>
                     <textarea class="form-control" id="saludo" name="saludo" rows="4">{{saludo}}</textarea>
                 </div>
@@ -75,17 +75,21 @@
                     <label for="whatsapp" class="form-label">WhatsApp</label>
                     <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{whatsapp}}" pattern="\d{10}">
                 </div>
-                <div class="col-md-4">
-                    <label for="primary_color" class="form-label">Primary Color</label>
-                    <input type="color" class="form-control" id="primary_color" name="primary_color" value="{{primary_color}}">
-                </div>
-                <div class="col-md-4">
-                    <label for="secondary_color" class="form-label">Secondary Color</label>
-                    <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="{{secondary_color}}">
-                </div>
-                <div class="col-md-4">
-                    <label for="link_color" class="form-label">Link Color</label>
-                    <input type="color" class="form-control" id="link_color" name="link_color" value="{{link_color}}">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="primary_color" class="form-label">Primary Color</label>
+                            <input type="color" class="form-control" id="primary_color" name="primary_color" value="{{primary_color}}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="secondary_color" class="form-label">Secondary Color</label>
+                            <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="{{secondary_color}}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="link_color" class="form-label">Link Color</label>
+                            <input type="color" class="form-control" id="link_color" name="link_color" value="{{link_color}}">
+                        </div>
+                    </div>
                 </div>
                 <div class="mt-5">
                     <button type="submit" class="btn btn-primary">

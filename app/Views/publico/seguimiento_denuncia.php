@@ -2,7 +2,12 @@
 
 <?= $this->section('content') ?>
 <section class="container my-5">
-    <h1 class="text-center text-primary animate__animated animate__fadeIn">Seguimiento a mi Denuncia</h1>
+
+    <div class="text-center mb-5">
+        <h1 class="titulo animate__animated animate__fadeIn">Seguimiento a mi Denuncia</h1>
+        <p class="text-muted">Ingrese su número de denuncia para verificar el estado actual y recibir detalles actualizados.</p>
+    </div>
+
 
     <!-- Formulario para buscar denuncia -->
     <form id="formBuscarDenuncia" class="mb-5">

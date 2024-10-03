@@ -28,8 +28,29 @@ body {
     background-color: @background-color;
 }
 
-.text-primary {
-    color: @primary-color !important;
+.titulo {
+    position: relative;
+    display: inline-block;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0; /* Inicia en 0 */
+        height: 2px;
+        background-color: @primary-color;
+        animation: underline 1s ease-in-out 1s forwards; /* 'forwards' mantiene el último frame */
+    }
+}
+
+@keyframes underline {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: 100%; /* Termina en 100% */
+    }
 }
 
 .btn-secondary {
@@ -42,6 +63,9 @@ body {
 p {
     font-size: 1rem;
     color: darken(@dark-color, 15%); // Texto más oscuro para mejorar la legibilidad
+}
+.content {
+    min-height: calc(100vh - 400px);
 }
 
 // Navbar styles

@@ -2,8 +2,10 @@
 
 <?= $this->section('content') ?>
 <section class="container my-5">
-    <h1 class="text-center text-primary animate__animated animate__fadeIn">Registrar una Denuncia</h1>
-    <p class="text-center text-muted">Complete el formulario para reportar una denuncia. Todos los campos son obligatorios.</p>
+    <div class="text-center mb-5">
+        <h1 class="titulo animate__animated animate__fadeIn">Registrar una Denuncia</h1>
+        <p class="text-muted">Complete el formulario para reportar una denuncia. Todos los campos son obligatorios.</p>
+    </div>
 
     <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
         <!-- Dato oculto: Cliente -->
