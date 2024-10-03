@@ -139,16 +139,126 @@ class UsuariosController extends Controller
         $emailService = new EmailService();
 
         // Crear el mensaje
-        $mensaje = "<p>Estimado/a <strong>{$nombreUsuario}</strong>,</p>";
-        $mensaje .= "<p>Su cuenta ha sido creada exitosamente en nuestra plataforma de Eqqua Denuncias.</p>";
-        $mensaje .= "<p>Sus credenciales de acceso son:</p>";
-        $mensaje .= "<p><strong>Nombre de usuario:</strong> {$nombreUsuario}</p>";
-        if ($contrasena) {
-            $mensaje .= "<p><strong>Contraseña:</strong> {$contrasena}</p>";
-        }
-        $mensaje .= "<p>Puede acceder a su cuenta utilizando el siguiente enlace: <a href='" . base_url() . "'>Iniciar Sesión</a></p>";
-        $mensaje .= "<p>Saludos cordiales,</p>";
-        $mensaje .= "<p><strong>Eqqua Denuncias</strong></p>";
+        $mensaje = '
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Bienvenido a Eqqua Denuncias</title>
+                <style>
+                    /* Estilos generales */
+                    body {
+                        font-family: "Arial", sans-serif;
+                        background-color: #f4f4f4;
+                        color: #333333;
+                        margin: 0;
+                        padding: 0;
+                        width: 100%;
+                    }
+                    table {
+                        max-width: 600px;
+                        width: 100%;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        border-collapse: collapse;
+                    }
+                    h1, h2, h3, p {
+                        margin: 0;
+                    }
+                    .header {
+                        background-color: #0047ba; /* Color primario del sistema */
+                        padding: 20px;
+                        text-align: center;
+                        color: #ffffff;
+                    }
+                    .header img {
+                        max-width: 150px;
+                        height: auto;
+                    }
+                    .body-content {
+                        padding: 20px;
+                    }
+                    .body-content h2 {
+                        color: #0047ba;
+                        font-size: 22px;
+                    }
+                    .body-content p {
+                        font-size: 16px;
+                        color: #333333;
+                        line-height: 1.6;
+                    }
+                    .cta-button {
+                        display: inline-block;
+                        padding: 10px 20px;
+                        margin-top: 20px;
+                        background-color: #f4b400; /* Amarillo del sistema */
+                        color: #ffffff;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-size: 16px;
+                    }
+                    .footer {
+                        background-color: #0047ba;
+                        color: #ffffff;
+                        text-align: center;
+                        padding: 10px 20px;
+                        font-size: 14px;
+                    }
+                    .footer a {
+                        color: #ffffff;
+                        text-decoration: underline;
+                    }
+                    @media only screen and (max-width: 600px) {
+                        .header img {
+                            max-width: 120px;
+                        }
+                        .body-content {
+                            padding: 15px;
+                        }
+                        .cta-button {
+                            font-size: 14px;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <table>
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <img src="https://eqqua.test/EqquaDenuncias/public/assets/images/logo.png" alt="Eqqua Denuncias Logo">
+                            <h1>Bienvenido a Eqqua Denuncias</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Body content -->
+                    <tr>
+                        <td class="body-content">
+                            <h2>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</h2>
+                            <p>Nos complace informarle que su cuenta ha sido creada exitosamente en la plataforma <strong>Eqqua Denuncias</strong>.</p>
+                            <p>A continuación, encontrará sus credenciales de acceso:</p>
+                            <ul style="list-style: none; padding: 0;">
+                                <li><strong>Nombre de usuario:</strong> ' . esc($nombreUsuario) . '</li>
+                                <li><strong>Contraseña:</strong> ' . esc($contrasena) . '</li>
+                            </ul>
+                            <p>Para acceder a su cuenta, haga clic en el siguiente enlace:</p>
+                            <p><a href="' . base_url() . '" class="cta-button">Iniciar Sesión</a></p>
+                            <p>Si tiene alguna pregunta, no dude en contactarnos.</p>
+                            <p>Saludos cordiales,<br><strong>Eqqua Denuncias</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <p>&copy; ' . date('Y') . ' Eqqua Denuncias. Todos los derechos reservados.</p>
+                            <p>Para más información, visite nuestro sitio web: <a href="https://eqqua.mx">eqqua.mx</a></p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>';
 
         // Enviar el correo
         $emailService->sendEmail($email, 'Bienvenido a Eqqua Denuncias', $mensaje);
