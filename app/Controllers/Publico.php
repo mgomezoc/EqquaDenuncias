@@ -195,9 +195,24 @@ class Publico extends BaseController
                 ->setJSON(['message' => 'Debe proporcionar un número de folio.']);
         }
 
-        // Buscar la denuncia en la base de datos por el folio
+        // Buscar la denuncia en la base de datos por el folio, usando joins para traer nombres asociados
         $denunciaModel = new DenunciaModel();
-        $denuncia = $denunciaModel->where('folio', $folio)->first();
+        $denuncia = $denunciaModel
+            ->select('denuncias.*, 
+                  clientes.nombre_empresa AS cliente_nombre, 
+                  sucursales.nombre AS sucursal_nombre, 
+                  categorias_denuncias.nombre AS categoria_nombre, 
+                  subcategorias_denuncias.nombre AS subcategoria_nombre, 
+                  departamentos.nombre AS departamento_nombre, 
+                  estados_denuncias.nombre AS estado_nombre')
+            ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
+            ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
+            ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
+            ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
+            ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
+            ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
+            ->where('denuncias.folio', $folio)
+            ->first();
 
         // Verificar si se encontró la denuncia
         if (!$denuncia) {
