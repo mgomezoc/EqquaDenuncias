@@ -200,10 +200,13 @@ p {
         grid-template-columns: 1fr;
     }
     .contact-item {
-        background-color: @secondary-color;
+        background-color: @dark-color;
         color: @light-color;
         padding: 20px;
+        border-radius: 10px;
         text-align: center;
+        margin-bottom: 20px;
+        flex-basis: 30%;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -211,30 +214,26 @@ p {
 
         &:hover {
             transform: translateY(-10px);
-            background-color: var(--secondary-color);
-            filter: brightness(0.9);
+            background-color: @secondary-color;
         }
 
         i {
             font-size: 2rem;
             margin-bottom: 10px;
+            color: @light-color;
         }
 
-        p {
+        p,
+        a {
             margin: 10px 0;
             font-size: 1rem;
             color: @light-color;
+            text-decoration: none;
         }
 
-        a {
-            color: @light-color;
-            font-weight: @font-weight-bold;
-            text-decoration: none;
-            font-size: 1rem;
-
-            &:hover {
-                text-decoration: underline;
-            }
+        a:hover {
+            text-decoration: underline;
+            color: lighten(@light-color, 15%);
         }
     }
 }

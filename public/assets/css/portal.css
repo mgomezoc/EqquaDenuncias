@@ -157,10 +157,13 @@ p {
   }
 }
 .contact-section .contact-item {
-  background-color: var(--secondary-color, #003a9c);
+  background-color: #333;
   color: #fff;
   padding: 20px;
+  border-radius: 10px;
   text-align: center;
+  margin-bottom: 20px;
+  flex-basis: 30%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -168,26 +171,23 @@ p {
 }
 .contact-section .contact-item:hover {
   transform: translateY(-10px);
-  background-color: var(--secondary-color);
-  filter: brightness(0.9);
+  background-color: var(--secondary-color, #003a9c);
 }
 .contact-section .contact-item i {
   font-size: 2rem;
   margin-bottom: 10px;
+  color: #fff;
 }
-.contact-section .contact-item p {
+.contact-section .contact-item p,
+.contact-section .contact-item a {
   margin: 10px 0;
   font-size: 1rem;
   color: #fff;
-}
-.contact-section .contact-item a {
-  color: #fff;
-  font-weight: 700;
   text-decoration: none;
-  font-size: 1rem;
 }
 .contact-section .contact-item a:hover {
   text-decoration: underline;
+  color: #ffffff;
 }
 footer {
   background-color: #1a1a1a;
