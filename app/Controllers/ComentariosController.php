@@ -33,9 +33,15 @@ class ComentariosController extends BaseController
         ];
 
         if ($comentarioModel->save($data)) {
-            return $this->response->setJSON(['message' => 'Comentario guardado correctamente']);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Comentario guardado correctamente'
+            ]);
         } else {
-            return $this->response->setStatusCode(500)->setJSON(['message' => 'Error al guardar el comentario']);
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al guardar el comentario'
+            ]);
         }
     }
 

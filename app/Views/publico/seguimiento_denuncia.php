@@ -30,14 +30,24 @@
                     <th>Comentario</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="tablaComentariosCuerpo">
+                <!-- Aquí se agregarán los comentarios dinámicamente -->
+            </tbody>
         </table>
+
+        <!-- Sección para mostrar archivos -->
+        <div id="archivosAdjuntos" style="display: none;">
+            <h3>Archivos Adjuntos</h3>
+            <ul id="listaArchivos">
+                <!-- Aquí se agregarán los archivos dinámicamente -->
+            </ul>
+        </div>
 
         <!-- Formulario para agregar un comentario -->
         <form id="formAgregarComentario" style="display: none;">
             <div class="mb-3">
                 <label for="nuevo_comentario" class="form-label">Agregar Comentario</label>
-                <textarea class="form-control" id="nuevo_comentario" name="nuevo_comentario" rows="3" required></textarea>
+                <textarea class="form-control" id="nuevo_comentario" name="contenido" rows="3" required></textarea>
             </div>
             <input type="hidden" id="id_denuncia" name="id_denuncia">
             <button type="submit" class="btn btn-success">Enviar Comentario</button>
