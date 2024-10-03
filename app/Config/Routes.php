@@ -28,6 +28,9 @@ $routes->group('public', function ($routes) {
 
     // Ruta pública para subir archivos adjuntos usando Dropzone
     $routes->post('denuncias/subir-anexo-public', 'Publico::subirAnexoPublico'); // Subir anexos públicos
+
+    // Ruta para la consulta de seguimiento de denuncias
+    $routes->get('denuncias/consultar', 'Publico::consultarDenuncia'); // Nueva ruta para buscar la denuncia por folio
 });
 
 

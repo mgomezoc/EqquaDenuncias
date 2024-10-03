@@ -8,6 +8,7 @@ use App\Models\SucursalModel;
 use App\Models\DenunciaModel;
 use App\Models\SubcategoriaDenunciaModel;
 use App\Models\AnexoDenunciaModel;
+use App\Models\ComentarioDenunciaModel;
 
 class Publico extends BaseController
 {
@@ -181,5 +182,47 @@ class Publico extends BaseController
         $departamentos = $sucursalModel->obtenerDepartamentosPorSucursal($sucursalId);
 
         return $this->response->setJSON($departamentos);
+    }
+
+    public function consultarDenuncia()
+    {
+        // Obtener el folio de la solicitud GET
+        $folio = $this->request->getGet('folio');
+
+        // Validar si se proporcionó un folio
+        if (!$folio) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['message' => 'Debe proporcionar un número de folio.']);
+        }
+
+        // Buscar la denuncia en la base de datos por el folio
+        $denunciaModel = new DenunciaModel();
+        $denuncia = $denunciaModel->where('folio', $folio)->first();
+
+        // Verificar si se encontró la denuncia
+        if (!$denuncia) {
+            return $this->response->setStatusCode(404)
+                ->setJSON(['message' => 'Denuncia no encontrada.']);
+        }
+
+        // Obtener los comentarios visibles para el cliente (en estados 4, 5 y 6)
+        $comentarioModel = new ComentarioDenunciaModel();
+        $comentarios = $comentarioModel->getComentariosByDenuncia($denuncia['id']);
+
+        // Filtrar comentarios visibles solo si el estado está en [4, 5, 6]
+        $comentariosVisibles = array_filter($comentarios, function ($comentario) {
+            return in_array($comentario['estado_denuncia'], [4, 5, 6]);
+        });
+
+        // Obtener los anexos asociados a la denuncia
+        $anexoModel = new AnexoDenunciaModel();
+        $archivos = $anexoModel->where('id_denuncia', $denuncia['id'])->findAll();
+
+        // Responder con los detalles de la denuncia, los comentarios y los archivos adjuntos
+        return $this->response->setJSON([
+            'denuncia' => $denuncia,
+            'comentarios' => $comentariosVisibles,
+            'archivos' => $archivos
+        ]);
     }
 }
