@@ -13,14 +13,14 @@ class DashboardController extends BaseController
         // Obtener datos del mes actual
         $estatusDenuncias = $model->getDenunciasPorEstatus();
         $denunciasPorDepto = $model->getDenunciasPorDepartamento();
-        //$denunciasAnonimas = $model->getDenunciasAnonimas();
+        $denunciasPorSucursal = $model->getDenunciasPorSucursal();  // NUEVO MÉTODO
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento();
 
         $data = [
-            'title' => '',
+            'title' => 'Dashboard',
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
-            //'denunciasAnonimas' => $denunciasAnonimas,
+            'denunciasPorSucursal' => $denunciasPorSucursal,  // NUEVO
             'denunciasPorConocimiento' => $denunciasPorConocimiento
         ];
 
@@ -36,13 +36,14 @@ class DashboardController extends BaseController
 
         $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate);
         $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate);
-        $denunciasAnonimas = $model->getDenunciasAnonimas($startDate, $endDate);
+        $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);  // NUEVO
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate);
 
         $data = [
+            'title' => 'Dashboard',
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
-            'denunciasAnonimas' => $denunciasAnonimas,
+            'denunciasPorSucursal' => $denunciasPorSucursal,  // NUEVO
             'denunciasPorConocimiento' => $denunciasPorConocimiento
         ];
 

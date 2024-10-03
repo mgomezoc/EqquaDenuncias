@@ -50,7 +50,7 @@ $routes->get('/noautorizado', 'Error::noautorizado'); // Página de error para a
  * Accesible para todos los usuarios autenticados
  */
 $routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']); // Dashboard principal
-
+$routes->post('/dashboard/filtrar', 'DashboardController::filtrar');
 /**
  * Grupo de rutas accesibles solo por ADMIN y otros roles específicos
  * Usuarios autenticados con roles ADMIN, CLIENTE, AGENTE, SUPERVISOR_CALIDAD

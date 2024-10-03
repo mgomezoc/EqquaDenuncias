@@ -90,4 +90,23 @@ class DashboardModel extends Model
 
         return $builder->get()->getResultArray();
     }
+
+    public function getDenunciasPorSucursal($startDate = null, $endDate = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select('sucursales.nombre, COUNT(denuncias.id) as total')
+            ->join('sucursales', 'denuncias.id_sucursal = sucursales.id')
+            ->groupBy('sucursales.nombre')
+            ->orderBy('total', 'DESC');  // Ordena por la cantidad de denuncias
+
+        if ($startDate && $endDate) {
+            $builder->where('denuncias.created_at >=', $startDate)
+                ->where('denuncias.created_at <=', $endDate);
+        } else {
+            $builder->where('MONTH(denuncias.created_at)', date('m'))
+                ->where('YEAR(denuncias.created_at)', date('Y'));
+        }
+
+        return $builder->get()->getResultArray();
+    }
 }
