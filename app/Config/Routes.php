@@ -166,6 +166,15 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
         $routes->post('perfil/actualizar', 'PerfilClienteController::actualizarPerfil');
 
         // Gestión de usuarios del cliente
+        $routes->group('usuarios', function ($routes) {
+            $routes->get('/', 'UsuariosClienteController::index'); // Página principal de usuarios del cliente
+            $routes->get('listar', 'UsuariosClienteController::listar'); // API para listar usuarios del cliente
+            $routes->post('guardar', 'UsuariosClienteController::guardar'); // Guardar/crear usuario del cliente
+            $routes->post('eliminar/(:num)', 'UsuariosClienteController::eliminar/$1'); // Eliminar usuario por ID
+            $routes->post('validarUnico', 'UsuariosClienteController::validarUnico'); // Validar unicidad de usuario
+        });
+
+        // Gestión de usuarios del cliente
         $routes->get('usuarios', 'UsuariosClienteController::index');
         $routes->post('usuarios/guardar', 'UsuariosClienteController::guardar');
         $routes->post('usuarios/eliminar/(:num)', 'UsuariosClienteController::eliminar/$1');

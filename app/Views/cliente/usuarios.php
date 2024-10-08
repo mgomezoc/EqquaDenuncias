@@ -1,0 +1,122 @@
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('title') ?>Usuarios del Cliente<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+<?php echo view('partials/_pageHeader', ['controlador' => 'Cliente', 'vista' => 'Usuarios']); ?>
+
+<div class="card custom-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Usuarios</span>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearUsuario">
+            <i class="fa fa-plus"></i> Agregar Usuario
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="tablaUsuarios" class="table table-sm table-striped table-eqqua">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Última Conexión</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<template id="tplAccionesTabla">
+    <button class="btn btn-sm btn-danger remove">
+        <i class="fa fa-trash"></i>
+    </button>
+</template>
+
+<template id="tplDetalleTabla">
+    <div class="card custom-card card-body">
+        <form id="formEditarUsuario-{{id}}" action="<?= base_url('cliente/usuarios/guardar') ?>" method="post" class="formEditarUsuario">
+            <input type="hidden" name="id" value="{{id}}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="nombre_usuario-{{id}}" class="form-label">Nombre de Usuario</label>
+                    <input type="text" class="form-control" id="nombre_usuario-{{id}}" name="nombre_usuario" value="{{nombre_usuario}}" required autocomplete="username">
+                </div>
+                <div class="col-md-6">
+                    <label for="correo_electronico-{{id}}" class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="correo_electronico-{{id}}" name="correo_electronico" value="{{correo_electronico}}" required autocomplete="email">
+                </div>
+                <div class="col-md-6">
+                    <label for="rol_id-{{id}}" class="form-label">Rol</label>
+                    <select class="form-select" id="rol_id-{{id}}" name="rol_id" required>
+                        <option value="2" {{#ifEquals rol_id "2"}}selected{{/ifEquals}}>Agente</option>
+                        <option value="3" {{#ifEquals rol_id "3"}}selected{{/ifEquals}}>Supervisor de Calidad</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</template>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
+<!-- Modal Crear Usuario -->
+<div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formCrearUsuario" action="<?= base_url('cliente/usuarios/guardar') ?>" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCrearUsuarioLabel">Agregar Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombre_usuario" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="correo_electronico" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="correo_electronico" name="correo_electronico" required autocomplete="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contrasena" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="contrasena" name="contrasena" required autocomplete="new-password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="rol_id" class="form-label">Rol</label>
+                        <select class="form-select" id="rol_id" name="rol_id" required>
+                            <option value="2">Agente</option>
+                            <option value="3">Supervisor de Calidad</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
+<script src="<?= base_url('assets/js/cliente-usuarios.js') ?>"></script>
+<?= $this->endSection() ?>
