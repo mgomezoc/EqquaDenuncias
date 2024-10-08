@@ -18,10 +18,16 @@ class UsuariosClienteController extends Controller
     {
         $clienteId = session()->get('id_cliente');
         $usuarioModel = new UsuarioModel();
-        $usuarios = $usuarioModel->where('id_cliente', $clienteId)->findAll();
+
+        // Obtener usuarios junto con el nombre del rol
+        $usuarios = $usuarioModel->select('usuarios.id, usuarios.nombre_usuario, usuarios.correo_electronico, usuarios.ultima_conexion, roles.nombre AS rol_nombre')
+            ->join('roles', 'roles.id = usuarios.rol_id')
+            ->where('usuarios.id_cliente', $clienteId)
+            ->findAll();
 
         return $this->response->setJSON($usuarios);
     }
+
 
     public function guardar()
     {

@@ -52,8 +52,7 @@
                 <div class="col-md-6">
                     <label for="rol_id-{{id}}" class="form-label">Rol</label>
                     <select class="form-select" id="rol_id-{{id}}" name="rol_id" required>
-                        <option value="2" {{#ifEquals rol_id "2"}}selected{{/ifEquals}}>Agente</option>
-                        <option value="3" {{#ifEquals rol_id "3"}}selected{{/ifEquals}}>Supervisor de Calidad</option>
+                        {{{selectOptions roles rol_id}}}
                     </select>
                 </div>
                 <div class="col-md-12">
@@ -65,6 +64,7 @@
         </form>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 
@@ -116,6 +116,9 @@
 
 <?= $this->section('scripts') ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.22.1/locale/bootstrap-table-es-MX.min.js"></script>
+<script src="<?= base_url('assets/js/bootstrap-table-config.js') ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script src="<?= base_url('assets/js/cliente-usuarios.js') ?>"></script>

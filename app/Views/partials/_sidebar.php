@@ -60,7 +60,14 @@
                             <span class="side-menu__label">Denuncias</span>
                         </a>
                     </li>
+                    <li class="slide">
+                        <a href="<?= base_url('reportes') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-chart-bar side-menu__icon"></i>
+                            <span class="side-menu__label">Reportes</span>
+                        </a>
+                    </li>
                 <?php endif; ?>
+
 
                 <?php if ($rol == 'CLIENTE'): ?>
                     <li class="slide">
