@@ -1,3 +1,11 @@
+/***
+ *
+ * PERFIL CLIENTE
+ *
+ */
+
+Dropzone.autoDiscover = false;
+
 $(document).ready(function () {
     $('#formActualizarPerfil').validate({
         rules: {
@@ -49,4 +57,27 @@ $(document).ready(function () {
                 });
         }
     });
+
+    // Inicializar Dropzones para logo y banner
+    initializeDropzone('dropzoneLogo', 'logo');
+    initializeDropzone('dropzoneBanner', 'banner');
 });
+
+function initializeDropzone(elementId, fieldName) {
+    new Dropzone(`#${elementId}`, {
+        url: `${Server}clientes/subirImagen`,
+        maxFiles: 1,
+        acceptedFiles: 'image/*',
+        addRemoveLinks: true,
+        dictDefaultMessage: 'Arrastra una imagen aquí para subirla',
+        dictRemoveFile: 'Eliminar imagen',
+        init: function () {
+            this.on('success', function (file, response) {
+                $(`#formActualizarPerfil`).append(`<input type="hidden" name="${fieldName}" value="assets/images/clientes/${response.filename}">`);
+            });
+            this.on('removedfile', function (file) {
+                $(`input[name="${fieldName}"]`).remove();
+            });
+        }
+    });
+}

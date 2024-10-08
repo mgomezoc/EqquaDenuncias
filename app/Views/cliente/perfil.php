@@ -7,6 +7,7 @@
 <div class="card custom-card">
     <div class="card-header">
         <h3>Información del Cliente</h3>
+        <a href="<?= base_url("public/cliente/" . $cliente['slug']) ?>" class="btn btn-link" target="_blank">Ver pagina</a>
     </div>
     <div class="card-body">
         <form id="formActualizarPerfil" action="<?= base_url('cliente/perfil/actualizar') ?>" method="post">
@@ -51,6 +52,41 @@
                     <label for="link_color" class="form-label">Link Color</label>
                     <input type="color" class="form-control" id="link_color" name="link_color" value="<?= $cliente['link_color'] ?>">
                 </div>
+
+                <!-- Sección para editar el Logo -->
+                <div class="col-md-6">
+                    <div class="card border-light mb-3">
+                        <div class="card-header text-center bg-light">
+                            <h5 class="mb-0">Logo</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <a href="<?= base_url($cliente['logo']) ?>" data-lightbox="cliente-logo" data-title="Logo de <?= $cliente['nombre_empresa'] ?>">
+                                <img src="<?= base_url($cliente['logo']) ?>" alt="logo" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                            </a>
+                            <label for="logo" class="form-label d-block">Subir Nuevo Logo</label>
+                            <div id="dropzoneLogo" class="dropzone mb-3"></div>
+                            <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección para editar el Banner -->
+                <div class="col-md-6">
+                    <div class="card border-light mb-3">
+                        <div class="card-header text-center bg-light">
+                            <h5 class="mb-0">Banner</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <a href="<?= base_url($cliente['banner']) ?>" data-lightbox="cliente-banner" data-title="Banner de <?= $cliente['nombre_empresa'] ?>">
+                                <img src="<?= base_url($cliente['banner']) ?>" alt="banner" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                            </a>
+                            <label for="banner" class="form-label d-block">Subir Nuevo Banner</label>
+                            <div id="dropzoneBanner" class="dropzone mb-3"></div>
+                            <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-5">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
@@ -60,6 +96,13 @@
         </form>
     </div>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
