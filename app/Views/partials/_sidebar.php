@@ -64,6 +64,18 @@
 
                 <?php if ($rol == 'CLIENTE'): ?>
                     <li class="slide">
+                        <a href="<?= base_url('cliente/perfil') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-user side-menu__icon"></i>
+                            <span class="side-menu__label">Perfil</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('cliente/usuarios') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-users side-menu__icon"></i>
+                            <span class="side-menu__label">Usuarios</span>
+                        </a>
+                    </li>
+                    <li class="slide">
                         <a href="<?= base_url('denuncias/mis-denuncias-cliente') ?>" class="side-menu__item">
                             <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
                             <span class="side-menu__label">Mis Denuncias</span>
@@ -73,12 +85,12 @@
                     <li class="slide has-sub">
                         <a href="javascript:void(0);" class="side-menu__item">
                             <i class="fa-solid fa-chart-bar side-menu__icon"></i>
-                            <span class="side-menu__label">Mis Reportes</span>
+                            <span class="side-menu__label">Reportes</span>
                             <i class="fa fa-chevron-right side-menu__angle"></i>
                         </a>
                         <ul class="slide-menu child1">
                             <li class="slide">
-                                <a href="<?= base_url('reportes/gasolina') ?>" class="side-menu__item">Reporte Denuncias</a>
+                                <a href="<?= base_url('reportes/denuncias') ?>" class="side-menu__item">Reporte Denuncias</a>
                             </li>
                         </ul>
                     </li>

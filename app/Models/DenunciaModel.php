@@ -118,6 +118,8 @@ class DenunciaModel extends Model
 
     public function getDenunciasByCliente($clienteId)
     {
+        $estadosPermitidos = [4, 5, 6]; // Estados que el cliente puede ver
+
         return $this->select('denuncias.*, 
                           sucursales.nombre AS sucursal_nombre, 
                           categorias_denuncias.nombre AS categoria_nombre, 
@@ -130,9 +132,11 @@ class DenunciaModel extends Model
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
             ->where('denuncias.id_cliente', $clienteId)
+            ->whereIn('denuncias.estado_actual', $estadosPermitidos) // Filtrar por estados permitidos
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
+
 
     public function eliminarDenuncia(int $id): bool
     {
@@ -205,9 +209,9 @@ class DenunciaModel extends Model
             ->findAll();
     }
 
-    public function getDenunciasParaCalidad()
+    public function getDenunciasParaCalidad($clienteId)
     {
-        // Supongamos que los estados relevantes para el supervisor de calidad son 2, 3 y 4
+        // Estados que el supervisor de calidad puede ver
         $estadosRelevantes = [2, 3, 4]; // ID de los estados "Clasificada", "Revisada por Calidad", "Liberada al Cliente"
 
         return $this->select('denuncias.*, 
@@ -223,7 +227,8 @@ class DenunciaModel extends Model
             ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
-            ->whereIn('denuncias.estado_actual', $estadosRelevantes)
+            ->where('denuncias.id_cliente', $clienteId) // Filtrar por el cliente correcto
+            ->whereIn('denuncias.estado_actual', $estadosRelevantes) // Filtrar por estados permitidos para calidad
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }

@@ -16,7 +16,7 @@ class ComentarioDenunciaModel extends Model
             ->join('usuarios', 'usuarios.id = comentarios_denuncias.id_usuario')
             ->join('estados_denuncias', 'estados_denuncias.id = comentarios_denuncias.estado_denuncia')
             ->where('id_denuncia', $id_denuncia)
-            ->orderBy('fecha_comentario', 'ASC')
+            ->orderBy('fecha_comentario', 'DESC')
             ->findAll();
     }
 }

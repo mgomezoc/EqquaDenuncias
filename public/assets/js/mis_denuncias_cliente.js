@@ -83,12 +83,37 @@ $(function () {
         'click .change-status': function (e, value, row, index) {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
                 let opciones = '';
+                const estadosPermitidos = []; // Aquí almacenaremos los estados que el cliente puede seleccionar
+
+                // Determinar los estados permitidos en función del estado actual
+                switch (parseInt(row.estado_actual)) {
+                    case 4: // "Liberada al Cliente"
+                        estadosPermitidos.push(5); // "En Revisión por Cliente"
+                        break;
+                    case 5: // "En Revisión por Cliente"
+                        estadosPermitidos.push(6); // "Cerrada"
+                        break;
+                    case 6: // "Cerrada"
+                        estadosPermitidos.push(4);
+                        estadosPermitidos.push(5);
+                        estadosPermitidos.push(6);
+                        break;
+                    default:
+                        // En otros estados, no se permite cambiar el estado por el cliente
+                        estadosPermitidos.push(parseInt(row.estado_actual)); // Solo mostrar el estado actual como seleccionable
+                        break;
+                }
+
+                // Filtrar los estados según los permitidos para el cliente
                 estados.forEach(estado => {
-                    const selected = estado.id === row.estado_actual ? 'selected' : '';
-                    opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
+                    if (estadosPermitidos.includes(parseInt(estado.id))) {
+                        const selected = estado.id === row.estado_actual ? 'selected' : '';
+                        opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
+                    }
                 });
 
                 const modal = new bootstrap.Modal($('#modalCambiarEstado'));
+
                 $('#modalCambiarEstado .modal-body').html(`
             <form id="formCambiarEstado">
                 <div class="mb-3">
@@ -103,6 +128,7 @@ $(function () {
                 </div>
             </form>
         `);
+
                 $('#modalCambiarEstado .modal-footer .btn-primary')
                     .off('click')
                     .on('click', function () {

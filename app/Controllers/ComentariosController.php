@@ -23,11 +23,11 @@ class ComentariosController extends BaseController
 
         $estado_denuncia = $denuncia['estado_actual'];
 
-
+        $id_usuario = session()->get('id') ?? 18;
         // Guardar el comentario con el estado de la denuncia
         $data = [
             'id_denuncia' => $id_denuncia,
-            'id_usuario' => session()->get('id'),  // ID del usuario que hace el comentario
+            'id_usuario' => $id_usuario,  // ID del usuario que hace el comentario
             'contenido' => $contenido,
             'estado_denuncia' => $estado_denuncia,
         ];

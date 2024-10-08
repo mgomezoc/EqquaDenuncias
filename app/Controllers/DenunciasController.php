@@ -157,8 +157,9 @@ class DenunciasController extends Controller
 
     public function listarDenunciasCalidad()
     {
+        $clienteId = session()->get('id_cliente');
         $denunciaModel = new DenunciaModel();
-        $denuncias = $denunciaModel->getDenunciasParaCalidad();
+        $denuncias = $denunciaModel->getDenunciasParaCalidad($clienteId);
 
         return $this->response->setJSON($denuncias);
     }

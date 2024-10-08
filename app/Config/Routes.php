@@ -160,6 +160,17 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
         $routes->get('mis-denuncias-cliente', 'DenunciasController::misDenunciasCliente'); // Ver denuncias del cliente autenticado
     });
 
+    $routes->group('cliente', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
+        // Gestión del perfil del cliente
+        $routes->get('perfil', 'PerfilClienteController::perfil');
+        $routes->post('perfil/actualizar', 'PerfilClienteController::actualizarPerfil');
+
+        // Gestión de usuarios del cliente
+        $routes->get('usuarios', 'UsuariosClienteController::index');
+        $routes->post('usuarios/guardar', 'UsuariosClienteController::guardar');
+        $routes->post('usuarios/eliminar/(:num)', 'UsuariosClienteController::eliminar/$1');
+    });
+
     // Gestión de clientes (solo accesible para el cliente autenticado)
     $routes->group('clientes', function ($routes) {
         $routes->get('/', 'ClientesController::index'); // Listar clientes

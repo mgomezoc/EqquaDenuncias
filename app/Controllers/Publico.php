@@ -229,12 +229,12 @@ class Publico extends BaseController
         $denunciaModel = new DenunciaModel();
         $denuncia = $denunciaModel
             ->select('denuncias.*, 
-              clientes.nombre_empresa AS cliente_nombre, 
-              sucursales.nombre AS sucursal_nombre, 
-              categorias_denuncias.nombre AS categoria_nombre, 
-              subcategorias_denuncias.nombre AS subcategoria_nombre, 
-              departamentos.nombre AS departamento_nombre, 
-              estados_denuncias.nombre AS estado_nombre')
+          clientes.nombre_empresa AS cliente_nombre, 
+          sucursales.nombre AS sucursal_nombre, 
+          categorias_denuncias.nombre AS categoria_nombre, 
+          subcategorias_denuncias.nombre AS subcategoria_nombre, 
+          departamentos.nombre AS departamento_nombre, 
+          estados_denuncias.nombre AS estado_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
             ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
