@@ -63,7 +63,7 @@
                     <li class="slide">
                         <a href="<?= base_url('reportes') ?>" class="side-menu__item">
                             <i class="fa-solid fa-chart-bar side-menu__icon"></i>
-                            <span class="side-menu__label">Reportes</span>
+                            <span class="side-menu__label">Reporte</span>
                         </a>
                     </li>
                 <?php endif; ?>
@@ -88,18 +88,11 @@
                             <span class="side-menu__label">Mis Denuncias</span>
                         </a>
                     </li>
-                    <li class="slide__category"><span class="category-name">Reportes</span></li>
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
+                    <li class="slide">
+                        <a href="<?= base_url('reportes/cliente') ?>" class="side-menu__item">
                             <i class="fa-solid fa-chart-bar side-menu__icon"></i>
-                            <span class="side-menu__label">Reportes</span>
-                            <i class="fa fa-chevron-right side-menu__angle"></i>
+                            <span class="side-menu__label">Reporte</span>
                         </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide">
-                                <a href="<?= base_url('reportes/denuncias') ?>" class="side-menu__item">Reporte Denuncias</a>
-                            </li>
-                        </ul>
                     </li>
                 <?php endif; ?>
 

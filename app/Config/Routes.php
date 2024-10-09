@@ -63,10 +63,13 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
     $routes->get('/admin', 'Admin::index');
 
     // Gestión de reportes de denuncias
-    $routes->group('reportes', ['filter' => 'authFilter:ADMIN'], function ($routes) {
+    $routes->group('reportes', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
         $routes->get('/', 'ReportesController::index');
         $routes->post('listar', 'ReportesController::listar');
         $routes->post('exportarCSV', 'ReportesController::exportarCSV');
+
+        $routes->get('cliente', 'ReportesController::cliente');
+        $routes->post('listarParaCliente', 'ReportesController::listarParaCliente');
     });
 
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');

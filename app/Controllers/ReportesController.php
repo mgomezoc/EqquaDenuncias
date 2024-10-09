@@ -130,4 +130,53 @@ class ReportesController extends Controller
         fclose($output);
         exit;
     }
+
+    public function cliente()
+    {
+        $estadoModel = new EstadoDenunciaModel();
+        $usuarioId = session()->get('usuario_id');
+        $clienteId = session()->get('id_cliente');
+
+        // Validar que el usuario autenticado pertenece a un cliente
+        if (empty($clienteId)) {
+            return redirect()->to('/noautorizado');
+        }
+
+        // Obtener los estados para los filtros
+        $estados = $estadoModel->findAll();
+
+        $data = [
+            'clienteId' => $clienteId,
+            'estados' => $estados,
+            'title' => 'Reporte de Denuncias para Cliente'
+        ];
+
+        return view('reportes/cliente', $data);
+    }
+
+    public function listarParaCliente()
+    {
+        $clienteId = session()->get('id_cliente'); // Obtener el ID del cliente desde la sesión
+        $postData = json_decode($this->request->getBody(), true);
+
+        $limit = $postData['limit'] ?? 10;
+        $offset = $postData['offset'] ?? 0;
+        $sort = $postData['sort'] ?? '';
+        $order = $postData['order'] ?? 'asc';
+
+        $filters = [
+            'search' => $postData['search'] ?? '',
+            'fecha_inicio' => $postData['fecha_inicio'] ?? '',
+            'fecha_fin' => $postData['fecha_fin'] ?? '',
+            'id_sucursal' => $postData['id_sucursal'] ?? '',
+            'id_departamento' => $postData['id_departamento'] ?? '',
+            'medio_recepcion' => $postData['medio_recepcion'] ?? '',
+            'estado_actual' => $postData['estado_actual'] ?? '',
+            'id_creador' => $postData['id_creador'] ?? '',
+        ];
+
+        $result = $this->denunciaModel->filtrarDenunciasParaCliente($clienteId, $limit, $offset, $filters, $sort, $order);
+
+        return $this->response->setJSON($result);
+    }
 }
