@@ -29,11 +29,6 @@
                 </a>
                 <ul class="main-header-dropdown dropdown-menu overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile">
                     <li>
-                        <a class="dropdown-item d-flex" href="<?= base_url('perfil') ?>">
-                            <i class="fa fa-user-circle fs-18 me-2 op-7"></i>Perfil
-                        </a>
-                    </li>
-                    <li>
                         <a class="dropdown-item d-flex" href="<?= base_url('logout') ?>">
                             <i class="fa fa-sign-out-alt fs-18 me-2 op-7"></i>Salir
                         </a>

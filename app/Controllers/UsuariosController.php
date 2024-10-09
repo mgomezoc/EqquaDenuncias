@@ -36,6 +36,7 @@ class UsuariosController extends Controller
         $usuarios = $usuarioModel->select('usuarios.*, roles.nombre AS rol_nombre, clientes.nombre_empresa AS cliente_nombre')
             ->join('roles', 'roles.id = usuarios.rol_id', 'left')
             ->join('clientes', 'clientes.id = usuarios.id_cliente', 'left')
+            ->where('usuarios.activo', 1) // Solo mostrar usuarios activos
             ->findAll();
 
         return $this->response->setJSON($usuarios);
@@ -59,26 +60,25 @@ class UsuariosController extends Controller
         $data = [
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
+            'contrasena' => $this->request->getVar('contrasena'),
             'rol_id' => $this->request->getVar('rol_id'),
             'id_cliente' => $id_cliente ?: null,
+            'activo' => 1
         ];
 
-        // Si se proporciona una contraseña, actualizarla
-        if ($contrasena = $this->request->getVar('contrasena')) {
-            $data['contrasena'] = password_hash($contrasena, PASSWORD_DEFAULT);
-        }
-
-        // Validar la unicidad del nombre de usuario y correo electrónico
+        // Validar la unicidad del nombre de usuario y correo electrónico solo para usuarios activos
         $usuarioExistente = null;
         if ($id) {
             $usuarioExistente = $usuarioModel->where('id !=', $id)
+                ->where('activo', 1) // Filtrar solo usuarios activos
                 ->groupStart()
                 ->where('nombre_usuario', $this->request->getVar('nombre_usuario'))
                 ->orWhere('correo_electronico', $this->request->getVar('correo_electronico'))
                 ->groupEnd()
                 ->first();
         } else {
-            $usuarioExistente = $usuarioModel->groupStart()
+            $usuarioExistente = $usuarioModel->where('activo', 1) // Filtrar solo usuarios activos
+                ->groupStart()
                 ->where('nombre_usuario', $this->request->getVar('nombre_usuario'))
                 ->orWhere('correo_electronico', $this->request->getVar('correo_electronico'))
                 ->groupEnd()
@@ -110,7 +110,7 @@ class UsuariosController extends Controller
             $this->enviarCorreoBienvenida(
                 $data['correo_electronico'],
                 $data['nombre_usuario'],
-                $contrasena // Solo si se proporciona una contraseña
+                $this->request->getVar('contrasena') // Solo si se proporciona una contraseña
             );
         }
 
@@ -125,6 +125,7 @@ class UsuariosController extends Controller
 
         return $this->response->setJSON(['message' => 'Usuario guardado correctamente']);
     }
+
 
     /**
      * Enviar correo de bienvenida al nuevo usuario
@@ -279,15 +280,21 @@ class UsuariosController extends Controller
         $usuarioModel = new UsuarioModel();
         $relacionModel = new RelacionClientesUsuariosModel();
 
-        // Eliminar la relación en `relacion_clientes_usuarios`
-        $relacionModel->where('id_usuario', $id)->delete();
+        // Verificar si el usuario existe
+        $usuario = $usuarioModel->find($id);
+        if (!$usuario) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Usuario no encontrado']);
+        }
 
-        // Eliminar el usuario
-        $usuarioModel->delete($id);
+        // Marcar el usuario como inactivo en lugar de eliminarlo físicamente
+        $data = ['id' => $id, 'activo' => 0]; // 0 indica inactivo
 
-        registrarAccion(session()->get('id'), 'Eliminación de usuario', 'ID: ' . $id);
+        if ($usuarioModel->save($data)) {
+            registrarAccion(session()->get('id'), 'Desactivación de usuario', 'ID: ' . $id);
+            return $this->response->setJSON(['message' => 'Usuario marcado como inactivo correctamente']);
+        }
 
-        return $this->response->setJSON(['message' => 'Usuario eliminado correctamente']);
+        return $this->response->setStatusCode(400)->setJSON(['message' => 'Error al desactivar el usuario']);
     }
 
     public function validarUnico()
@@ -312,6 +319,10 @@ class UsuariosController extends Controller
             }
             $usuarioModel->groupEnd();
 
+            // Filtrar solo usuarios activos
+            $usuarioModel->where('activo', 1);
+
+            // Excluir el usuario actual si se proporciona un ID
             if ($id) {
                 $usuarioModel->where('id !=', $id);
             }
