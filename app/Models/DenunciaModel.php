@@ -232,4 +232,104 @@ class DenunciaModel extends Model
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
+
+    public function filtrarDenuncias($limit, $offset, array $filters, $sort = '', $order = 'asc')
+    {
+        $builder = $this->db->table($this->table);
+
+        // Selección de campos y unión con otras tablas
+        $builder->select('denuncias.*, 
+                      clientes.nombre_empresa AS cliente_nombre, 
+                      sucursales.nombre AS sucursal_nombre, 
+                      departamentos.nombre AS departamento_nombre, 
+                      estados_denuncias.nombre AS estado_nombre, 
+                      usuarios.nombre_usuario AS creador_nombre,
+                      subcategorias_denuncias.nombre AS subcategoria_nombre,
+                      categorias_denuncias.nombre AS categoria_nombre');
+        $builder->join('clientes', 'clientes.id = denuncias.id_cliente', 'left');
+        $builder->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left');
+        $builder->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left');
+        $builder->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left');
+        $builder->join('usuarios', 'usuarios.id = denuncias.id_creador', 'left');
+        $builder->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left');
+        $builder->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left');
+
+        // Aplicar filtros
+        if (!empty($filters['fecha_inicio']) && !empty($filters['fecha_fin'])) {
+            $builder->where('denuncias.fecha_hora_reporte >=', $filters['fecha_inicio'] . ' 00:00:00');
+            $builder->where('denuncias.fecha_hora_reporte <=', $filters['fecha_fin'] . ' 23:59:59');
+        }
+
+        if (!empty($filters['id_cliente']) && $filters['id_cliente'] !== 'todos') {
+            $builder->where('denuncias.id_cliente', $filters['id_cliente']);
+        }
+
+        if (!empty($filters['id_sucursal'])) {
+            $builder->where('denuncias.id_sucursal', $filters['id_sucursal']);
+        }
+
+        if (!empty($filters['id_departamento'])) {
+            $builder->where('denuncias.id_departamento', $filters['id_departamento']);
+        }
+
+        if (!empty($filters['medio_recepcion'])) {
+            $builder->where('denuncias.medio_recepcion', $filters['medio_recepcion']);
+        }
+
+        if (!empty($filters['estado_actual'])) {
+            $builder->where('denuncias.estado_actual', $filters['estado_actual']);
+        }
+
+        if (!empty($filters['id_creador'])) {
+            $builder->where('denuncias.id_creador', $filters['id_creador']);
+        }
+
+        // Aplicar búsqueda en múltiples columnas si se envió el parámetro 'search'
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $builder->groupStart()
+                ->like('denuncias.folio', $search)
+                ->orLike('clientes.nombre_empresa', $search)
+                ->orLike('sucursales.nombre', $search)
+                ->orLike('departamentos.nombre', $search)
+                ->orLike('estados_denuncias.nombre', $search)
+                ->orLike('usuarios.nombre_usuario', $search)
+                ->orLike('denuncias.descripcion', $search)
+                ->orLike('subcategorias_denuncias.nombre', $search)
+                ->orLike('categorias_denuncias.nombre', $search)
+                ->groupEnd();
+        }
+
+        // Ordenar y validar el tipo de columna a ordenar
+        $validColumns = [
+            'folio',
+            'cliente_nombre',
+            'sucursal_nombre',
+            'departamento_nombre',
+            'estado_nombre',
+            'creador_nombre',
+            'subcategoria_nombre',
+            'categoria_nombre',
+            'fecha_hora_reporte',
+            'fecha_incidente'
+        ];
+        if (!empty($sort) && in_array($sort, $validColumns)) {
+            $builder->orderBy($sort, $order);
+        } else {
+            $builder->orderBy('denuncias.fecha_hora_reporte', 'desc');
+        }
+
+        $builder->limit($limit, $offset);
+
+        $result = $builder->get()->getResultArray();
+
+        // Calcular el total de registros basados en los mismos filtros
+        $countQuery = clone $builder;
+        $total = count($countQuery->get()->getResultArray());
+
+        return [
+            'total' => $total,
+            'rows' => $result
+        ];
+    }
 }

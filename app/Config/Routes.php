@@ -62,6 +62,16 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
     // Ruta para la página de administración
     $routes->get('/admin', 'Admin::index');
 
+    // Gestión de reportes de denuncias
+    $routes->group('reportes', ['filter' => 'authFilter:ADMIN'], function ($routes) {
+        $routes->get('/', 'ReportesController::index');
+        $routes->post('listar', 'ReportesController::listar');
+        $routes->post('exportarCSV', 'ReportesController::exportarCSV');
+    });
+
+    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
+
+
     // Gestión de usuarios
     $routes->group('usuarios', function ($routes) {
         $routes->get('/', 'UsuariosController::index'); // Listar usuarios
