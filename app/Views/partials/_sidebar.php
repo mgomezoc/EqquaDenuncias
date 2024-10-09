@@ -13,7 +13,7 @@
                 </svg>
             </div>
             <ul class="main-menu">
-                <li class="slide__category"><span class="category-name">General</span></li>
+                <li class="slide__category"><span class="category-name"><?= session()->get('nombre_empresa') ?></span></li>
                 <li class="slide">
                     <a href="<?= base_url('dashboard') ?>" class="side-menu__item">
                         <i class="fa-solid fa-tachometer-alt side-menu__icon"></i>
@@ -89,12 +89,19 @@
                         </a>
                     </li>
                     <li class="slide">
+                        <a href="<?= base_url('public/cliente/' . session()->get('slug')) ?>" class="side-menu__item" target="_blank">
+                            <i class="fa-solid fa-external-link-alt side-menu__icon"></i> <!-- Ícono para representar un portal o enlace externo -->
+                            <span class="side-menu__label">Portal</span>
+                        </a>
+                    </li>
+                    <li class="slide">
                         <a href="<?= base_url('reportes/cliente') ?>" class="side-menu__item">
                             <i class="fa-solid fa-chart-bar side-menu__icon"></i>
                             <span class="side-menu__label">Reporte</span>
                         </a>
                     </li>
                 <?php endif; ?>
+
 
                 <?php if ($rol == 'AGENTE'): ?>
                     <li class="slide">

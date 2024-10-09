@@ -1,18 +1,35 @@
+let $formBuscarDenuncia;
+let $resultadoDenuncia;
+let $denunciaId;
+let $estado_nombre;
+let $fechaHoraReporte;
+let $sucursalNombre;
+let $categoriaNombre;
+let $subcategoriaNombre;
+let $descripcionDenuncia;
+let $contenedorComentarios;
+let $formAgregarComentario;
+let $nuevoComentario;
+let $idDenunciaInput;
+let $listaArchivos;
+let $archivosAdjuntos;
+
 $(document).ready(function () {
-    const $formBuscarDenuncia = $('#formBuscarDenuncia');
-    const $resultadoDenuncia = $('#resultadoDenuncia');
-    const $denunciaId = $('#denunciaId');
-    const $fechaHoraReporte = $('#fechaHoraReporte');
-    const $sucursalNombre = $('#sucursalNombre');
-    const $categoriaNombre = $('#categoriaNombre');
-    const $subcategoriaNombre = $('#subcategoriaNombre');
-    const $descripcionDenuncia = $('#descripcionDenuncia');
-    const $contenedorComentarios = $('#contenedorComentarios');
-    const $formAgregarComentario = $('#formAgregarComentario');
-    const $nuevoComentario = $('#nuevo_comentario');
-    const $idDenunciaInput = $('#id_denuncia');
-    const $listaArchivos = $('#listaArchivos');
-    const $archivosAdjuntos = $('#archivosAdjuntos');
+    $formBuscarDenuncia = $('#formBuscarDenuncia');
+    $resultadoDenuncia = $('#resultadoDenuncia');
+    $denunciaId = $('#denunciaId');
+    $estado_nombre = $('#estado_nombre');
+    $fechaHoraReporte = $('#fechaHoraReporte');
+    $sucursalNombre = $('#sucursalNombre');
+    $categoriaNombre = $('#categoriaNombre');
+    $subcategoriaNombre = $('#subcategoriaNombre');
+    $descripcionDenuncia = $('#descripcionDenuncia');
+    $contenedorComentarios = $('#contenedorComentarios');
+    $formAgregarComentario = $('#formAgregarComentario');
+    $nuevoComentario = $('#nuevo_comentario');
+    $idDenunciaInput = $('#id_denuncia');
+    $listaArchivos = $('#listaArchivos');
+    $archivosAdjuntos = $('#archivosAdjuntos');
 
     const CONSULTA_URL = `${Server}/public/denuncias/consultar`;
     const COMENTARIO_URL = `${Server}/comentarios/guardar`;
@@ -60,6 +77,7 @@ $(document).ready(function () {
                     text: 'Ocurrió un error al buscar la denuncia. Por favor, intenta nuevamente.',
                     confirmButtonText: 'OK'
                 });
+                $resultadoDenuncia.hide();
             });
     }
 
@@ -68,6 +86,7 @@ $(document).ready(function () {
         $resultadoDenuncia.show();
 
         // Mostrar los detalles de la denuncia
+        $estado_nombre.text(data.denuncia.estado_nombre);
         $denunciaId.text(data.denuncia.id || 'N/A');
         $fechaHoraReporte.text(data.denuncia.fecha_hora_reporte || 'N/A');
         $sucursalNombre.text(data.denuncia.sucursal_nombre || 'N/A');
@@ -98,7 +117,7 @@ $(document).ready(function () {
             $.each(comentariosKeys, function (index, key) {
                 const comentario = comentarios[key]; // Acceder al comentario usando la clave actual
                 const comentarioHTML = `
-                <div class="alert alert-secondary" role="alert">
+                <div class="alert alert-light" role="alert">
                     <div class="d-flex justify-content-between">
                         <strong>${comentario.nombre_usuario}</strong>
                         <span class="text-muted">${comentario.fecha_comentario}</span>

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\ClienteModel;
 use App\Models\UsuarioModel;
 use App\Models\RolModel;
 
@@ -81,8 +82,13 @@ class Auth extends BaseController
 
                 // Si el rol es CLIENTE, AGENTE o SUPERVISOR_CALIDAD, agregar id_cliente y nombre_cliente a la sesión
                 if (in_array($data['rol_slug'], ['CLIENTE', 'AGENTE', 'SUPERVISOR_CALIDAD'])) {
-                    $ses_data['id_cliente'] = $data['id_cliente']; // Guarda el id_cliente en la sesión
-                    $ses_data['nombre_cliente'] = $data['nombre_cliente']; // Guarda el nombre_cliente en la sesión
+                    $modelCliente = new ClienteModel();
+                    $cliente = $modelCliente->getClienteById($data['id_cliente']);
+
+
+                    $ses_data['id_cliente'] = $data['id_cliente'];
+                    $ses_data['nombre_empresa'] = $cliente['nombre_empresa'];
+                    $ses_data['slug'] = $cliente['slug'];
                 }
 
                 $session->set($ses_data);

@@ -83,8 +83,10 @@ class DenunciasController extends Controller
         $subcategorias = $subcategoriaModel->findAll();
 
         // Obtener solo las denuncias que están en los estados relevantes para el supervisor de calidad
+        $clienteId = session()->get('id_cliente');
+
         $denunciaModel = new DenunciaModel();
-        $denuncias = $denunciaModel->getDenunciasParaCalidad();
+        $denuncias = $denunciaModel->getDenunciasParaCalidad($clienteId);
 
         $data = [
             'title' => 'Gestión de Denuncias - Supervisor de Calidad',

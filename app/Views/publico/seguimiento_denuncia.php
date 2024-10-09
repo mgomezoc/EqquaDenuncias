@@ -27,6 +27,9 @@
     <div id="resultadoDenuncia" class="animate__animated animate__fadeIn" style="display: none;">
         <h2 class="mb-4">Detalle de la Denuncia</h2>
         <div class="card mb-4">
+            <h5 class="card-header">
+                Estatus: <span id="estado_nombre"></span>
+            </h5>
             <div class="card-body">
                 <ul class="list-group">
                     <li class="list-group-item"><strong>ID de Denuncia:</strong> <span id="denunciaId">N/A</span></li>
