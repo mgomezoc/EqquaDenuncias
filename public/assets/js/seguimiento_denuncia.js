@@ -82,11 +82,23 @@ $(document).ready(function () {
     }
 
     // Función para mostrar los detalles de la denuncia
+    const estadoMap = {
+        Recepción: 'Denuncia Recibida',
+        Clasificada: 'En Proceso de Revisión',
+        'Revisada por Calidad': 'Revisión Interna Completada',
+        'Liberada al Cliente': 'En Revisión por el Cliente',
+        'En Revisión por Cliente': 'Revisión en Proceso por el Cliente',
+        Cerrada: 'Denuncia Cerrada'
+    };
+
     function mostrarDetallesDenuncia(data) {
         $resultadoDenuncia.show();
 
-        // Mostrar los detalles de la denuncia
-        $estado_nombre.text(data.denuncia.estado_nombre);
+        // Obtener el nombre del estado desde el mapeo o usar el original si no se encuentra en el mapeo
+        const estadoAmigable = estadoMap[data.denuncia.estado_nombre] || data.denuncia.estado_nombre;
+
+        // Mostrar los detalles de la denuncia con el nombre del estado traducido
+        $estado_nombre.text(estadoAmigable);
         $denunciaId.text(data.denuncia.id || 'N/A');
         $fechaHoraReporte.text(data.denuncia.fecha_hora_reporte || 'N/A');
         $sucursalNombre.text(data.denuncia.sucursal_nombre || 'N/A');
@@ -117,14 +129,13 @@ $(document).ready(function () {
             $.each(comentariosKeys, function (index, key) {
                 const comentario = comentarios[key]; // Acceder al comentario usando la clave actual
                 const comentarioHTML = `
-                <div class="alert alert-light" role="alert">
-                    <div class="d-flex justify-content-between">
-                        <strong>${comentario.nombre_usuario}</strong>
-                        <span class="text-muted">${comentario.fecha_comentario}</span>
-                    </div>
-                    <p>${comentario.contenido}</p>
+            <div class="alert alert-light" role="alert">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">${comentario.fecha_comentario}</span>
                 </div>
-            `;
+                <p>${comentario.contenido}</p>
+            </div>
+        `;
                 $contenedorComentarios.append(comentarioHTML);
             });
         } else {
