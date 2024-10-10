@@ -182,6 +182,15 @@ $(document).ready(function () {
         event.preventDefault();
         const formData = new FormData(this);
 
+        // Seleccionamos el textarea y el botón de envío
+        const $textarea = $('#nuevo_comentario');
+        const $submitButton = $(this).find('button[type="submit"]');
+
+        // Deshabilitar el textarea y el botón, y cambiar el texto del botón
+        $textarea.prop('disabled', true);
+        $submitButton.prop('disabled', true);
+        $submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
+
         $.ajax({
             url: COMENTARIO_URL,
             method: 'POST',
@@ -196,7 +205,7 @@ $(document).ready(function () {
                         text: 'Tu comentario se ha enviado con éxito.',
                         confirmButtonText: 'OK'
                     });
-                    $nuevoComentario.val(''); // Limpiar campo de comentario
+                    $textarea.val(''); // Limpiar campo de comentario
                     consultarDenuncia({ folio: $('#folio').val().trim(), id_cliente: $('#id_cliente').val() }); // Volver a cargar los comentarios
                 } else {
                     Swal.fire({
@@ -215,6 +224,12 @@ $(document).ready(function () {
                     text: 'Ocurrió un error al enviar el comentario. Por favor, intenta nuevamente.',
                     confirmButtonText: 'OK'
                 });
+            },
+            complete: function () {
+                // Rehabilitar el textarea y el botón, y restaurar el texto del botón original
+                $textarea.prop('disabled', false);
+                $submitButton.prop('disabled', false);
+                $submitButton.html('<i class="fas fa-comment-dots"></i> Enviar Comentario');
             }
         });
     });
