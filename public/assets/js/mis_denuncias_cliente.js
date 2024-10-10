@@ -220,20 +220,33 @@ $(function () {
         ]
     });
 
-    // Enviar nuevo comentario
     $('#formAgregarComentario').submit(function (e) {
         e.preventDefault();
         const $frm = $(this);
+        const $textarea = $('#contenidoComentario');
+        const $submitButton = $frm.find('button[type="submit"]');
         const formData = $frm.serialize();
+
+        // Deshabilitar el textarea y el botón, y cambiar el texto del botón
+        $textarea.prop('disabled', true);
+        $submitButton.prop('disabled', true);
+        $submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
 
         $.post(`${Server}comentarios/guardar`, formData, function (response) {
             cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
-            $('#contenido').val(''); // Limpiar el campo de texto
             showToast('Comentario agregado exitosamente.', 'success');
+            $textarea.val(''); // Limpiar el campo de texto
             $frm[0].reset();
-        }).fail(function () {
-            showToast('Error al agregar el comentario.', 'error');
-        });
+        })
+            .fail(function () {
+                showToast('Error al agregar el comentario.', 'error');
+            })
+            .always(function () {
+                // Rehabilitar el textarea y el botón, y restaurar el texto del botón original
+                $textarea.prop('disabled', false);
+                $submitButton.prop('disabled', false);
+                $submitButton.html('<i class="fas fa-paper-plane"></i> Enviar');
+            });
     });
 });
 
