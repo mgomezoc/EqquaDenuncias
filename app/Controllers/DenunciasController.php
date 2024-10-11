@@ -52,8 +52,7 @@ class DenunciasController extends Controller
         // Obtener el ID del agente desde la sesión
         $agenteId = session()->get('id');
 
-        // Obtener solo los clientes relacionados con el agente
-        $clientes = $clienteModel->getClientesByAgente($agenteId);
+        $clientes = $clienteModel->findAll();
 
         $data = [
             'title' => 'Mis Denuncias',

@@ -248,8 +248,11 @@ $(function () {
         // Funcionalidad para el botón de cambiar estado
         'click .change-status': function (e, value, row, index) {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
+                // Filtrar solo los estados "Recepción" (1) y "Clasificada" (2)
+                const estadosFiltrados = estados.filter(estado => estado.id === '1' || estado.id === '2');
+
                 let opciones = '';
-                estados.forEach(estado => {
+                estadosFiltrados.forEach(estado => {
                     const selected = estado.id === row.estado_actual ? 'selected' : '';
                     opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
                 });
@@ -321,11 +324,17 @@ $(function () {
         columns: [
             {
                 field: 'id',
-                title: 'ID'
+                title: 'ID',
+                formatter: function (value) {
+                    return `<b>${value}</b>`;
+                }
             },
             {
                 field: 'folio',
-                title: 'Folio'
+                title: 'Folio',
+                cellStyle: {
+                    css: { 'white-space': 'nowrap', 'max-width': '250px', overflow: 'hidden', 'text-overflow': 'ellipsis' }
+                }
             },
             {
                 field: 'cliente_nombre',

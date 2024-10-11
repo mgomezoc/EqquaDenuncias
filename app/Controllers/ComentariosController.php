@@ -70,35 +70,46 @@ class ComentariosController extends BaseController
     private function obtenerUsuariosInvolucrados($id_denuncia)
     {
         $usuarioModel = new UsuarioModel();
+        $denunciaModel = new DenunciaModel();
         $usuarios = [];
+
+        // Obtener el estado actual de la denuncia
+        $denuncia = $denunciaModel->find($id_denuncia);
+        if (!$denuncia) {
+            return []; // Si no se encuentra la denuncia, regresar un array vacío
+        }
+
+        $estadoActual = $denuncia['estado_actual'];
 
         // 1. Obtener el agente o creador de la denuncia
         $creador = $usuarioModel->query("
-            SELECT u.id, u.nombre_usuario, u.correo_electronico
-            FROM denuncias d
-            INNER JOIN usuarios u ON d.id_creador = u.id
-            WHERE d.id = ?", [$id_denuncia])->getResultArray();
+        SELECT u.id, u.nombre_usuario, u.correo_electronico
+        FROM denuncias d
+        INNER JOIN usuarios u ON d.id_creador = u.id
+        WHERE d.id = ?", [$id_denuncia])->getResultArray();
 
         $usuarios = array_merge($usuarios, $creador);
 
         // 2. Obtener supervisores de calidad que cambiaron el estado
         $supervisores = $usuarioModel->query("
-            SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
-            FROM seguimiento_denuncias sd
-            INNER JOIN usuarios u ON sd.id_usuario = u.id
-            WHERE sd.id_denuncia = ? AND u.rol_id = 3", [$id_denuncia])->getResultArray();
+        SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
+        FROM seguimiento_denuncias sd
+        INNER JOIN usuarios u ON sd.id_usuario = u.id
+        WHERE sd.id_denuncia = ? AND u.rol_id = 3", [$id_denuncia])->getResultArray();
 
         $usuarios = array_merge($usuarios, $supervisores);
 
-        // 3. Obtener clientes asociados a la empresa de la denuncia
-        $clientes = $usuarioModel->query("
+        // 3. Solo obtener clientes si el estado es 4, 5 o 6
+        if (in_array($estadoActual, [4, 5, 6])) {
+            $clientes = $usuarioModel->query("
             SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
             FROM denuncias d
             INNER JOIN relacion_clientes_usuarios rcu ON d.id_cliente = rcu.id_cliente
             INNER JOIN usuarios u ON rcu.id_usuario = u.id
             WHERE d.id = ? AND u.rol_id = 4", [$id_denuncia])->getResultArray();
 
-        $usuarios = array_merge($usuarios, $clientes);
+            $usuarios = array_merge($usuarios, $clientes);
+        }
 
         // Filtrar duplicados (por si un usuario está en más de una consulta)
         $usuariosUnicos = [];
@@ -108,6 +119,7 @@ class ComentariosController extends BaseController
 
         return array_values($usuariosUnicos);
     }
+
 
     private function enviarCorreoNotificacion($email, $nombreUsuario, $denuncia, $contenidoComentario)
     {

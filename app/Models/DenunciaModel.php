@@ -202,12 +202,11 @@ class DenunciaModel extends Model
             ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
-            ->join('relacion_clientes_usuarios', 'relacion_clientes_usuarios.id_cliente = denuncias.id_cliente')
-            ->where('relacion_clientes_usuarios.id_usuario', $agenteId)
             ->whereIn('denuncias.estado_actual', [1, 2]) // Filtrar por estados "Recepción" y "Clasificada"
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
+
 
     public function getDenunciasParaCalidad($clienteId)
     {
