@@ -14,32 +14,34 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="nombre_empresa" class="form-label">Nombre Empresa</label>
-                    <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="<?= $cliente['nombre_empresa'] ?>" required>
+                    <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="<?= $cliente['nombre_empresa'] ?>" disabled>
                 </div>
                 <div class="col-md-6">
                     <label for="numero_identificacion" class="form-label">Número Identificación</label>
-                    <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="<?= $cliente['numero_identificacion'] ?>" required>
+                    <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="<?= $cliente['numero_identificacion'] ?>" disabled>
                 </div>
                 <div class="col-md-6">
                     <label for="correo_contacto" class="form-label">Correo Contacto</label>
-                    <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="<?= $cliente['correo_contacto'] ?>" required>
+                    <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="<?= $cliente['correo_contacto'] ?>" disabled>
                 </div>
                 <div class="col-md-6">
                     <label for="telefono_contacto" class="form-label">Teléfono Contacto</label>
-                    <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="<?= $cliente['telefono_contacto'] ?>" required>
+                    <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="<?= $cliente['telefono_contacto'] ?>" disabled>
                 </div>
                 <div class="col-md-12">
                     <label for="direccion" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" value="<?= $cliente['direccion'] ?>" required>
+                    <input type="text" class="form-control" id="direccion" name="direccion" value="<?= $cliente['direccion'] ?>" disabled>
                 </div>
                 <div class="col-md-6">
                     <label for="whatsapp" class="form-label">WhatsApp</label>
-                    <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="<?= $cliente['whatsapp'] ?>" pattern="\d{10}">
+                    <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="<?= $cliente['whatsapp'] ?>" pattern="\d{10}" disabled>
                 </div>
                 <div class="col-md-12">
                     <label for="saludo" class="form-label">Saludo</label>
-                    <textarea class="form-control" id="saludo" name="saludo" rows="3"><?= $cliente['saludo'] ?></textarea>
+                    <textarea class="form-control" id="saludo" name="saludo" rows="3" disabled><?= $cliente['saludo'] ?></textarea>
                 </div>
+                <?php
+                /*
                 <div class="col-md-4">
                     <label for="primary_color" class="form-label">Primary Color</label>
                     <input type="color" class="form-control" id="primary_color" name="primary_color" value="<?= $cliente['primary_color'] ?>">
@@ -85,13 +87,15 @@
                             <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
                         </div>
                     </div>
-                </div>
+                </div>                
 
                 <div class="mt-5">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
                     </button>
                 </div>
+                */
+                ?>
             </div>
         </form>
     </div>

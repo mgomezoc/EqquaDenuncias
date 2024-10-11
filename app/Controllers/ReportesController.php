@@ -142,17 +142,39 @@ class ReportesController extends Controller
             return redirect()->to('/noautorizado');
         }
 
-        // Obtener los estados para los filtros
-        $estados = $estadoModel->findAll();
+        // Definir los estados permitidos para el cliente (4, 5, 6)
+        $estadosPermitidos = [4, 5, 6];
+
+        // Obtener solo los estados permitidos para los filtros
+        $estados = $estadoModel->whereIn('id', $estadosPermitidos)->findAll();
+
+        // Mapeo de los nombres de los estados a nombres amigables para el cliente
+        $estadosAmigables = [];
+        foreach ($estados as $estado) {
+            switch ($estado['id']) {
+                case 4:
+                    $estado['nombre'] = 'Nueva'; // Estado 4 mapeado a "Nueva"
+                    break;
+                case 5:
+                    $estado['nombre'] = 'En Revisión'; // Estado 5 mapeado a "En Revisión"
+                    break;
+                case 6:
+                    $estado['nombre'] = 'Cerrada'; // Estado 6 mantiene el mismo nombre
+                    break;
+            }
+            $estadosAmigables[] = $estado;
+        }
 
         $data = [
             'clienteId' => $clienteId,
-            'estados' => $estados,
+            'estados' => $estadosAmigables,
             'title' => 'Reporte de Denuncias para Cliente'
         ];
 
         return view('reportes/cliente', $data);
     }
+
+
 
     public function listarParaCliente()
     {

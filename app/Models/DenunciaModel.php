@@ -118,7 +118,7 @@ class DenunciaModel extends Model
 
     public function getDenunciasByCliente($clienteId)
     {
-        $estadosPermitidos = [4, 5, 6]; // Estados que el cliente puede ver
+        $estadosPermitidos = [4, 5]; // Estados que el cliente puede ver
 
         return $this->select('denuncias.*, 
                           sucursales.nombre AS sucursal_nombre, 
@@ -337,13 +337,13 @@ class DenunciaModel extends Model
         $builder = $this->db->table($this->table);
 
         $builder->select('denuncias.*, 
-                      clientes.nombre_empresa AS cliente_nombre, 
-                      sucursales.nombre AS sucursal_nombre, 
-                      departamentos.nombre AS departamento_nombre, 
-                      estados_denuncias.nombre AS estado_nombre, 
-                      usuarios.nombre_usuario AS creador_nombre,
-                      subcategorias_denuncias.nombre AS subcategoria_nombre,
-                      categorias_denuncias.nombre AS categoria_nombre');
+                  clientes.nombre_empresa AS cliente_nombre, 
+                  sucursales.nombre AS sucursal_nombre, 
+                  departamentos.nombre AS departamento_nombre, 
+                  estados_denuncias.nombre AS estado_nombre, 
+                  usuarios.nombre_usuario AS creador_nombre,
+                  subcategorias_denuncias.nombre AS subcategoria_nombre,
+                  categorias_denuncias.nombre AS categoria_nombre');
         $builder->join('clientes', 'clientes.id = denuncias.id_cliente', 'left');
         $builder->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left');
         $builder->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left');
@@ -354,6 +354,15 @@ class DenunciaModel extends Model
 
         // Filtro obligatorio para que el cliente solo vea sus propias denuncias
         $builder->where('denuncias.id_cliente', $clienteId);
+
+        // Filtrar siempre por estados 4, 5 y 6 (visible para el cliente)
+        $estadosVisibles = [4, 5, 6];
+        $builder->whereIn('denuncias.estado_actual', $estadosVisibles);
+
+        // Filtrar por estado_actual si se proporciona y está dentro de los estados permitidos
+        if (!empty($filters['estado_actual']) && in_array($filters['estado_actual'], $estadosVisibles)) {
+            $builder->where('denuncias.estado_actual', $filters['estado_actual']);
+        }
 
         if (!empty($filters['fecha_inicio']) && !empty($filters['fecha_fin'])) {
             $builder->where('denuncias.fecha_hora_reporte >=', $filters['fecha_inicio'] . ' 00:00:00');
@@ -370,10 +379,6 @@ class DenunciaModel extends Model
 
         if (!empty($filters['medio_recepcion'])) {
             $builder->where('denuncias.medio_recepcion', $filters['medio_recepcion']);
-        }
-
-        if (!empty($filters['estado_actual'])) {
-            $builder->where('denuncias.estado_actual', $filters['estado_actual']);
         }
 
         if (!empty($filters['id_creador'])) {

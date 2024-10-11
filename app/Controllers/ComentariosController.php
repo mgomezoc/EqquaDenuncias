@@ -67,6 +67,16 @@ class ComentariosController extends BaseController
         return $this->response->setJSON($comentarios);
     }
 
+    public function listarCliente($id_denuncia)
+    {
+        $comentarioModel = new ComentarioDenunciaModel();
+
+        // Obtener los comentarios relacionados con la denuncia
+        $comentarios = $comentarioModel->getComentariosVisiblesParaCliente($id_denuncia);
+
+        return $this->response->setJSON($comentarios);
+    }
+
     private function obtenerUsuariosInvolucrados($id_denuncia)
     {
         $usuarioModel = new UsuarioModel();

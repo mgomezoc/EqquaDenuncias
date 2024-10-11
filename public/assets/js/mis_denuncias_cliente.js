@@ -41,35 +41,6 @@ $(function () {
                     <p><strong>Descripción:</strong></p>
                     <p>${data.descripcion || 'N/A'}</p>
                 </div>
-                <div class="col-12 mt-3">
-                    <h5>Historial de Seguimiento</h5>
-                    <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>De</th>
-                                <th>A</th>
-                                <th>Comentario</th>
-                                <th>Por</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.seguimientos
-                                .map(
-                                    seg => `
-                                    <tr>
-                                        <td>${seg.fecha}</td>
-                                        <td>${seg.estado_anterior_nombre}</td>
-                                        <td>${seg.estado_nuevo_nombre}</td>
-                                        <td>${seg.comentario || 'N/A'}</td>
-                                        <td>${seg.usuario_nombre}</td>
-                                    </tr>
-                                `
-                                )
-                                .join('')}
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
         `;
@@ -318,37 +289,29 @@ function operateFormatter(value, row, index) {
 }
 
 function operateFormatterEstado(value, row, index) {
-    const estado = row.estado_nombre;
+    let estado = row.estado_nombre;
     let badgeClass = '';
 
+    // Ajustar el nombre y color de los estados visibles para el cliente
     switch (estado) {
-        case 'Recepción':
-            badgeClass = 'bg-yellow'; // Amarillo (#f4b400)
-            break;
-        case 'Clasificada':
-            badgeClass = 'bg-purple'; // Púrpura (#4285f4)
-            break;
-        case 'Revisada por Calidad':
-            badgeClass = 'bg-teal'; // Verde Azulado (#0f9d58)
-            break;
         case 'Liberada al Cliente':
-            badgeClass = 'bg-red'; // Rojo (#db4437)
+            estado = 'Nueva'; // Cambiar el nombre para hacerlo más amigable
+            badgeClass = 'bg-primary'; // Color azul para indicar que es un estado nuevo
             break;
         case 'En Revisión por Cliente':
-            badgeClass = 'bg-light-purple'; // Púrpura Claro
-            break;
-        case 'Cerrada':
-            badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+            estado = 'En Revisión'; // Cambiar el nombre para hacerlo más amigable
+            badgeClass = 'bg-warning'; // Color amarillo para indicar revisión en progreso
             break;
         default:
-            badgeClass = 'bg-light text-dark'; // Para estados no reconocidos
+            // Si por alguna razón llega un estado que no debería estar aquí, no mostrar nada
+            return '';
     }
 
     return `<span class="badge ${badgeClass}">${estado}</span>`;
 }
 
 function cargarComentarios(denunciaId) {
-    $.get(`${Server}comentarios/listar/${denunciaId}`, function (data) {
+    $.get(`${Server}comentarios/listar-cliente/${denunciaId}`, function (data) {
         let comentariosHtml = '';
         if (data.length > 0) {
             data.forEach(comentario => {

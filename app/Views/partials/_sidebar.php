@@ -76,16 +76,20 @@
                             <span class="side-menu__label">Perfil</span>
                         </a>
                     </li>
+                    <?php
+                    /*
                     <li class="slide">
                         <a href="<?= base_url('cliente/usuarios') ?>" class="side-menu__item">
                             <i class="fa-solid fa-users side-menu__icon"></i>
                             <span class="side-menu__label">Usuarios</span>
                         </a>
                     </li>
+                    */
+                    ?>
                     <li class="slide">
                         <a href="<?= base_url('denuncias/mis-denuncias-cliente') ?>" class="side-menu__item">
                             <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
-                            <span class="side-menu__label">Mis Denuncias</span>
+                            <span class="side-menu__label">Denuncias Activas</span>
                         </a>
                     </li>
                     <li class="slide">

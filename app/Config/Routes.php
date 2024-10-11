@@ -228,8 +228,9 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
  * Las rutas aquí permiten listar y guardar comentarios en una denuncia
  */
 $routes->group('comentarios', function ($routes) {
-    $routes->get('listar/(:num)', 'ComentariosController::listar/$1'); // Listar comentarios por ID de denuncia
-    $routes->post('guardar', 'ComentariosController::guardar'); // Guardar nuevo comentario
+    $routes->get('listar/(:num)', 'ComentariosController::listar/$1');
+    $routes->get('listar-cliente/(:num)', 'ComentariosController::listarCliente/$1');
+    $routes->post('guardar', 'ComentariosController::guardar');
 });
 
 /**

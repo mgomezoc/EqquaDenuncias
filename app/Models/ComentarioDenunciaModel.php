@@ -19,4 +19,18 @@ class ComentarioDenunciaModel extends Model
             ->orderBy('fecha_comentario', 'DESC')
             ->findAll();
     }
+
+    public function getComentariosVisiblesParaCliente($id_denuncia)
+    {
+        // Definimos los estados que el cliente puede ver
+        $estadosVisibles = [4, 5, 6];
+
+        return $this->select('comentarios_denuncias.*, usuarios.nombre_usuario, estados_denuncias.nombre AS estado_nombre')
+            ->join('usuarios', 'usuarios.id = comentarios_denuncias.id_usuario')
+            ->join('estados_denuncias', 'estados_denuncias.id = comentarios_denuncias.estado_denuncia') // Corregido aquí
+            ->where('comentarios_denuncias.id_denuncia', $id_denuncia)
+            ->whereIn('comentarios_denuncias.estado_denuncia', $estadosVisibles) // Filtrar por estados 4, 5 y 6
+            ->orderBy('comentarios_denuncias.fecha_comentario', 'DESC')
+            ->findAll();
+    }
 }
