@@ -43,7 +43,7 @@
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label for="nombre_usuario-{{id}}" class="form-label">Nombre de Usuario</label>
+                    <label for="nombre_usuario-{{id}}" class="form-label">Nombre</label>
                     <input type="text" class="form-control" id="nombre_usuario-{{id}}" name="nombre_usuario" value="{{nombre_usuario}}" required autocomplete="username">
                 </div>
                 <div class="col-md-4">
@@ -87,7 +87,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="nombre_usuario" class="form-label">Nombre de Usuario</label>
+                        <label for="nombre_usuario" class="form-label">Nombre</label>
                         <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" required autocomplete="username">
                     </div>
                     <div class="mb-3">
@@ -101,9 +101,7 @@
                     <div class="mb-3">
                         <label for="rol_id" class="form-label">Rol</label>
                         <select class="form-select select2ModalCrearUsuario" id="rol_id" name="rol_id" required>
-                            <?php foreach ($roles as $rol) : ?>
-                                <option value="<?= $rol['id'] ?>"><?= $rol['nombre'] ?></option>
-                            <?php endforeach; ?>
+                            <option value="" selected disabled>Selecciona una opción</option>
                         </select>
                     </div>
                     <div class="mb-3" id="clienteContainer" style="display: none;">

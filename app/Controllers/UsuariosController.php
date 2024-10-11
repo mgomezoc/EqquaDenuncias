@@ -99,7 +99,7 @@ class UsuariosController extends Controller
         // Guardar o actualizar el usuario
         if ($id) {
             $usuarioModel->update($id, $data);
-            $idUsuario = $id; // Mantener el ID del usuario actualizado
+            $idUsuario = $id;
             registrarAccion(session()->get('id'), 'Actualización de usuario', 'ID: ' . $id);
         } else {
             $usuarioModel->save($data);

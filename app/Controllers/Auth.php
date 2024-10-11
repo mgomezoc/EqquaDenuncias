@@ -80,8 +80,8 @@ class Auth extends BaseController
                     'isLoggedIn' => TRUE
                 ];
 
-                // Si el rol es CLIENTE, AGENTE o SUPERVISOR_CALIDAD, agregar id_cliente y nombre_cliente a la sesión
-                if (in_array($data['rol_slug'], ['CLIENTE', 'AGENTE', 'SUPERVISOR_CALIDAD'])) {
+                // Si el rol es CLIENTE, agregar id_cliente y nombre_cliente a la sesión
+                if (in_array($data['rol_slug'], ['CLIENTE'])) {
                     $modelCliente = new ClienteModel();
                     $cliente = $modelCliente->getClienteById($data['id_cliente']);
 

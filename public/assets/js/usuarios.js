@@ -13,13 +13,16 @@ let optionsClientes;
 $(function () {
     optionsRoles = roles.map(rol => ({
         id: rol.id,
-        name: rol.nombre
+        name: rol.nombre,
+        text: rol.nombre
     }));
 
     optionsClientes = clientes.map(cliente => ({
         id: cliente.id,
         name: cliente.nombre_empresa
     }));
+
+    optionsRoles = optionsRoles.filter(role => role.name !== 'Denunciante');
 
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplDetalleTabla = $('#tplDetalleTabla').html();
@@ -28,7 +31,8 @@ $(function () {
     $('.select2ModalCrearUsuario').select2({
         placeholder: 'Seleccione una opción',
         allowClear: true,
-        dropdownParent: $('#modalCrearUsuario')
+        dropdownParent: $('#modalCrearUsuario'),
+        data: optionsRoles
     });
 
     $('#rol_id').on('change', function () {
@@ -339,7 +343,7 @@ async function eliminarUsuario(id) {
  * @param {string} clienteFieldSelector - Selector del campo de cliente
  */
 function handleRoleChange(rolId, clienteContainerSelector, clienteFieldSelector) {
-    if (rolId == 2 || rolId == 3 || rolId == 4) {
+    if (rolId == 4) {
         // 2 = Agente, 3 = Supervisor de Calidad, 4 = Cliente
         $(clienteContainerSelector).show();
         $(clienteFieldSelector).prop('required', true);
