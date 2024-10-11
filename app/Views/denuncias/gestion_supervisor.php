@@ -66,13 +66,13 @@
                 <!-- Información General -->
                 <div class="col-md-4">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
-                    <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" disabled>
+                    <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente">
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label for="id_sucursal-{{id}}" class="form-label">Sucursal</label>
-                    <select class="form-select select2" id="id_sucursal-{{id}}" name="id_sucursal" disabled>
+                    <select class="form-select select2" id="id_sucursal-{{id}}" name="id_sucursal">
                         {{{selectOptions sucursales id_sucursal}}}
                     </select>
                 </div>

@@ -110,9 +110,14 @@ $(function () {
         'click .change-status': function (e, value, row, index) {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
                 let opciones = '';
+                const estadosPermitidos = ['1', '2', '3', '4']; // IDs de los estados "Recepción", "Clasificada" y "Revisada por Calidad"
+
                 estados.forEach(estado => {
-                    const selected = estado.id === row.estado_actual ? 'selected' : '';
-                    opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
+                    // Verificar si el estado está en los permitidos para calidad
+                    if (estadosPermitidos.includes(estado.id)) {
+                        const selected = estado.id === row.estado_actual ? 'selected' : '';
+                        opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
+                    }
                 });
 
                 const modal = new bootstrap.Modal($('#modalCambiarEstado'));

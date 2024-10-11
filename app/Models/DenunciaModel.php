@@ -208,10 +208,10 @@ class DenunciaModel extends Model
     }
 
 
-    public function getDenunciasParaCalidad($clienteId)
+    public function getDenunciasParaCalidad()
     {
         // Estados que el supervisor de calidad puede ver
-        $estadosRelevantes = [2, 3, 4]; // ID de los estados "Clasificada", "Revisada por Calidad", "Liberada al Cliente"
+        $estadosRelevantes = [2, 3]; // Solo "Clasificada" y "Revisada por Calidad"
 
         return $this->select('denuncias.*, 
                           clientes.nombre_empresa AS cliente_nombre, 
@@ -226,11 +226,11 @@ class DenunciaModel extends Model
             ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
-            ->where('denuncias.id_cliente', $clienteId) // Filtrar por el cliente correcto
-            ->whereIn('denuncias.estado_actual', $estadosRelevantes) // Filtrar por estados permitidos para calidad
+            ->whereIn('denuncias.estado_actual', $estadosRelevantes) // Filtrar por estados "Clasificada" y "Revisada por Calidad"
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
+
 
     public function filtrarDenuncias($limit, $offset, array $filters, $sort = '', $order = 'asc')
     {
