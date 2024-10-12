@@ -93,6 +93,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
         $routes->get('obtener/(:num)', 'ClientesController::obtener/$1'); // Obtener cliente por ID
         $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1'); // Eliminar cliente por ID
         $routes->post('subirImagen', 'ClientesController::subirImagen'); // Subir imagen del cliente
+        $routes->post('validarUnico', 'ClientesController::validarUnico'); // Validar unicidad de cliente
     });
 
     // Gestión de categorías y subcategorías de denuncias
