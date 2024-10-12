@@ -2,21 +2,33 @@
 
 namespace App\Controllers;
 
+use App\Models\AnexoDenunciaModel;
 use App\Models\DenunciaModel;
 use App\Models\ClienteModel;
+use App\Models\ComentarioDenunciaModel;
 use App\Models\SucursalModel;
 use App\Models\DepartamentoModel;
 use App\Models\UsuarioModel;
 use App\Models\EstadoDenunciaModel;
+use App\Models\SeguimientoDenunciaModel;
+use Config\Database;
 use CodeIgniter\Controller;
 
 class ReportesController extends Controller
 {
     protected $denunciaModel;
+    protected $anexoDenunciaModel;
+    protected $comentarioDenunciaModel;
+    protected $seguimientoDenunciaModel;
+    protected $db;
 
     public function __construct()
     {
         $this->denunciaModel = new DenunciaModel();
+        $this->anexoDenunciaModel = new AnexoDenunciaModel();
+        $this->comentarioDenunciaModel = new ComentarioDenunciaModel();
+        $this->seguimientoDenunciaModel = new SeguimientoDenunciaModel();
+        $this->db = Database::connect();
     }
 
     /**
@@ -200,5 +212,44 @@ class ReportesController extends Controller
         $result = $this->denunciaModel->filtrarDenunciasParaCliente($clienteId, $limit, $offset, $filters, $sort, $order);
 
         return $this->response->setJSON($result);
+    }
+
+    /**
+     * Eliminar una denuncia, sus anexos, comentarios y seguimiento
+     */
+    public function eliminarDenuncia($id)
+    {
+        // Iniciar transacción para asegurar la consistencia de los datos
+        $this->db->transBegin();
+
+        // Eliminar comentarios de la denuncia
+        $this->comentarioDenunciaModel->where('id_denuncia', $id)->delete();
+
+        // Eliminar seguimientos de la denuncia
+        $this->seguimientoDenunciaModel->deleteSeguimientoByDenunciaId($id);
+
+        // Obtener los anexos relacionados a la denuncia para eliminarlos físicamente
+        $anexos = $this->anexoDenunciaModel->getAnexosByDenunciaId($id);
+        foreach ($anexos as $anexo) {
+            $rutaArchivo = WRITEPATH . '../public/' . $anexo['ruta_archivo'];
+            if (file_exists($rutaArchivo)) {
+                unlink($rutaArchivo); // Eliminar el archivo físicamente
+            }
+        }
+
+        // Eliminar anexos de la denuncia
+        $this->anexoDenunciaModel->deleteAnexosByDenunciaId($id);
+
+        // Eliminar la denuncia
+        $this->denunciaModel->delete($id);
+
+        // Verificar si la transacción fue exitosa
+        if ($this->db->transStatus() === false) {
+            $this->db->transRollback();
+            return $this->response->setStatusCode(500)->setJSON(['message' => 'Error al eliminar la denuncia.']);
+        }
+
+        $this->db->transCommit();
+        return $this->response->setJSON(['message' => 'Denuncia eliminada correctamente.']);
     }
 }

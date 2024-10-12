@@ -13,8 +13,8 @@ $(document).ready(function () {
         method: 'post',
         pagination: true,
         sidePagination: 'server',
-        pageSize: 10,
-        pageList: [10, 25, 50, 100],
+        pageSize: 50,
+        pageList: [50, 100, 150, 200],
         search: true,
         searchAlign: 'left',
         showRefresh: true,
@@ -245,3 +245,40 @@ $(document).ready(function () {
         }
     });
 });
+
+// Definir eventos para las acciones de la tabla
+window.operateEvents = {
+    'click .remove': function (e, value, row, index) {
+        eliminarDenuncia(row.id); // Llamar a la función de eliminación
+    }
+};
+
+async function eliminarDenuncia(id) {
+    const data = await confirm('¿Estás seguro de eliminar esta denuncia?', 'Eliminar esta denuncia es una acción permanente. Todos los comentarios, archivos adjuntos y seguimientos relacionados también serán eliminados de manera definitiva. Esta acción no se puede deshacer.');
+
+    if (data.isConfirmed) {
+        ajaxCall({
+            url: `${Server}reportes/eliminarDenuncia/${id}`,
+            method: 'POST',
+            success: function (response) {
+                $tablaDenuncias.bootstrapTable('refresh');
+                showToast('¡Denuncia eliminada correctamente!', 'success');
+            },
+            error: function (xhr, status, error) {
+                let errorMessage = 'Ocurrió un error al eliminar la denuncia.';
+                if (xhr.status === 409) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMessage = response.message;
+                    }
+                }
+                showToast(errorMessage, 'error');
+            }
+        });
+    }
+}
+
+// Función para el formateador de la columna de acciones en la tabla
+function operateFormatter(value, row, index) {
+    return ['<a class="remove btn btn-danger btn-sm" href="javascript:void(0)" title="Eliminar">', '<i class="fa fa-trash"></i>', '</a>'].join('');
+}

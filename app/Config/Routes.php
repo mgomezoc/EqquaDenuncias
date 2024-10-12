@@ -67,6 +67,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
         $routes->get('/', 'ReportesController::index');
         $routes->post('listar', 'ReportesController::listar');
         $routes->post('exportarCSV', 'ReportesController::exportarCSV');
+        $routes->post('eliminarDenuncia/(:num)', 'ReportesController::eliminarDenuncia/$1'); // Ruta para 
 
         $routes->get('cliente', 'ReportesController::cliente');
         $routes->post('listarParaCliente', 'ReportesController::listarParaCliente');
