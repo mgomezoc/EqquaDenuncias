@@ -14,76 +14,6 @@
 
         <!-- Agrupación de campos en secciones lógicas -->
         <div class="row g-4">
-
-            <!-- Información de sucursal y categoría -->
-            <div class="col-md-6">
-                <label for="id_sucursal" class="form-label">Sucursal</label>
-                <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
-                    <option value="">Seleccione una sucursal</option>
-                    <?php foreach ($sucursales as $sucursal): ?>
-                        <option value="<?= $sucursal['id'] ?>"><?= $sucursal['nombre'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label for="categoria" class="form-label">Categoría</label>
-                <select class="form-select select2" id="categoria" name="categoria" required>
-                    <option value="">Seleccione una categoría</option>
-                    <?php foreach ($categorias as $categoria): ?>
-                        <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Subcategoría y Departamento -->
-            <div class="col-md-6">
-                <label for="subcategoria" class="form-label">Subcategoría</label>
-                <select class="form-select select2" id="subcategoria" name="subcategoria" required>
-                    <option value="">Seleccione una subcategoría</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label for="id_departamento" class="form-label">Departamento</label>
-                <select class="form-select select2" id="id_departamento" name="id_departamento">
-                    <option value="">Seleccione un departamento</option>
-                </select>
-            </div>
-
-            <!-- Información del incidente -->
-            <div class="col-md-6">
-                <label for="fecha_incidente" class="form-label">Fecha del Incidente</label>
-                <input type="text" class="form-control flatpickr" id="fecha_incidente" name="fecha_incidente" required>
-            </div>
-
-            <div class="col-md-6">
-                <label for="como_se_entero" class="form-label">¿Cómo se Enteró?</label>
-                <select class="form-select select2" id="como_se_entero" name="como_se_entero" required>
-                    <option value="Fui víctima">Fui víctima</option>
-                    <option value="Fui testigo">Fui testigo</option>
-                    <option value="Estaba involucrado">Estaba involucrado</option>
-                    <option value="Otro">Otro</option>
-                </select>
-            </div>
-
-            <!-- Descripción del área y la denuncia -->
-            <div class="col-md-6">
-                <label for="area_incidente" class="form-label">Área del Incidente</label>
-                <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
-            </div>
-
-            <div class="col-md-6">
-                <label for="denunciar_a_alguien" class="form-label">Denunciar a Alguien</label>
-                <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien" placeholder="Describa a la persona involucrada"></textarea>
-            </div>
-
-            <!-- Descripción completa del incidente -->
-            <div class="col-md-12">
-                <label for="descripcion" class="form-label">Descripción</label>
-                <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="5"></textarea>
-            </div>
-
             <div class="col-md-6">
                 <label class="form-label">¿Es anónimo?</label>
                 <div class="d-flex gap-3">
@@ -99,7 +29,7 @@
             </div>
 
             <!-- Información adicional cuando no es anónimo -->
-            <div id="infoAdicional" class="row g-3" style="display: none;">
+            <div id="infoAdicional" class="row g-3" style="display: none;" aria-hidden="true">
                 <div class="col-md-6">
                     <label for="nombre_completo" class="form-label">Nombre Completo</label>
                     <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" placeholder="Ingrese su nombre completo">
@@ -116,10 +46,82 @@
                 </div>
             </div>
 
+            <hr>
+
+            <!-- Información de sucursal y categoría -->
+            <div class="col-md-6">
+                <label for="id_sucursal" class="form-label">Sucursal <span class="text-danger">*</span></label>
+                <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
+                    <option value="">Seleccione una sucursal</option>
+                    <?php foreach ($sucursales as $sucursal): ?>
+                        <option value="<?= $sucursal['id'] ?>"><?= $sucursal['nombre'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="categoria" class="form-label">Categoría <span class="text-danger">*</span></label>
+                <select class="form-select select2" id="categoria" name="categoria" required>
+                    <option value="">Seleccione una categoría</option>
+                    <?php foreach ($categorias as $categoria): ?>
+                        <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Subcategoría y Departamento -->
+            <div class="col-md-6">
+                <label for="subcategoria" class="form-label">Subcategoría <span class="text-danger">*</span></label>
+                <select class="form-select select2" id="subcategoria" name="subcategoria" required>
+                    <option value="">Seleccione una subcategoría</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_departamento" class="form-label">Departamento</label>
+                <select class="form-select select2" id="id_departamento" name="id_departamento">
+                    <option value="">Seleccione un departamento</option>
+                </select>
+            </div>
+
+            <!-- Información del incidente -->
+            <div class="col-md-6">
+                <label for="fecha_incidente" class="form-label">Fecha del Incidente <span class="text-danger">*</span></label>
+                <input type="text" class="form-control flatpickr" id="fecha_incidente" name="fecha_incidente" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="como_se_entero" class="form-label">¿Cómo se Enteró? <span class="text-danger">*</span></label>
+                <select class="form-select select2" id="como_se_entero" name="como_se_entero" required>
+                    <option value="Fui víctima">Fui víctima</option>
+                    <option value="Fui testigo">Fui testigo</option>
+                    <option value="Estaba involucrado">Estaba involucrado</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+
+            <!-- Descripción del área y la denuncia -->
+            <div class="col-md-6">
+                <label for="area_incidente" class="form-label">Área del Incidente <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
+            </div>
+
+            <div class="col-md-6">
+                <label for="denunciar_a_alguien" class="form-label">Denunciar a Alguien</label>
+                <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien" placeholder="Describa a la persona involucrada"></textarea>
+            </div>
+
+            <!-- Descripción completa del incidente -->
+            <div class="col-md-12">
+                <label for="descripcion" class="form-label">Descripción <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="5"></textarea>
+            </div>
+
             <!-- Adjuntos -->
             <div class="col-md-12">
                 <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
                 <div id="dropzoneArchivos" class="dropzone border p-3" style="border-radius: 10px;"></div>
+                <small class="text-muted">Máximo tamaño de archivo: 10 MB. Formatos permitidos: PDF, JPG, PNG.</small>
             </div>
 
             <!-- Audio -->
@@ -136,11 +138,12 @@
 
         <!-- Botón de envío -->
         <div class="mt-5 text-center">
-            <button type="submit" class="btn btn-secondary btn-lg px-5">
+            <button type="submit" class="btn btn-secondary btn-lg px-5" id="submitButton">
                 <i class="fa fa-paper-plane me-1"></i> Enviar Denuncia
             </button>
         </div>
     </form>
+
 </section>
 <?= $this->endSection() ?>
 
