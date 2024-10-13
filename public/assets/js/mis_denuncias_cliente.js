@@ -18,35 +18,73 @@ $(function () {
         'click .view-detail': function (e, value, row, index) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
-                const contenido = `
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Folio:</strong> ${data.folio}</p>
-                    <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
-                    <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
-                    <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
-                    <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
-                    <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
-                    <p><strong>Estado:</strong> ${data.estado_nombre}</p>
-                    <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
-                    <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
-                    <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
-                    <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
-                </div>
-                <div class="col-12 mt-3">
-                    <p><strong>Descripción:</strong></p>
-                    <p>${data.descripcion || 'N/A'}</p>
-                </div>
-            </div>
-        </div>
-        `;
 
-                $('#modalVerDetalle .modal-body').html(contenido);
-                modal.show();
+                // Obtener los anexos de la denuncia
+                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`, function (anexos) {
+                    let anexosHtml = '';
+
+                    if (anexos.length > 0) {
+                        anexosHtml = anexos
+                            .map(anexo => {
+                                if (anexo.tipo === 'application/pdf') {
+                                    return `
+                                <div class="card mb-3">
+                                    <div class="card-body d-flex justify-content-between align-items-center">
+                                        <a href="${Server}${anexo.ruta_archivo}" data-lightbox="pdf-${anexo.id}" data-title="${anexo.nombre_archivo}" class="pdf-viewer">${anexo.nombre_archivo}</a>
+                                    </div>
+                                </div>
+                            `;
+                                } else {
+                                    return `
+                                <div class="card mb-3">
+                                    <div class="card-body d-flex justify-content-between align-items-center">
+                                        <a href="${Server}${anexo.ruta_archivo}" data-lightbox="image-${anexo.id}" data-title="${anexo.nombre_archivo}">
+                                            <img src="${Server}${anexo.ruta_archivo}" alt="${anexo.nombre_archivo}" class="img-thumbnail" style="max-width: 100px;">
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                                }
+                            })
+                            .join('');
+                    } else {
+                        anexosHtml = '<p class="text-center">No hay archivos adjuntos.</p>';
+                    }
+
+                    const contenido = `
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Folio:</strong> ${data.folio}</p>
+                                <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
+                                <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
+                                <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                                <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
+                                <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
+                                <p><strong>Estado:</strong> ${data.estado_nombre}</p>
+                                <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
+                                <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
+                                <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
+                                <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <p><strong>Descripción:</strong></p>
+                                <p>${data.descripcion || 'N/A'}</p>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <p><strong>Archivos Adjuntos:</strong></p>
+                                ${anexosHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                    $('#modalVerDetalle .modal-body').html(contenido);
+                    modal.show();
+                });
             });
         },
 
