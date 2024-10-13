@@ -314,3 +314,29 @@ a {
         text-decoration: underline;
     }
 }
+
+/* Estilo para los labels de campos con error */
+label.is-invalid {
+    color: #dc3545; /* Color de error (rojo) */
+    font-weight: bold; /* Hacer el texto del label más visible */
+}
+
+/* Estilo para el texto de validación que aparece debajo del input */
+.invalid-feedback {
+    display: block;
+    color: #dc3545; /* Mismo color de error que Bootstrap */
+    font-size: 0.875rem; /* Tamaño de fuente ligeramente más pequeño */
+    margin-top: 0.25rem; /* Espaciado para separar del input */
+}
+
+/* Estilo para los inputs que tengan el estado de error */
+.form-control.is-invalid,
+.select2-container--default .select2-selection--single.is-invalid {
+    border-color: #dc3545; /* Cambiar el borde a rojo */
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Agregar sombra roja */
+}
+
+/* Para selects de .select2 con estado de error */
+.select2-selection.is-invalid {
+    border-color: #dc3545; /* Borde rojo para selects de select2 */
+}

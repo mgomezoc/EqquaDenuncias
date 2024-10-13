@@ -10,7 +10,9 @@ Dropzone.autoDiscover = false;
 $(document).ready(function () {
     // Constantes
     const MAX_FILES = 5;
-    const MAX_AUDIO_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    const MAX_FILE_SIZE_MB = 10; // Tamaño máximo para archivos normales (10 MB)
+    const MAX_AUDIO_FILE_SIZE = 5 * 1024 * 1024; // Tamaño máximo para el archivo de audio (5 MB)
+    const MAX_VIDEO_SIZE_MB = 20; // Tamaño máximo para videos cortos (20 MB)
 
     let mediaRecorder;
     let audioChunks = [];
@@ -60,17 +62,21 @@ $(document).ready(function () {
 
         const dropzoneOptions = {
             url: `${Server}public/denuncias/subir-anexo-public`,
-            maxFiles: MAX_FILES,
-            acceptedFiles: 'image/*,application/pdf',
+            maxFiles: MAX_FILES, // Máximo 5 archivos
+            maxFilesize: MAX_FILE_SIZE_MB, // Limitar el tamaño de cada archivo a 10 MB
+            acceptedFiles: 'image/*,application/pdf,video/mp4,video/webm,video/ogg', // Tipos permitidos: imágenes, PDFs y videos cortos
             addRemoveLinks: true,
-            dictDefaultMessage: 'Arrastra los archivos aquí para subirlos',
+            dictDefaultMessage: 'Arrastra los archivos aquí para subirlos (imágenes, PDF, videos cortos)',
             dictRemoveFile: 'Eliminar archivo',
+            dictFileTooBig: 'El archivo es muy grande ({{filesize}} MB). Tamaño máximo: {{maxFilesize}} MB.',
+            dictInvalidFileType: 'Tipo de archivo no permitido.',
             init: function () {
                 this.on('success', handleFileUploadSuccess);
                 this.on('removedfile', handleFileRemove);
-            },
-            error: function (file, message) {
-                console.error('Error en la subida del archivo: ', message);
+                this.on('error', function (file, message) {
+                    console.error('Error en la subida del archivo: ', message);
+                    Swal.fire('Error', message, 'error');
+                });
             }
         };
 
@@ -285,6 +291,16 @@ $(document).ready(function () {
      */
     function handleAudioRecordingStop() {
         audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+
+        const audioFileSize = audioBlob.size / 1024 / 1024; // Tamaño del archivo en MB
+        const MAX_AUDIO_SIZE_MB = 5; // Límite de tamaño de archivo de audio a 5 MB
+
+        if (audioFileSize > MAX_AUDIO_SIZE_MB) {
+            Swal.fire('Error', 'El archivo de audio supera el tamaño máximo permitido de 5 MB.', 'error');
+            $('#audioPlayback').hide();
+            $('#audio_input').val(''); // Limpiar el input de audio
+            return;
+        }
 
         const audioURL = URL.createObjectURL(audioBlob);
         $('#audioPlayback').attr('src', audioURL).show();

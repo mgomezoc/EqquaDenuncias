@@ -121,7 +121,7 @@
             <div class="col-md-12">
                 <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
                 <div id="dropzoneArchivos" class="dropzone border p-3" style="border-radius: 10px;"></div>
-                <small class="text-muted">Máximo tamaño de archivo: 10 MB. Formatos permitidos: PDF, JPG, PNG.</small>
+                <small class="text-muted">Máximo tamaño de archivo: 10 MB para imágenes y PDF, 20 MB para videos. Formatos permitidos: PDF, JPG, PNG, MP4, WEBM, OGG.</small>
             </div>
 
             <!-- Audio -->
