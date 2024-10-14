@@ -12,6 +12,8 @@ class UsuarioModel extends Model
         'nombre_usuario',
         'correo_electronico',
         'contrasena',
+        'password_reset_token',
+        'token_expiry',
         'rol_id',
         'ultima_conexion',
         'id_cliente',

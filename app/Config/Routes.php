@@ -47,6 +47,12 @@ $routes->get('/register', 'Auth::register'); // Mostrar formulario de registro
 $routes->post('/auth/registerSubmit', 'Auth::registerSubmit'); // Procesar registro
 $routes->get('/noautorizado', 'Error::noautorizado'); // Página de error para accesos no autorizados
 
+$routes->get('/forgot-password', 'Auth::forgotPassword'); // Mostrar formulario de recuperación de contraseña
+$routes->post('/forgot-password-submit', 'Auth::forgotPasswordSubmit'); // Procesar solicitud de recuperación
+$routes->get('/reset-password/(:any)', 'Auth::resetPassword/$1'); // Mostrar formulario para restablecer la contraseña
+$routes->post('/reset-password-submit', 'Auth::resetPasswordSubmit'); // Procesar nueva contraseña
+
+
 /**
  * Rutas para el dashboard
  * Accesible para todos los usuarios autenticados
