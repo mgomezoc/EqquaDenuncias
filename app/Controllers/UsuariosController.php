@@ -146,7 +146,7 @@ class UsuariosController extends Controller
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Bienvenido a Eqqua Denuncias</title>
+                <title>Bienvenido a Eqqua</title>
                 <style>
                     /* Estilos generales */
                     body {
@@ -262,7 +262,7 @@ class UsuariosController extends Controller
             </html>';
 
         // Enviar el correo
-        $emailService->sendEmail($email, 'Bienvenido a Eqqua Denuncias', $mensaje);
+        $emailService->sendEmail($email, 'Bienvenido a Eqqua', $mensaje);
     }
 
     public function obtener($id)
