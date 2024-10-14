@@ -176,6 +176,9 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
     });
 
     $routes->group('cliente', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
+        //Dashboard
+        $routes->get('dashboard', 'DashboardClienteController::index');
+        $routes->post('dashboard/filtrar', 'DashboardClienteController::filtrar');
         // Gestión del perfil del cliente
         $routes->get('perfil', 'PerfilClienteController::perfil');
         $routes->post('perfil/actualizar', 'PerfilClienteController::actualizarPerfil');

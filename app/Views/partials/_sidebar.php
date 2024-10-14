@@ -14,16 +14,15 @@
             </div>
             <ul class="main-menu">
                 <li class="slide__category"><span class="category-name"><?= session()->get('nombre_empresa') ?></span></li>
-                <li class="slide">
-                    <a href="<?= base_url('dashboard') ?>" class="side-menu__item">
-                        <i class="fa-solid fa-tachometer-alt side-menu__icon"></i>
-                        <span class="side-menu__label">Dashboard</span>
-                    </a>
-                </li>
-
                 <?php $rol = session()->get('rol_slug'); ?>
 
                 <?php if ($rol == 'ADMIN'): ?>
+                    <li class="slide">
+                        <a href="<?= base_url('dashboard') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-tachometer-alt side-menu__icon"></i>
+                            <span class="side-menu__label">Dashboard</span>
+                        </a>
+                    </li>
                     <li class="slide">
                         <a href="<?= base_url('usuarios') ?>" class="side-menu__item">
                             <i class="fa-solid fa-users side-menu__icon"></i>
@@ -70,6 +69,13 @@
 
 
                 <?php if ($rol == 'CLIENTE'): ?>
+                    <li class="slide">
+                        <a href="<?= base_url('cliente/dashboard') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-tachometer-alt side-menu__icon"></i>
+                            <span class="side-menu__label">Dashboard</span>
+                        </a>
+                    </li>
+
                     <li class="slide">
                         <a href="<?= base_url('cliente/perfil') ?>" class="side-menu__item">
                             <i class="fa-solid fa-user side-menu__icon"></i>
