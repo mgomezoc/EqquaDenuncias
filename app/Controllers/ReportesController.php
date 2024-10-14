@@ -180,7 +180,7 @@ class ReportesController extends Controller
         $data = [
             'clienteId' => $clienteId,
             'estados' => $estadosAmigables,
-            'title' => 'Reporte de Denuncias para Cliente'
+            'title' => 'Reporte de Denuncias'
         ];
 
         return view('reportes/cliente', $data);

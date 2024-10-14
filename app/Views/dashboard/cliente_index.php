@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/main') ?>
 
-<?= $this->section('title') ?>Dashboard del Cliente<?= $this->endSection() ?>
+<?= $this->section('title') ?>Dashboard<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="container mt-5">

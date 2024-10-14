@@ -24,7 +24,7 @@ class DashboardClienteController extends BaseController
         $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
 
         $data = [
-            'title' => 'Dashboard del Cliente',
+            'title' => 'Dashboard',
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
             'denunciasPorSucursal' => $denunciasPorSucursal,
@@ -65,7 +65,7 @@ class DashboardClienteController extends BaseController
 
         // Pasar los datos a la vista
         $data = [
-            'title' => 'Dashboard del Cliente',
+            'title' => 'Dashboard',
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
             'denunciasPorSucursal' => $denunciasPorSucursal,

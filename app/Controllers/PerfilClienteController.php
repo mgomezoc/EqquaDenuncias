@@ -18,7 +18,7 @@ class PerfilClienteController extends Controller
         }
 
         $data = [
-            'title' => 'Perfil del Cliente',
+            'title' => 'Perfil',
             'cliente' => $cliente,
         ];
 

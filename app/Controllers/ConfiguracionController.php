@@ -16,7 +16,7 @@ class ConfiguracionController extends Controller
         $usuario = $usuarioModel->find($session->get('id'));
 
         $data = [
-            'title' => 'Administración de Sucursales',
+            'title' => 'Cambiar Contraseña',
             'controlador' => 'Sucursales',
             'vista' => 'Sucursales',
             'usuario' => $usuario

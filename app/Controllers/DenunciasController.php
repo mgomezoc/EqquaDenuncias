@@ -88,7 +88,7 @@ class DenunciasController extends Controller
         $denuncias = $denunciaModel->getDenunciasParaCalidad($clienteId);
 
         $data = [
-            'title' => 'Gestión de Denuncias - Supervisor de Calidad',
+            'title' => 'Mis Denuncias',
             'controlador' => 'Denuncias',
             'vista' => 'Gestión de Denuncias Supervisor',
             'clientes' => $clientes,
@@ -124,7 +124,7 @@ class DenunciasController extends Controller
         $denuncias = $denunciaModel->getDenunciasByCliente($clienteId);
 
         $data = [
-            'title' => 'Mis Denuncias',
+            'title' => 'Denuncias Activas',
             'controlador' => 'Denuncias',
             'vista' => 'Mis Denuncias Cliente',
             'cliente' => $cliente,  // Información del cliente
