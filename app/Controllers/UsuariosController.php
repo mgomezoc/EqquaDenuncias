@@ -228,8 +228,8 @@ class UsuariosController extends Controller
                     <!-- Header -->
                     <tr>
                         <td class="header">
-                            <img src="https://eqqua.test/EqquaDenuncias/public/assets/images/logo.png" alt="Eqqua Denuncias Logo">
-                            <h1>Bienvenido a Eqqua Denuncias</h1>
+                            <img src="https://denuncias.eqqua.mx/assets/images/logo_blanco.png" alt="Eqqua Denuncias Logo">
+                            <h1>Bienvenido a Eqqua</h1>
                         </td>
                     </tr>
 
@@ -237,23 +237,23 @@ class UsuariosController extends Controller
                     <tr>
                         <td class="body-content">
                             <h2>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</h2>
-                            <p>Nos complace informarle que su cuenta ha sido creada exitosamente en la plataforma <strong>Eqqua Denuncias</strong>.</p>
+                            <p>Nos complace informarle que su cuenta ha sido creada exitosamente en la plataforma <strong>Eqqua</strong>.</p>
                             <p>A continuación, encontrará sus credenciales de acceso:</p>
                             <ul style="list-style: none; padding: 0;">
-                                <li><strong>Nombre de usuario:</strong> ' . esc($nombreUsuario) . '</li>
+                                <li><strong>Nombre de usuario:</strong> ' . esc($email) . '</li>
                                 <li><strong>Contraseña:</strong> ' . esc($contrasena) . '</li>
                             </ul>
                             <p>Para acceder a su cuenta, haga clic en el siguiente enlace:</p>
                             <p><a href="' . base_url() . '" class="cta-button">Iniciar Sesión</a></p>
                             <p>Si tiene alguna pregunta, no dude en contactarnos.</p>
-                            <p>Saludos cordiales,<br><strong>Eqqua Denuncias</strong></p>
+                            <p>Saludos cordiales,<br><strong>Eqqua</strong></p>
                         </td>
                     </tr>
 
                     <!-- Footer -->
                     <tr>
                         <td class="footer">
-                            <p>&copy; ' . date('Y') . ' Eqqua Denuncias. Todos los derechos reservados.</p>
+                            <p>&copy; ' . date('Y') . ' Eqqua. Todos los derechos reservados.</p>
                             <p>Para más información, visite nuestro sitio web: <a href="https://eqqua.mx">eqqua.mx</a></p>
                         </td>
                     </tr>
