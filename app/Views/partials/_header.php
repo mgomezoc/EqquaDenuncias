@@ -1,4 +1,3 @@
-// App/Views/partials/_header.php
 <header class="app-header">
     <div class="main-header-container container-fluid">
         <div class="header-content-left">
@@ -28,6 +27,14 @@
                     </div>
                 </a>
                 <ul class="main-header-dropdown dropdown-menu overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile">
+                    <!-- Opción de Configuración -->
+                    <li>
+                        <a class="dropdown-item d-flex" href="<?= base_url('configuracion') ?>">
+                            <i class="fa fa-cog fs-18 me-2 op-7"></i>Configuración
+                        </a>
+                    </li>
+
+                    <!-- Opción de Cerrar sesión -->
                     <li>
                         <a class="dropdown-item d-flex" href="<?= base_url('logout') ?>">
                             <i class="fa fa-sign-out-alt fs-18 me-2 op-7"></i>Salir

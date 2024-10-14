@@ -64,6 +64,10 @@ $routes->post('/dashboard/filtrar', 'DashboardController::filtrar');
  * Usuarios autenticados con roles ADMIN, CLIENTE, AGENTE, SUPERVISOR_CALIDAD
  */
 $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALIDAD'], function ($routes) {
+    //Configuración
+    $routes->get('configuracion', 'ConfiguracionController::index', ['filter' => 'authFilter']); // Ver la configuración del usuario
+    $routes->post('configuracion/actualizar', 'ConfiguracionController::actualizar', ['filter' => 'authFilter']); // Actualizar contraseña
+
 
     // Ruta para la página de administración
     $routes->get('/admin', 'Admin::index');
