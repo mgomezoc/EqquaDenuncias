@@ -6,16 +6,16 @@
 <div class="container mt-5">
 
     <!-- Filtro de fechas -->
-    <form action="<?= base_url('cliente/dashboard/filtrar') ?>" method="post" class="mb-4">
+    <form action="<?= base_url('cliente/dashboard/filtrar') ?>" method="post" class="mb-4" id="dateFilterForm">
         <div class="row">
             <div class="col-md-4">
-                <input type="date" name="start_date" class="form-control" placeholder="Fecha inicio">
+                <input type="text" id="startDate" name="start_date" class="form-control" placeholder="Fecha inicio" value="<?= $startDate ?? '' ?>">
             </div>
             <div class="col-md-4">
-                <input type="date" name="end_date" class="form-control" placeholder="Fecha fin">
+                <input type="text" id="endDate" name="end_date" class="form-control" placeholder="Fecha fin" value="<?= $endDate ?? '' ?>">
             </div>
             <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                <button type="submit" class="btn btn-primary w-100" id="filterButton">Filtrar</button>
             </div>
         </div>
     </form>
@@ -75,14 +75,48 @@
     </div>
 
 </div>
+<?= $this->endSection() ?>
 
+<?= $this->section('styles') ?>
+<!-- Incluir Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<!-- Incluir Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <!-- Scripts de Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Agregar plugin de Chart.js Data Labels -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
-
 <script>
+    // Configuración de Flatpickr para los campos de fecha
+    flatpickr("#startDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: "<?= $startDate ?? 'today' ?>",
+        locale: "es"
+    });
+
+    flatpickr("#endDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: "<?= $endDate ?? 'today' ?>",
+        locale: "es"
+    });
+
+    // Validación de las fechas antes de enviar el formulario
+    document.getElementById("dateFilterForm").addEventListener("submit", function(e) {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!startDate || !endDate) {
+            e.preventDefault();
+            alert('Por favor selecciona ambas fechas de inicio y fin.');
+        } else if (new Date(startDate) > new Date(endDate)) {
+            e.preventDefault();
+            alert('La fecha de inicio no puede ser mayor que la fecha de fin.');
+        }
+    });
+
     // Función para obtener el total de denuncias (suma de todas las categorías)
     const totalDenuncias = (dataset) => dataset.reduce((a, b) => a + b, 0);
 
@@ -329,5 +363,5 @@
         }
     });
 </script>
-
+<script src="<?= base_url('assets/js/dashboard-cliente.js') ?>"></script>
 <?= $this->endSection() ?>
