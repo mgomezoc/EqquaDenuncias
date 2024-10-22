@@ -11,6 +11,8 @@ use App\Models\SucursalModel;
 use App\Models\AnexoDenunciaModel;
 use App\Models\DepartamentoModel;
 use App\Models\SeguimientoDenunciaModel;
+use App\Models\UsuarioModel;
+use App\Services\EmailService;
 use CodeIgniter\Controller;
 
 class DenunciasController extends Controller
@@ -295,6 +297,9 @@ class DenunciasController extends Controller
     public function cambiarEstado()
     {
         $denunciaModel = new DenunciaModel();
+        $usuarioModel = new UsuarioModel();
+        $emailService = new EmailService();
+
         $id = $this->request->getVar('id');
         $estado_nuevo = $this->request->getVar('estado_nuevo');
 
@@ -309,13 +314,25 @@ class DenunciasController extends Controller
         $seguimientoModel = new SeguimientoDenunciaModel();
         $seguimientoModel->save([
             'id_denuncia' => $id,
-            'estado_anterior' => $estado_anterior, // Aquí se asegura que no sea null
+            'estado_anterior' => $estado_anterior,
             'estado_nuevo' => $estado_nuevo,
             'comentario' => $this->request->getVar('comentario'),
             'id_usuario' => session()->get('id'),
         ]);
 
         registrarAccion(session()->get('id'), 'Cambio de estado de denuncia', 'ID: ' . $id);
+
+        // Verificar si el estado es "Liberada al Cliente" (estado 4)
+        if ($estado_nuevo == 4) {
+            // Obtener la información del cliente asignado a la denuncia
+            $clienteId = $denuncia['id_cliente'];
+            $cliente = $usuarioModel->where('id', $clienteId)->first();
+
+            if ($cliente) {
+                // Enviar correo al cliente
+                $this->enviarCorreoLiberacionCliente($cliente['correo_electronico'], $cliente['nombre_usuario'], $denuncia);
+            }
+        }
 
         return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
     }
@@ -460,5 +477,89 @@ class DenunciasController extends Controller
             log_message('error', $e->getMessage());
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al eliminar el anexo. Error: ' . $e->getMessage()]);
         }
+    }
+
+    // Función para enviar el correo al cliente cuando la denuncia es liberada
+    private function enviarCorreoLiberacionCliente($email, $nombreUsuario, $denuncia)
+    {
+        $emailService = new EmailService();
+
+        // Crear el mensaje de notificación
+        $mensaje = '
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Denuncia Liberada</title>
+                <style>
+                    /* Estilos generales */
+                    body {
+                        font-family: "Arial", sans-serif;
+                        background-color: #f4f4f4;
+                        color: #333333;
+                        margin: 0;
+                        padding: 0;
+                        width: 100%;
+                    }
+                    table {
+                        max-width: 600px;
+                        width: 100%;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        border-collapse: collapse;
+                    }
+                    h1, h2, h3, p {
+                        margin: 0;
+                    }
+                    .header {
+                        background-color: #0047ba; /* Color primario del sistema */
+                        padding: 20px;
+                        text-align: center;
+                        color: #ffffff;
+                    }
+                    .body-content {
+                        padding: 20px;
+                    }
+                    .footer {
+                        background-color: #0047ba;
+                        color: #ffffff;
+                        text-align: center;
+                        padding: 10px 20px;
+                        font-size: 14px;
+                    }
+                    .footer a {
+                        color: #ffffff;
+                        text-decoration: underline;
+                    }
+                </style>
+            </head>
+            <body>
+                <table>
+                    <tr>
+                        <td class="header">
+                            <h1>Denuncia Liberada al Cliente</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="body-content">
+                            <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
+                            <p>Le informamos que su denuncia con el folio <strong>' . esc($denuncia['folio']) . '</strong> ha sido liberada.</p>
+                            <p>Ahora tiene acceso a la información completa y a los resultados de la investigación. Puede revisar los detalles accediendo a su cuenta en el sistema.</p>
+                            <p>Para más detalles, ingrese a su cuenta en <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
+                            <p>Saludos cordiales,<br><strong>Eqqua Denuncias</strong></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <p>&copy; ' . date('Y') . ' Eqqua Denuncias</p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>';
+
+        // Enviar el correo
+        $emailService->sendEmail($email, 'Denuncia Liberada: ' . esc($denuncia['folio']), $mensaje);
     }
 }
