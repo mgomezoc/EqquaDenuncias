@@ -8,6 +8,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Eqqua - Iniciar Sesión</title>
 
+    <link rel="icon" type="image/png" href="<?= base_url("favicon-48x48.png") ?>" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="<?= base_url("favicon.svg") ?>" />
+    <link rel="shortcut icon" href="<?= base_url("favicon.ico") ?>" />
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url("apple-touch-icon.png") ?>" />
+    <meta name="apple-mobile-web-app-title" content="Eqqua" />
+    <link rel="manifest" href="/site.webmanifest" />
+
     <link id="style" href="<?= base_url('assets/libs/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= base_url('assets/css/styles.min.css') ?>" rel="stylesheet">
     <link href="<?= base_url('assets/css/site.css') ?>" rel="stylesheet">

@@ -13,13 +13,12 @@
     <?= $this->renderSection('styles') ?>
     <link rel="stylesheet" href="<?= base_url('assets/css/site.css') ?>">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/images/favicon/apple-touch-icon.png') ?>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?= base_url('assets/images/favicon/favicon-32x32.png') ?>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<?= base_url('assets/images/favicon/favicon-16x16.png') ?>">
-    <link rel="manifest" href="<?= base_url('assets/images/favicon/site.webmanifest') ?>">
-    <link rel="mask-icon" href="<?= base_url('assets/images/favicon/safari-pinned-tab.svg') ?>" color="#006657">
-    <meta name="msapplication-TileColor" content="#006657">
-    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" href="<?= base_url("favicon-48x48.png") ?>" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="<?= base_url("favicon.svg") ?>" />
+    <link rel="shortcut icon" href="<?= base_url("favicon.ico") ?>" />
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url("apple-touch-icon.png") ?>" />
+    <meta name="apple-mobile-web-app-title" content="Eqqua" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <script src="https://kit.fontawesome.com/901438e2f4.js" crossorigin="anonymous"></script>
     <script>

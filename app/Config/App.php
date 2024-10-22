@@ -16,7 +16,7 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = 'http://eqqua.test/EqquaDenuncias/public/';
+    public string $baseURL = 'https://eqqua.test/EqquaDenuncias/public/';
 
 
     /**
