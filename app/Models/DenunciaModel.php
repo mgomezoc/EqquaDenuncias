@@ -353,6 +353,7 @@ class DenunciaModel extends Model
     {
         $builder = $this->db->table($this->table);
 
+        // Selección de campos con las uniones necesarias
         $builder->select('denuncias.*, 
                   clientes.nombre_empresa AS cliente_nombre, 
                   sucursales.nombre AS sucursal_nombre, 
@@ -376,16 +377,18 @@ class DenunciaModel extends Model
         $estadosVisibles = [4, 5, 6];
         $builder->whereIn('denuncias.estado_actual', $estadosVisibles);
 
-        // Filtrar por estado_actual si se proporciona y está dentro de los estados permitidos
+        // Aplicar filtro de estado si está dentro de los estados permitidos
         if (!empty($filters['estado_actual']) && in_array($filters['estado_actual'], $estadosVisibles)) {
             $builder->where('denuncias.estado_actual', $filters['estado_actual']);
         }
 
+        // Filtrar por fecha de reporte si está presente
         if (!empty($filters['fecha_inicio']) && !empty($filters['fecha_fin'])) {
             $builder->where('denuncias.fecha_hora_reporte >=', $filters['fecha_inicio'] . ' 00:00:00');
             $builder->where('denuncias.fecha_hora_reporte <=', $filters['fecha_fin'] . ' 23:59:59');
         }
 
+        // Otros filtros opcionales
         if (!empty($filters['id_sucursal'])) {
             $builder->where('denuncias.id_sucursal', $filters['id_sucursal']);
         }
@@ -418,7 +421,7 @@ class DenunciaModel extends Model
                 ->groupEnd();
         }
 
-        // Ordenar y validar el tipo de columna a ordenar
+        // Ordenar por la columna solicitada, si está presente
         $validColumns = [
             'folio',
             'sucursal_nombre',
@@ -436,15 +439,20 @@ class DenunciaModel extends Model
             $builder->orderBy('denuncias.fecha_hora_reporte', 'desc');
         }
 
+        // Clonar el builder para contar el total sin aplicar el límite
+        $countQuery = clone $builder;
+        $total = $countQuery->countAllResults(false);  // Evita que la consulta se resetee
+
+        // Aplicar el límite y el offset para la paginación
         $builder->limit($limit, $offset);
 
+        // Obtener los resultados paginados
         $result = $builder->get()->getResultArray();
 
-        $total = count($result);
-
+        // Retornar el total y los resultados
         return [
-            'total' => $total,
-            'rows' => $result
+            'total' => $total,   // El total de registros sin paginación
+            'rows' => $result    // Los registros actuales, según el límite y el offset
         ];
     }
 }

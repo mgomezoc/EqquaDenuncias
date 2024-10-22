@@ -60,7 +60,6 @@ class UsuariosController extends Controller
         $data = [
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
-            'contrasena' => $this->request->getVar('contrasena'),
             'rol_id' => $this->request->getVar('rol_id'),
             'id_cliente' => $id_cliente ?: null,
             'activo' => 1
