@@ -64,6 +64,50 @@ label.error {
     background: hsl(243.29deg 29.8% 51.96% / 88%) !important;
 }
 
+// Sobrescribe el estilo global del scrollbar solo dentro del contenedor de tabla responsiva
+.table-responsive {
+    // Estilo del scrollbar horizontal
+    ::-webkit-scrollbar {
+        height: 0.5rem; // Ajusta el tamaño del scrollbar horizontal
+        background-color: #f0f0f0; // Color de fondo del scrollbar
+    }
+
+    // Estilo de la "pista" del scrollbar (la línea por la que se mueve el thumb)
+    ::-webkit-scrollbar-track {
+        background-color: #f8f9fa; // Color de fondo de la pista
+        border-radius: 10px; // Redondear los bordes
+    }
+
+    // Estilo del "thumb" (la barra que puedes arrastrar)
+    ::-webkit-scrollbar-thumb {
+        background-color: #3e8ed0; // Color del thumb (puedes ajustar este color a tu paleta de colores)
+        border-radius: 10px; // Redondear los bordes del thumb
+        border: 2px solid #f0f0f0; // Agregar borde para que parezca más integrado
+    }
+
+    // Estilo del scrollbar vertical (por si se utiliza)
+    ::-webkit-scrollbar-vertical {
+        width: 0.5rem; // Tamaño del scrollbar vertical
+        background-color: #f0f0f0; // Color de fondo del scrollbar vertical
+    }
+
+    // Pista y thumb del scrollbar vertical
+    ::-webkit-scrollbar-track {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: #3e8ed0;
+        border-radius: 10px;
+        border: 2px solid #f0f0f0;
+    }
+
+    // Compatibilidad para navegadores que no usan WebKit (como Firefox)
+    scrollbar-width: thin; // Ancho del scrollbar en Firefox
+    scrollbar-color: #3e8ed0 #f0f0f0; // Color del thumb y de la pista en Firefox
+}
+
 .table-eqqua {
     & thead {
         & th {

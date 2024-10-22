@@ -121,7 +121,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $supportedLocales = ['en'];
+    public array $supportedLocales = ['es'];
 
     /**
      * --------------------------------------------------------------------------
@@ -134,7 +134,8 @@ class App extends BaseConfig
      * @see https://www.php.net/manual/en/timezones.php for list of timezones
      *      supported by PHP.
      */
-    public string $appTimezone = 'UTC';
+    public $appTimezone = 'America/Monterrey';
+
 
     /**
      * --------------------------------------------------------------------------

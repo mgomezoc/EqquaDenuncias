@@ -234,6 +234,7 @@ class DenunciaModel extends Model
 
     public function filtrarDenuncias($limit, $offset, array $filters, $sort = '', $order = 'asc')
     {
+        // Construir la consulta principal
         $builder = $this->db->table($this->table);
 
         // Selección de campos y unión con otras tablas
@@ -253,32 +254,38 @@ class DenunciaModel extends Model
         $builder->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left');
         $builder->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left');
 
-        // Aplicar filtros
+        // Aplicar filtros de fechas si están presentes
         if (!empty($filters['fecha_inicio']) && !empty($filters['fecha_fin'])) {
             $builder->where('denuncias.fecha_hora_reporte >=', $filters['fecha_inicio'] . ' 00:00:00');
             $builder->where('denuncias.fecha_hora_reporte <=', $filters['fecha_fin'] . ' 23:59:59');
         }
 
+        // Aplicar filtro de cliente si no es "todos"
         if (!empty($filters['id_cliente']) && $filters['id_cliente'] !== 'todos') {
             $builder->where('denuncias.id_cliente', $filters['id_cliente']);
         }
 
+        // Aplicar filtro de sucursal si está presente
         if (!empty($filters['id_sucursal'])) {
             $builder->where('denuncias.id_sucursal', $filters['id_sucursal']);
         }
 
+        // Aplicar filtro de departamento si está presente
         if (!empty($filters['id_departamento'])) {
             $builder->where('denuncias.id_departamento', $filters['id_departamento']);
         }
 
+        // Aplicar filtro de medio de recepción si está presente
         if (!empty($filters['medio_recepcion'])) {
             $builder->where('denuncias.medio_recepcion', $filters['medio_recepcion']);
         }
 
+        // Aplicar filtro de estado actual si está presente
         if (!empty($filters['estado_actual'])) {
             $builder->where('denuncias.estado_actual', $filters['estado_actual']);
         }
 
+        // Aplicar filtro de creador si está presente
         if (!empty($filters['id_creador'])) {
             $builder->where('denuncias.id_creador', $filters['id_creador']);
         }
@@ -299,7 +306,7 @@ class DenunciaModel extends Model
                 ->groupEnd();
         }
 
-        // Ordenar y validar el tipo de columna a ordenar
+        // Ordenar por la columna solicitada, si está presente
         $validColumns = [
             'folio',
             'cliente_nombre',
@@ -318,19 +325,25 @@ class DenunciaModel extends Model
             $builder->orderBy('denuncias.fecha_hora_reporte', 'desc');
         }
 
+        // Limitar resultados según el límite y offset
         $builder->limit($limit, $offset);
 
+        // Ejecutar la consulta principal y obtener los resultados
         $result = $builder->get()->getResultArray();
 
-        // Calcular el total de registros basados en los mismos filtros
-        $countQuery = clone $builder;
-        $total = count($countQuery->get()->getResultArray());
+        // Contar el total de registros aplicando los mismos filtros
+        $totalBuilder = clone $builder;
+        $totalBuilder->select('COUNT(*) as total');
+        $totalResult = $totalBuilder->get()->getFirstRow();
+        $total = $totalResult->total;
 
         return [
             'total' => $total,
             'rows' => $result
         ];
     }
+
+
 
     public function filtrarDenunciasParaCliente($clienteId, $limit, $offset, array $filters, $sort = '', $order = 'asc')
     {

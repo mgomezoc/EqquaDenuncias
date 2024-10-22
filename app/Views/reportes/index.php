@@ -89,7 +89,7 @@
                         <th data-field="subcategoria_nombre">SubCategoría</th>
                         <th data-field="fecha_incidente">Fecha Incidente</th>
                         <th data-field="medio_recepcion">Medio Recepción</th>
-                        <th data-field="updated_at">Ultima Actualización</th>
+                        <th data-field="updated_at" data-visible="false">Ultima Actualización</th>
                         <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-align="center">Acciones</th>
                     </thead>
                 </table>

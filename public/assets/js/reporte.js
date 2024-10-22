@@ -113,13 +113,13 @@ $(document).ready(function () {
 
     // Inicializar flatpickr en los campos de fecha con el mes en curso
     const fechaInicioInput = flatpickr('#fecha_inicio', {
-        dateFormat: 'Y-m-d',
-        defaultDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // Primer día del mes actual
+        dateFormat: 'Y-m-d'
+        //defaultDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // Primer día del mes actual
     });
 
     const fechaFinInput = flatpickr('#fecha_fin', {
-        dateFormat: 'Y-m-d',
-        defaultDate: new Date() // Fecha actual como fecha de fin por defecto
+        dateFormat: 'Y-m-d'
+        //defaultDate: new Date() // Fecha actual como fecha de fin por defecto
     });
 
     // Regla personalizada para verificar que la fecha de fin sea mayor o igual a la fecha de inicio
@@ -206,7 +206,7 @@ $(document).ready(function () {
     // Filtrar las denuncias
     $('#btnFiltrar').on('click', function () {
         if ($('#formFiltros').valid()) {
-            $('#tablaDenuncias').bootstrapTable('refresh');
+            $tablaDenuncias.bootstrapTable('refreshOptions', { pageNumber: 1 });
         }
     });
 

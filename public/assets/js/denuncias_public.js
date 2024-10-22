@@ -46,13 +46,13 @@ $(document).ready(function () {
     function initializeFlatpickr() {
         // Selecciona todos los elementos con la clase 'flatpickr' para inicializarlos con la configuración de Flatpickr
         $('.flatpickr').flatpickr({
-            dateFormat: 'd-m-Y', // Formato de fecha más amigable (día-mes-año)
+            dateFormat: 'Y-m-d', // Formato de fecha más amigable (día-mes-año)
             maxDate: 'today', // No permitir seleccionar fechas futuras
             defaultDate: 'today', // Fecha seleccionada por defecto: hoy
             locale: 'es', // Cambia la localización a español para meses y días
             altInput: true, // Habilitar el campo alternativo de fecha
             altFormat: 'F j, Y', // Mostrar un formato alternativo más amigable (ej: Octubre 13, 2024)
-            weekNumbers: true // Muestra los números de la semana (opcional)
+            weekNumbers: false // Muestra los números de la semana (opcional)
         });
     }
 

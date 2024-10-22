@@ -48,6 +48,36 @@ label.error {
 .authentication .authentication-cover:before {
   background: hsla(243.29, 29.8%, 51.96%, 0.88) !important;
 }
+.table-responsive {
+  scrollbar-width: thin;
+  scrollbar-color: #3e8ed0 #f0f0f0;
+}
+.table-responsive ::-webkit-scrollbar {
+  height: 0.5rem;
+  background-color: #f0f0f0;
+}
+.table-responsive ::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+}
+.table-responsive ::-webkit-scrollbar-thumb {
+  background-color: #3e8ed0;
+  border-radius: 10px;
+  border: 2px solid #f0f0f0;
+}
+.table-responsive ::-webkit-scrollbar-vertical {
+  width: 0.5rem;
+  background-color: #f0f0f0;
+}
+.table-responsive ::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+}
+.table-responsive ::-webkit-scrollbar-thumb {
+  background-color: #3e8ed0;
+  border-radius: 10px;
+  border: 2px solid #f0f0f0;
+}
 .table-eqqua thead th {
   background: #0f9d58;
   color: #fff;

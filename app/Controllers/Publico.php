@@ -120,6 +120,43 @@ class Publico extends BaseController
             }
         }
 
+        // Procesar archivo de audio si está presente
+        $audioFile = $this->request->getFile('audio_file');
+        if ($audioFile && $audioFile->isValid()) {
+            // Obtener el tipo MIME del archivo antes de moverlo
+            $mimeType = $audioFile->getMimeType();
+
+            // Validar el archivo de audio
+            if ($audioFile->getSize() <= 5 * 1024 * 1024 && in_array($mimeType, ['audio/wav', 'audio/mpeg', 'audio/ogg', 'video/webm'])) {
+                // Mover el archivo a la carpeta de uploads (con nombre aleatorio)
+                $newAudioName = $audioFile->getRandomName();
+                if ($audioFile->move(WRITEPATH . '../public/uploads/denuncias', $newAudioName)) {
+                    // Guardar el audio como anexo en la base de datos
+                    $anexoModel = new AnexoDenunciaModel();
+                    $anexoModel->save([
+                        'id_denuncia' => $denunciaId,
+                        'nombre_archivo' => $newAudioName,
+                        'ruta_archivo' => 'uploads/denuncias/' . $newAudioName,
+                        'tipo' => $mimeType, // Usar el tipo MIME ya obtenido
+                    ]);
+                } else {
+                    return $this->response->setStatusCode(400)
+                        ->setJSON(['message' => 'No se pudo subir el archivo de audio']);
+                }
+            } else {
+                return $this->response->setStatusCode(400)
+                    ->setJSON([
+                        'success' => false,
+                        'message' => 'Archivo de audio no válido o demasiado grande',
+                        'data' => [
+                            'size' => $audioFile->getSize(),
+                            'mime' => $mimeType,
+                        ]
+                    ]);
+            }
+        }
+
+
         // Retornar el folio en la respuesta JSON
         return $this->response->setJSON([
             'success' => true,
@@ -127,8 +164,6 @@ class Publico extends BaseController
             'folio' => $folio // Retornar el folio generado
         ]);
     }
-
-
 
     /**
      * Subir archivo anexo para la denuncia usando Dropzone
