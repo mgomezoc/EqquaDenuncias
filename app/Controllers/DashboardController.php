@@ -13,15 +13,25 @@ class DashboardController extends BaseController
         // Obtener datos del mes actual
         $estatusDenuncias = $model->getDenunciasPorEstatus();
         $denunciasPorDepto = $model->getDenunciasPorDepartamento();
-        $denunciasPorSucursal = $model->getDenunciasPorSucursal();  // NUEVO MÉTODO
+        $denunciasPorSucursal = $model->getDenunciasPorSucursal();
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento();
+
+        // Calcular totales
+        $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
+        $totalDeptos = array_sum(array_column($denunciasPorDepto, 'total'));
+        $totalSucursales = array_sum(array_column($denunciasPorSucursal, 'total'));
+        $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
 
         $data = [
             'title' => 'Dashboard',
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
-            'denunciasPorSucursal' => $denunciasPorSucursal,  // NUEVO
-            'denunciasPorConocimiento' => $denunciasPorConocimiento
+            'denunciasPorSucursal' => $denunciasPorSucursal,
+            'denunciasPorConocimiento' => $denunciasPorConocimiento,
+            'totalEstatus' => $totalEstatus,
+            'totalDeptos' => $totalDeptos,
+            'totalSucursales' => $totalSucursales,
+            'totalConocimiento' => $totalConocimiento,
         ];
 
         return view('dashboard/index', $data);
@@ -36,15 +46,27 @@ class DashboardController extends BaseController
 
         $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate);
         $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate);
-        $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);  // NUEVO
+        $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate);
+
+        // Calcular totales
+        $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
+        $totalDeptos = array_sum(array_column($denunciasPorDepto, 'total'));
+        $totalSucursales = array_sum(array_column($denunciasPorSucursal, 'total'));
+        $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
 
         $data = [
             'title' => 'Dashboard',
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
-            'denunciasPorSucursal' => $denunciasPorSucursal,  // NUEVO
-            'denunciasPorConocimiento' => $denunciasPorConocimiento
+            'denunciasPorSucursal' => $denunciasPorSucursal,
+            'denunciasPorConocimiento' => $denunciasPorConocimiento,
+            'totalEstatus' => $totalEstatus,
+            'totalDeptos' => $totalDeptos,
+            'totalSucursales' => $totalSucursales,
+            'totalConocimiento' => $totalConocimiento,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
         ];
 
         return view('dashboard/index', $data);
