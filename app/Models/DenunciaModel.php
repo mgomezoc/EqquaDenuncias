@@ -239,13 +239,15 @@ class DenunciaModel extends Model
 
         // Selección de campos y unión con otras tablas
         $builder->select('denuncias.*, 
-                      clientes.nombre_empresa AS cliente_nombre, 
-                      sucursales.nombre AS sucursal_nombre, 
-                      departamentos.nombre AS departamento_nombre, 
-                      estados_denuncias.nombre AS estado_nombre, 
-                      usuarios.nombre_usuario AS creador_nombre,
-                      subcategorias_denuncias.nombre AS subcategoria_nombre,
-                      categorias_denuncias.nombre AS categoria_nombre');
+                  clientes.nombre_empresa AS cliente_nombre, 
+                  sucursales.nombre AS sucursal_nombre, 
+                  departamentos.nombre AS departamento_nombre, 
+                  estados_denuncias.nombre AS estado_nombre, 
+                  usuarios.nombre_usuario AS creador_nombre,
+                  subcategorias_denuncias.nombre AS subcategoria_nombre,
+                  categorias_denuncias.nombre AS categoria_nombre');
+
+        // Uniones con las tablas relacionadas
         $builder->join('clientes', 'clientes.id = denuncias.id_cliente', 'left');
         $builder->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left');
         $builder->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left');
@@ -306,6 +308,12 @@ class DenunciaModel extends Model
                 ->groupEnd();
         }
 
+        // Clonar el builder antes de aplicar los límites para obtener el total
+        $countBuilder = clone $builder;
+
+        // Obtener el total de registros que cumplen con los filtros (sin aplicar los límites)
+        $total = $countBuilder->countAllResults(false); // El false evita que se resetee el builder
+
         // Ordenar por la columna solicitada, si está presente
         $validColumns = [
             'folio',
@@ -325,23 +333,19 @@ class DenunciaModel extends Model
             $builder->orderBy('denuncias.fecha_hora_reporte', 'desc');
         }
 
-        // Limitar resultados según el límite y offset
+        // Aplicar los límites para la paginación
         $builder->limit($limit, $offset);
 
-        // Ejecutar la consulta principal y obtener los resultados
+        // Obtener los resultados con paginación
         $result = $builder->get()->getResultArray();
 
-        // Contar el total de registros aplicando los mismos filtros
-        $totalBuilder = clone $builder;
-        $totalBuilder->select('COUNT(*) as total');
-        $totalResult = $totalBuilder->get()->getFirstRow();
-        $total = $totalResult->total;
-
+        // Devolver el total y las filas paginadas
         return [
-            'total' => $total,
-            'rows' => $result
+            'total' => $total,  // Total de registros antes de la paginación
+            'rows' => $result   // Registros paginados
         ];
     }
+
 
 
 

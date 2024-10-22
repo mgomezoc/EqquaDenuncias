@@ -184,20 +184,12 @@ $(document).ready(function () {
     // Validación del formulario de filtros
     $('#formFiltros').validate({
         rules: {
-            fecha_inicio: {
-                required: true
-            },
             fecha_fin: {
-                required: true,
-                greaterThan: '#fecha_inicio' // Aplicar la regla personalizada
+                greaterThan: '#fecha_inicio'
             }
         },
         messages: {
-            fecha_inicio: {
-                required: 'La fecha de inicio es obligatoria'
-            },
             fecha_fin: {
-                required: 'La fecha de fin es obligatoria',
                 greaterThan: 'La fecha de fin debe ser mayor o igual a la fecha de inicio'
             }
         }

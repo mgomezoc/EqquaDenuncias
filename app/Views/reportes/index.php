@@ -8,7 +8,9 @@
 <div class="card custom-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Reporte de Denuncias</span>
-        <button type="button" class="btn btn-secondary" id="btnExportar">Exportar CSV</button>
+        <button type="button" class="btn btn-secondary" id="btnExportar">
+            <i class="fas fa-file-download"></i> Exportar CSV
+        </button>
     </div>
 
     <div class="card-body">
@@ -72,7 +74,9 @@
                     </select>
                 </div>
             </div>
-            <button type="button" class="btn btn-primary" id="btnFiltrar">Filtrar</button>
+            <button type="button" class="btn btn-primary" id="btnFiltrar">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
         </form>
 
         <div class="mt-4">
