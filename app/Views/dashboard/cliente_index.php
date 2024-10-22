@@ -24,7 +24,7 @@
 
     <div class="row">
         <!-- Gráfico de Estatus de Denuncias -->
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Estatus de Denuncias</h4>
                 <canvas id="chartEstatusDenuncias"></canvas>
@@ -37,7 +37,7 @@
         </div>
 
         <!-- Gráfico de Denuncias por Departamento -->
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Denuncias por Departamento</h4>
                 <canvas id="chartDeptosDenuncias"></canvas>
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Gráfico de Conocimiento del Incidente -->
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Conocimiento del Incidente</h4>
                 <canvas id="chartConocimiento"></canvas>
@@ -119,8 +119,10 @@
         }
     });
 
-    // Función para obtener el total de denuncias (suma de todas las categorías)
     const totalDenuncias = (dataset) => dataset.reduce((a, b) => a + b, 0);
+
+    // Paleta de colores personalizada
+    const colors = ['#f4b400', '#db4437', '#0f9d58', '#4285f4', '#ff6d00', '#34a853', '#ffeb3b', '#6a5acd', '#d81b60'];
 
     // Gráfico de Estatus de Denuncias
     const ctxEstatus = document.getElementById('chartEstatusDenuncias').getContext('2d');
@@ -130,13 +132,13 @@
             labels: <?= json_encode(array_column($estatusDenuncias, 'estatus')) ?>,
             datasets: [{
                 data: <?= json_encode(array_column($estatusDenuncias, 'total')) ?>,
-                backgroundColor: ['#f4b400', '#db4437', '#0f9d58', '#4285f4']
+                backgroundColor: colors
             }]
         },
         options: {
             plugins: {
                 legend: {
-                    position: 'bottom', // Mueve los labels debajo del gráfico
+                    position: 'left', // Alinear leyenda a la izquierda
                     labels: {
                         font: {
                             size: 14
@@ -146,7 +148,8 @@
                             const total = totalDenuncias(dataset.data);
                             return chart.data.labels.map((label, i) => ({
                                 text: `${label}: ${dataset.data[i]} (${((dataset.data[i] / total) * 100).toFixed(2)}%)`,
-                                fillStyle: dataset.backgroundColor[i]
+                                fillStyle: dataset.backgroundColor[i],
+                                boxWidth: 20 // Tamaño de las cajas de color
                             }));
                         }
                     }
@@ -181,7 +184,6 @@
         plugins: [ChartDataLabels]
     });
 
-
     // Gráfico de Denuncias por Departamento
     const ctxDepto = document.getElementById('chartDeptosDenuncias').getContext('2d');
     const deptoChart = new Chart(ctxDepto, {
@@ -190,13 +192,13 @@
             labels: <?= json_encode(array_column($denunciasPorDepto, 'departamento')) ?>,
             datasets: [{
                 data: <?= json_encode(array_column($denunciasPorDepto, 'total')) ?>,
-                backgroundColor: ['#f4b400', '#db4437', '#0f9d58', '#4285f4', '#f4b400', '#db4437']
+                backgroundColor: colors
             }]
         },
         options: {
             plugins: {
                 legend: {
-                    position: 'bottom', // Mueve los labels debajo del gráfico
+                    position: 'left', // Alinear leyenda a la izquierda
                     labels: {
                         font: {
                             size: 14
@@ -206,7 +208,8 @@
                             const total = totalDenuncias(dataset.data);
                             return chart.data.labels.map((label, i) => ({
                                 text: `${label}: ${dataset.data[i]} (${((dataset.data[i] / total) * 100).toFixed(2)}%)`,
-                                fillStyle: dataset.backgroundColor[i]
+                                fillStyle: dataset.backgroundColor[i],
+                                boxWidth: 20
                             }));
                         }
                     }
@@ -240,7 +243,6 @@
         },
         plugins: [ChartDataLabels]
     });
-
 
     // Gráfico de Conocimiento del Incidente
     const ctxConocimiento = document.getElementById('chartConocimiento').getContext('2d');
@@ -250,13 +252,13 @@
             labels: <?= json_encode(array_column($denunciasPorConocimiento, 'como_se_entero')) ?>,
             datasets: [{
                 data: <?= json_encode(array_column($denunciasPorConocimiento, 'total')) ?>,
-                backgroundColor: ['#f4b400', '#4285f4']
+                backgroundColor: colors
             }]
         },
         options: {
             plugins: {
                 legend: {
-                    position: 'bottom', // Mueve los labels debajo del gráfico
+                    position: 'left', // Alinear leyenda a la izquierda
                     labels: {
                         font: {
                             size: 14
@@ -266,7 +268,8 @@
                             const total = totalDenuncias(dataset.data);
                             return chart.data.labels.map((label, i) => ({
                                 text: `${label}: ${dataset.data[i]} (${((dataset.data[i] / total) * 100).toFixed(2)}%)`,
-                                fillStyle: dataset.backgroundColor[i]
+                                fillStyle: dataset.backgroundColor[i],
+                                boxWidth: 20
                             }));
                         }
                     }
@@ -301,17 +304,19 @@
         plugins: [ChartDataLabels]
     });
 
-
     // Gráfico de Denuncias por Sucursal
     const ctxSucursales = document.getElementById('chartSucursalesDenuncias').getContext('2d');
+    const sucursalCount = <?= count($denunciasPorSucursal) ?>;
+    const sucursalColors = colors.slice(0, sucursalCount); // Limitar la paleta de colores según la cantidad de sucursales
+
     const sucursalesChart = new Chart(ctxSucursales, {
         type: 'bar',
         data: {
-            labels: <?= json_encode(array_column($denunciasPorSucursal, 'nombre')) ?>, // Etiquetas (Sucursales)
+            labels: <?= json_encode(array_column($denunciasPorSucursal, 'nombre')) ?>,
             datasets: [{
                 label: 'Denuncias',
-                data: <?= json_encode(array_column($denunciasPorSucursal, 'total')) ?>, // Datos de denuncias por sucursal
-                backgroundColor: '#6a5acd', // Color de las barras
+                data: <?= json_encode(array_column($denunciasPorSucursal, 'total')) ?>,
+                backgroundColor: sucursalColors, // Color personalizado para cada sucursal
                 borderWidth: 1
             }]
         },
@@ -360,10 +365,21 @@
                             return `Denuncias: ${value}`; // Mostrar el número de denuncias en el tooltip
                         }
                     }
+                },
+                // Habilitar datalabels para mostrar los totales en la parte superior
+                datalabels: {
+                    anchor: 'end',
+                    align: 'start',
+                    color: '#000', // Color del texto
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: (value) => value, // Mostrar el valor como etiqueta
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels] // Activar el plugin de datalabels
     });
 </script>
-<script src="<?= base_url('assets/js/dashboard-cliente.js') ?>"></script>
 <?= $this->endSection() ?>
