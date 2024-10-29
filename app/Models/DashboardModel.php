@@ -120,4 +120,22 @@ class DashboardModel extends Model
         return $this->db->table('denuncias')
             ->countAllResults();
     }
+
+    /**
+     * Obtiene la cantidad de denuncias agrupadas por mes en un periodo específico.
+     */
+    public function getDenunciasPorMes($startDate = null, $endDate = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select("MONTH(fecha_hora_reporte) as mes, COUNT(id) as total")
+            ->groupBy("MONTH(fecha_hora_reporte)")
+            ->orderBy("mes", "ASC");
+
+        if ($startDate && $endDate) {
+            $builder->where('fecha_hora_reporte >=', $startDate)
+                ->where('fecha_hora_reporte <=', $endDate);
+        }
+
+        return $builder->get()->getResultArray();
+    }
 }

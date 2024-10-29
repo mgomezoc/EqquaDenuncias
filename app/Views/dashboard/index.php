@@ -51,6 +51,14 @@
 
     <!-- Gráficos -->
     <div class="row">
+        <!-- Gráfico de Mes de recepción de denuncia -->
+        <div class="col-md-12">
+            <div class="card mb-4 p-4 shadow-sm">
+                <h4 class="text-center mb-3">Mes de recepción de denuncia</h4>
+                <canvas id="chartMesDenuncias"></canvas>
+                <p class="text-center mt-3" id="totalMesDenuncias"></p>
+            </div>
+        </div>
         <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Estatus de Denuncias</h4>

@@ -10,7 +10,10 @@ class DashboardController extends BaseController
     {
         $model = new DashboardModel();
 
-        // Obtener datos de las denuncias
+        // Obtener datos de las denuncias por mes
+        $denunciasPorMes = $model->getDenunciasPorMes();
+
+        // Otros datos
         $estatusDenuncias = $model->getDenunciasPorEstatus();
         $denunciasPorDepto = $model->getDenunciasPorDepartamento();
         $denunciasPorSucursal = $model->getDenunciasPorSucursal();
@@ -21,14 +24,15 @@ class DashboardController extends BaseController
         $totalDenunciasProceso = $model->countDenunciasEnProceso();
         $totalDenunciasRecibidas = $model->countDenunciasRecibidas();
 
-        // Calcular totales para cada gráfico
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
         $totalDeptos = array_sum(array_column($denunciasPorDepto, 'total'));
         $totalSucursales = array_sum(array_column($denunciasPorSucursal, 'total'));
         $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
 
+
         $data = [
             'title' => 'Dashboard',
+            'denunciasPorMes' => $denunciasPorMes,
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
             'denunciasPorSucursal' => $denunciasPorSucursal,
@@ -52,6 +56,7 @@ class DashboardController extends BaseController
         $startDate = $this->request->getPost('start_date');
         $endDate = $this->request->getPost('end_date');
 
+        $denunciasPorMes = $model->getDenunciasPorMes($startDate, $endDate);
         $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate);
         $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate);
         $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);
@@ -64,6 +69,7 @@ class DashboardController extends BaseController
         $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
 
         return $this->response->setJSON([
+            'denunciasPorMes' => $denunciasPorMes,
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto,
             'denunciasPorSucursal' => $denunciasPorSucursal,

@@ -1,9 +1,50 @@
 // Define variables globales para cada gráfico
-let estatusChart, deptoChart, conocimientoChart, sucursalesChart;
+let estatusChart, deptoChart, conocimientoChart, sucursalesChart, mesDenunciasChart;
 
 // Función para inicializar los gráficos
 function initCharts() {
     const colors = ['#f4b400', '#db4437', '#0f9d58', '#4285f4', '#34a853', '#ff6d00', '#ffeb3b', '#1e88e5', '#6a5acd', '#d81b60'];
+
+    // Inicializar gráfico de Mes de recepción de denuncia
+    const ctxMesDenuncias = document.getElementById('chartMesDenuncias').getContext('2d');
+    mesDenunciasChart = new Chart(ctxMesDenuncias, {
+        type: 'bar',
+        data: {
+            labels: [], // Meses
+            datasets: [
+                {
+                    label: 'Total de denuncias',
+                    data: [], // Totales
+                    backgroundColor: '#4285f4',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            return `Denuncias: ${tooltipItem.raw}`;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#ff0000',
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: value => value,
+                    font: { weight: 'bold' }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Mes' } },
+                y: { title: { display: true, text: 'Total de denuncias' }, beginAtZero: true }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
 
     // Inicializar gráfico de Estatus de Denuncias
     const ctxEstatus = document.getElementById('chartEstatusDenuncias').getContext('2d');
@@ -212,6 +253,13 @@ function loadDashboardData(startDate = null, endDate = null) {
 
 // Función para actualizar los datos de los gráficos
 function updateCharts(data) {
+    if (data.denunciasPorMes && mesDenunciasChart) {
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        mesDenunciasChart.data.labels = data.denunciasPorMes.map(item => meses[item.mes - 1]);
+        mesDenunciasChart.data.datasets[0].data = data.denunciasPorMes.map(item => item.total);
+        mesDenunciasChart.update();
+    }
+
     if (data.estatusDenuncias && estatusChart) {
         estatusChart.data.labels = data.estatusDenuncias.map(item => item.estatus);
         estatusChart.data.datasets[0].data = data.estatusDenuncias.map(item => item.total);
