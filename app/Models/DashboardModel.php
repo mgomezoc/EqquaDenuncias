@@ -32,16 +32,67 @@ class DashboardModel extends Model
     public function getDenunciasPorDepartamento($startDate = null, $endDate = null)
     {
         $builder = $this->db->table('denuncias')
-            ->select('IFNULL(departamentos.nombre, "Sin departamento") as departamento, COUNT(denuncias.id) as total')
-            ->join('departamentos', 'denuncias.id_departamento = departamentos.id', 'left')
-            ->groupBy('departamentos.nombre');
+            ->select('departamentos.nombre AS departamento, sucursales.nombre AS sucursal, COUNT(denuncias.id) AS total')
+            ->join('departamentos', 'denuncias.id_departamento = departamentos.id', 'inner')
+            ->join('sucursales', 'denuncias.id_sucursal = sucursales.id', 'inner')
+            ->groupBy(['departamentos.nombre', 'sucursales.nombre'])
+            ->orderBy('departamentos.nombre', 'ASC')
+            ->orderBy('sucursales.nombre', 'ASC');
 
+        // Filtro por fechas
         if ($startDate && $endDate) {
             $builder->where('denuncias.created_at >=', $startDate)
                 ->where('denuncias.created_at <=', $endDate);
+        } else {
+            // Mes actual si no se especifican fechas
+            $builder->where('MONTH(denuncias.created_at)', date('m'))
+                ->where('YEAR(denuncias.created_at)', date('Y'));
         }
 
-        return $builder->get()->getResultArray();
+        $result = $builder->get()->getResultArray();
+
+        // Reestructurar datos para el formato de tabla
+        $data = [];
+        $sucursales = [];
+
+        foreach ($result as $row) {
+            $departamento = $row['departamento'];
+            $sucursal = $row['sucursal'];
+            $total = $row['total'];
+
+            // Crear la estructura de departamentos
+            if (!isset($data[$departamento])) {
+                $data[$departamento] = array_fill_keys(array_column($result, 'sucursal'), 0);
+                $data[$departamento]['Total'] = 0;
+            }
+
+            // Agregar el total de denuncias para cada sucursal y el total por departamento
+            $data[$departamento][$sucursal] = $total;
+            $data[$departamento]['Total'] += $total;
+
+            // Rastrear las sucursales únicas para columnas
+            if (!in_array($sucursal, $sucursales)) {
+                $sucursales[] = $sucursal;
+            }
+        }
+
+        // Agregar fila de totales al final
+        $totales = array_fill_keys($sucursales, 0);
+        $totales['Total'] = 0;
+
+        foreach ($data as $deptData) {
+            foreach ($sucursales as $sucursal) {
+                $totales[$sucursal] += $deptData[$sucursal];
+            }
+            $totales['Total'] += $deptData['Total'];
+        }
+
+        $data['Total'] = $totales;
+
+        return [
+            'data' => $data,
+            'sucursales' => $sucursales
+        ];
     }
 
     /**

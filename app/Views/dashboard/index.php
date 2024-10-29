@@ -80,14 +80,6 @@
                 <p class="text-center mt-3" id="totalDenunciasPorMedio"></p>
             </div>
         </div>
-
-        <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Denuncias por Departamento</h4>
-                <canvas id="chartDeptosDenuncias"></canvas>
-                <p class="text-center mt-3" id="totalDeptos"></p>
-            </div>
-        </div>
         <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Conocimiento del Incidente</h4>
@@ -97,6 +89,36 @@
         </div>
         <div class="col-md-12">
             <div class="card mb-4 p-4 shadow-sm">
+                <h4 class="text-center mb-3">Denuncias por Departamento</h4>
+                <div class="table-responsive">
+                    <table id="tableDenunciasDepartamento" class="table table-eqqua table-sm table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Departamento</th>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <th><?= esc($sucursal) ?></th>
+                                <?php endforeach; ?>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($denunciasPorDepto as $departamento => $totales): ?>
+                                <tr>
+                                    <td><?= esc($departamento) ?></td>
+                                    <?php foreach ($sucursales as $sucursal): ?>
+                                        <td><?= esc($totales[$sucursal] ?? 0) ?></td>
+                                    <?php endforeach; ?>
+                                    <td><?= esc($totales['Total']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Denuncias por Sucursal</h4>
                 <canvas id="chartSucursalesDenuncias"></canvas>
                 <p class="text-center mt-3" id="totalSucursales"></p>
@@ -104,14 +126,17 @@
         </div>
     </div>
 </div>
-
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.22.1/locale/bootstrap-table-es-MX.min.js"></script>
+<script src="<?= base_url('assets/js/bootstrap-table-config.js') ?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

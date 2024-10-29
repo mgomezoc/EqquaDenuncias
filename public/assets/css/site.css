@@ -92,6 +92,9 @@ label.error {
 .table-eqqua-quaternary tbody {
   background: #fff;
 }
+.tfoot {
+  color: red;
+}
 .img-thumbnail {
   max-width: 100%;
   height: auto;

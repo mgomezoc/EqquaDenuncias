@@ -1,5 +1,6 @@
 // Define variables globales para cada gráfico
-let estatusChart, deptoChart, conocimientoChart, sucursalesChart, mesDenunciasChart, anonimatoChart, denuncianteChart;
+let estatusChart, conocimientoChart, sucursalesChart, mesDenunciasChart, anonimatoChart, denuncianteChart;
+let $tableDenunciasDepartamento;
 
 // Función para inicializar los gráficos
 function initCharts() {
@@ -186,52 +187,6 @@ function initCharts() {
         plugins: [ChartDataLabels]
     });
 
-    // Inicializar gráfico de Denuncias por Departamento
-    const ctxDepto = document.getElementById('chartDeptosDenuncias').getContext('2d');
-    deptoChart = new Chart(ctxDepto, {
-        type: 'pie',
-        data: {
-            labels: [],
-            datasets: [
-                {
-                    data: [],
-                    backgroundColor: colors
-                }
-            ]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left',
-                    labels: { font: { size: 14 } }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = tooltipItem.raw;
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    anchor: 'end',
-                    align: 'start',
-                    offset: 10,
-                    font: { weight: 'bold', size: 12 }
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
-
     // Inicializar gráfico de Conocimiento del Incidente
     const ctxConocimiento = document.getElementById('chartConocimiento').getContext('2d');
     conocimientoChart = new Chart(ctxConocimiento, {
@@ -336,6 +291,7 @@ function loadDashboardData(startDate = null, endDate = null) {
         dataType: 'json',
         success: function (data) {
             updateCharts(data);
+            updateDepartmentTable(data);
         },
         error: function (xhr, status, error) {
             console.error('Error al cargar datos del dashboard:', error);
@@ -386,12 +342,6 @@ function updateCharts(data) {
         estatusChart.update();
     }
 
-    if (data.denunciasPorDepto && deptoChart) {
-        deptoChart.data.labels = data.denunciasPorDepto.map(item => item.departamento);
-        deptoChart.data.datasets[0].data = data.denunciasPorDepto.map(item => item.total);
-        deptoChart.update();
-    }
-
     if (data.denunciasPorConocimiento && conocimientoChart) {
         conocimientoChart.data.labels = data.denunciasPorConocimiento.map(item => item.como_se_entero);
         conocimientoChart.data.datasets[0].data = data.denunciasPorConocimiento.map(item => item.total);
@@ -403,6 +353,42 @@ function updateCharts(data) {
         sucursalesChart.data.datasets[0].data = data.denunciasPorSucursal.map(item => item.total);
         sucursalesChart.update();
     }
+}
+
+// Función para actualizar la tabla de denuncias por departamento
+function updateDepartmentTable(data) {
+    let tableHTML = '';
+
+    // Validación para verificar si hay sucursales y si el único dato en denunciasPorDepto es un total vacío
+    if (data.sucursales.length === 0 || (Object.keys(data.denunciasPorDepto).length === 1 && data.denunciasPorDepto.Total && data.denunciasPorDepto.Total.Total === 0)) {
+        // Mostrar mensaje de "Sin información disponible" si no hay datos significativos
+        tableHTML = '<tr><td colspan="100%" class="text-center">Sin información disponible</td></tr>';
+        $('#tableDenunciasDepartamento').html(`<thead><tr><th>Departamento</th></tr></thead><tbody>${tableHTML}</tbody>`);
+        return;
+    }
+
+    const sucursales = data.sucursales;
+
+    // Generar encabezado de la tabla
+    tableHTML += '<thead><tr><th>Departamento</th>';
+    sucursales.forEach(sucursal => {
+        tableHTML += `<th>${sucursal}</th>`;
+    });
+    tableHTML += '<th>Total</th></tr></thead><tbody>';
+
+    // Generar filas de la tabla para cada departamento
+    for (const [departamento, totales] of Object.entries(data.denunciasPorDepto)) {
+        tableHTML += `<tr><td>${departamento}</td>`;
+        sucursales.forEach(sucursal => {
+            tableHTML += `<td class='text-center'>${totales[sucursal] || 0}</td>`;
+        });
+        tableHTML += `<td class='text-center'><b>${totales.Total}</b></td></tr>`;
+    }
+
+    tableHTML += '</tbody>';
+
+    // Reemplazar el contenido de la tabla
+    $('#tableDenunciasDepartamento').html(tableHTML);
 }
 
 // Configurar Flatpickr para seleccionar fechas
