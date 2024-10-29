@@ -21,6 +21,7 @@ class DashboardController extends BaseController
         $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate);
         $denunciasAnonimas = $model->getDenunciasAnonimas($startDate, $endDate);
+        $denunciasPorMedio = $model->getDenunciasPorMedioRecepcion();
 
         // Contadores de denuncias según los criterios
         $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate);
@@ -41,6 +42,7 @@ class DashboardController extends BaseController
             'denunciasPorSucursal' => $denunciasPorSucursal,
             'denunciasPorConocimiento' => $denunciasPorConocimiento,
             'denunciasAnonimas' => $denunciasAnonimas,
+            'denunciasPorMedio' => $denunciasPorMedio,
             'totalEstatus' => $totalEstatus,
             'totalDeptos' => $totalDeptos,
             'totalSucursales' => $totalSucursales,
@@ -70,6 +72,7 @@ class DashboardController extends BaseController
         $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate);
         $denunciasAnonimas = $model->getDenunciasAnonimas($startDate, $endDate);
+        $denunciasPorMedio = $model->getDenunciasPorMedioRecepcion($startDate, $endDate);
 
         // Contadores de denuncias según los criterios
         $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate);
@@ -89,6 +92,7 @@ class DashboardController extends BaseController
             'denunciasPorSucursal' => $denunciasPorSucursal,
             'denunciasPorConocimiento' => $denunciasPorConocimiento,
             'denunciasAnonimas' => $denunciasAnonimas,
+            'denunciasPorMedio' => $denunciasPorMedio,
             'totalEstatus' => $totalEstatus,
             'totalDeptos' => $totalDeptos,
             'totalSucursales' => $totalSucursales,

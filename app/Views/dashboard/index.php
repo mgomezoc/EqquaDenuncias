@@ -73,6 +73,13 @@
                 <p class="text-center mt-3" id="totalDenunciasAnonimas"></p>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="card mb-4 p-4 shadow-sm">
+                <h4 class="text-center mb-3">Tipo de Denunciante</h4>
+                <canvas id="chartDenunciante"></canvas>
+                <p class="text-center mt-3" id="totalDenunciasPorMedio"></p>
+            </div>
+        </div>
 
         <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">

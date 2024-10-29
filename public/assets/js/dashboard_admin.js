@@ -1,9 +1,57 @@
 // Define variables globales para cada gráfico
-let estatusChart, deptoChart, conocimientoChart, sucursalesChart, mesDenunciasChart, anonimatoChart;
+let estatusChart, deptoChart, conocimientoChart, sucursalesChart, mesDenunciasChart, anonimatoChart, denuncianteChart;
 
 // Función para inicializar los gráficos
 function initCharts() {
     const colors = ['#f4b400', '#db4437', '#0f9d58', '#4285f4', '#34a853', '#ff6d00', '#ffeb3b', '#1e88e5', '#6a5acd', '#d81b60'];
+
+    // Inicializar gráfico de Medio de Recepción de Denuncias
+    const ctxDenunciante = document.getElementById('chartDenunciante').getContext('2d');
+    denuncianteChart = new Chart(ctxDenunciante, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    data: [],
+                    backgroundColor: colors
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        font: { size: 14 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
+                            const value = tooltipItem.raw;
+                            const percentage = ((value / total) * 100).toFixed(2);
+                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(2);
+                        return `${percentage}%`;
+                    },
+                    anchor: 'end',
+                    align: 'start',
+                    offset: 10,
+                    font: { weight: 'bold', size: 12 }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
 
     // Inicializar gráfico de Denuncias Anónimas
     const ctxAnonimato = document.getElementById('chartDenunciasAnonimas').getContext('2d');
@@ -301,6 +349,16 @@ function updateCharts(data) {
     $('#totalDenunciasNuevas').html(data.totalDenunciasNuevas);
     $('#totalDenunciasProceso').html(data.totalDenunciasProceso);
     $('#totalDenunciasRecibidas').html(data.totalDenunciasRecibidas);
+
+    if (data.denunciasPorMedio && denuncianteChart) {
+        denuncianteChart.data.labels = data.denunciasPorMedio.map(item => item.medio_recepcion);
+        denuncianteChart.data.datasets[0].data = data.denunciasPorMedio.map(item => item.total);
+        denuncianteChart.update();
+
+        // Calcular el total y mostrarlo en el HTML
+        const totalDenunciante = data.denunciasPorMedio.reduce((sum, item) => sum + parseInt(item.total, 10), 0);
+        $('#totalDenunciasPorMedio').text(`Total ${totalDenunciante}`);
+    }
 
     if (data.denunciasAnonimas && anonimatoChart) {
         // Asignamos los valores de etiquetas y datos

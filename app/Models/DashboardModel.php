@@ -171,4 +171,22 @@ class DashboardModel extends Model
 
         return $builder->get()->getResultArray();
     }
+
+    public function getDenunciasPorMedioRecepcion($startDate = null, $endDate = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select('medio_recepcion, COUNT(id) as total')
+            ->groupBy('medio_recepcion');
+
+        if ($startDate && $endDate) {
+            $builder->where('fecha_hora_reporte >=', $startDate)
+                ->where('fecha_hora_reporte <=', $endDate);
+        } else {
+            // Filtrar por mes actual si no hay fechas especificadas
+            $builder->where('MONTH(fecha_hora_reporte)', date('m'))
+                ->where('YEAR(fecha_hora_reporte)', date('Y'));
+        }
+
+        return $builder->get()->getResultArray();
+    }
 }
