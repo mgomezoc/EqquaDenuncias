@@ -11,115 +11,113 @@ class DashboardModel extends Model
     /**
      * Obtiene el total de denuncias agrupadas por estatus.
      */
-    public function getDenunciasPorEstatus($startDate = null, $endDate = null, $clienteId = null)
+    public function getDenunciasPorEstatus($startDate = null, $endDate = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('estados_denuncias.nombre as estatus, COUNT(denuncias.id) as total')
             ->join('estados_denuncias', 'denuncias.estado_actual = estados_denuncias.id', 'left')
             ->groupBy('estados_denuncias.nombre');
 
-        // Filtrar por cliente
-        if ($clienteId) {
-            $builder->where('denuncias.id_cliente', $clienteId);
-        }
-
-        // Filtrar por fechas si están disponibles
         if ($startDate && $endDate) {
             $builder->where('denuncias.created_at >=', $startDate)
                 ->where('denuncias.created_at <=', $endDate);
-        } else {
-            // Filtro por mes actual
-            $builder->where('MONTH(denuncias.created_at)', date('m'))
-                ->where('YEAR(denuncias.created_at)', date('Y'));
         }
 
         return $builder->get()->getResultArray();
     }
 
-
     /**
      * Obtiene el total de denuncias agrupadas por departamento.
      */
-    public function getDenunciasPorDepartamento($startDate = null, $endDate = null, $clienteId = null)
+    public function getDenunciasPorDepartamento($startDate = null, $endDate = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('IFNULL(departamentos.nombre, "Sin departamento") as departamento, COUNT(denuncias.id) as total')
             ->join('departamentos', 'denuncias.id_departamento = departamentos.id', 'left')
             ->groupBy('departamentos.nombre');
 
-        // Filtrar por cliente
-        if ($clienteId) {
-            $builder->where('denuncias.id_cliente', $clienteId);
-        }
-
-        // Filtrar por fechas si están disponibles
         if ($startDate && $endDate) {
             $builder->where('denuncias.created_at >=', $startDate)
                 ->where('denuncias.created_at <=', $endDate);
-        } else {
-            // Filtro por mes actual
-            $builder->where('MONTH(denuncias.created_at)', date('m'))
-                ->where('YEAR(denuncias.created_at)', date('Y'));
         }
 
         return $builder->get()->getResultArray();
     }
-
-
-    /**
-     * Obtiene el total de denuncias agrupadas por cómo se enteró el denunciante del incidente.
-     */
-    public function getDenunciasPorConocimiento($startDate = null, $endDate = null, $clienteId = null)
-    {
-        $builder = $this->db->table('denuncias')
-            ->select('denuncias.como_se_entero, COUNT(denuncias.id) as total')
-            ->groupBy('denuncias.como_se_entero');
-
-        // Filtrar por cliente
-        if ($clienteId) {
-            $builder->where('denuncias.id_cliente', $clienteId);
-        }
-
-        // Filtrar por fechas si están disponibles
-        if ($startDate && $endDate) {
-            $builder->where('denuncias.created_at >=', $startDate)
-                ->where('denuncias.created_at <=', $endDate);
-        } else {
-            // Filtro por mes actual
-            $builder->where('MONTH(denuncias.created_at)', date('m'))
-                ->where('YEAR(denuncias.created_at)', date('Y'));
-        }
-
-        return $builder->get()->getResultArray();
-    }
-
 
     /**
      * Obtiene el total de denuncias agrupadas por sucursal.
      */
-    public function getDenunciasPorSucursal($startDate = null, $endDate = null, $clienteId = null)
+    public function getDenunciasPorSucursal($startDate = null, $endDate = null)
     {
         $builder = $this->db->table('denuncias')
-            ->select('sucursales.nombre, COUNT(denuncias.id) as total')
-            ->join('sucursales', 'denuncias.id_sucursal = sucursales.id')
-            ->groupBy('sucursales.nombre')
-            ->orderBy('total', 'DESC');
+            ->select('sucursales.nombre as nombre, COUNT(denuncias.id) as total')
+            ->join('sucursales', 'denuncias.id_sucursal = sucursales.id', 'left')
+            ->groupBy('sucursales.nombre');
 
-        // Filtrar por cliente
-        if ($clienteId) {
-            $builder->where('denuncias.id_cliente', $clienteId);
-        }
-
-        // Filtrar por fechas si están disponibles
         if ($startDate && $endDate) {
             $builder->where('denuncias.created_at >=', $startDate)
                 ->where('denuncias.created_at <=', $endDate);
-        } else {
-            // Filtro por mes actual
-            $builder->where('MONTH(denuncias.created_at)', date('m'))
-                ->where('YEAR(denuncias.created_at)', date('Y'));
         }
 
         return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Obtiene el total de denuncias agrupadas por conocimiento del incidente.
+     */
+    public function getDenunciasPorConocimiento($startDate = null, $endDate = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select('denuncias.como_se_entero as como_se_entero, COUNT(denuncias.id) as total')
+            ->groupBy('denuncias.como_se_entero');
+
+        if ($startDate && $endDate) {
+            $builder->where('denuncias.created_at >=', $startDate)
+                ->where('denuncias.created_at <=', $endDate);
+        }
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Cuenta denuncias por estado específico (ej. 'Nuevo', 'En Proceso').
+     */
+    public function countDenunciasPorEstado($estadoNombre)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select('COUNT(denuncias.id) as total')
+            ->join('estados_denuncias', 'denuncias.estado_actual = estados_denuncias.id', 'left')
+            ->where('estados_denuncias.nombre', $estadoNombre);
+
+        return $builder->get()->getRow()->total;
+    }
+
+    /**
+     * Cuenta denuncias con el estado "Nuevo" (id_estado = 1).
+     */
+    public function countDenunciasNuevas()
+    {
+        return $this->db->table('denuncias')
+            ->where('estado_actual', 1)
+            ->countAllResults();
+    }
+
+    /**
+     * Cuenta denuncias con estados "En Proceso" (id_estado = 2, 3, 4, o 5).
+     */
+    public function countDenunciasEnProceso()
+    {
+        return $this->db->table('denuncias')
+            ->whereIn('estado_actual', [2, 3, 4, 5])
+            ->countAllResults();
+    }
+
+    /**
+     * Cuenta todas las denuncias recibidas.
+     */
+    public function countDenunciasRecibidas()
+    {
+        return $this->db->table('denuncias')
+            ->countAllResults();
     }
 }
