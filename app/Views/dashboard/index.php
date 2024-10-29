@@ -68,6 +68,14 @@
         </div>
         <div class="col-md-6">
             <div class="card mb-4 p-4 shadow-sm">
+                <h4 class="text-center mb-3">Denuncias Anónimas</h4>
+                <canvas id="chartDenunciasAnonimas"></canvas>
+                <p class="text-center mt-3" id="totalDenunciasAnonimas"></p>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4 p-4 shadow-sm">
                 <h4 class="text-center mb-3">Denuncias por Departamento</h4>
                 <canvas id="chartDeptosDenuncias"></canvas>
                 <p class="text-center mt-3" id="totalDeptos"></p>

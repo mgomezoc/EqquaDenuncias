@@ -156,4 +156,19 @@ class DashboardModel extends Model
 
         return $builder->get()->getResultArray();
     }
+
+    public function getDenunciasAnonimas($startDate = null, $endDate = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select('IF(anonimo = 1, "Sí", "No") as anonimato, COUNT(id) as total')
+            ->groupBy('anonimo');
+
+        // Filtro de fechas si están presentes
+        if ($startDate && $endDate) {
+            $builder->where('created_at >=', $startDate)
+                ->where('created_at <=', $endDate);
+        }
+
+        return $builder->get()->getResultArray();
+    }
 }
