@@ -95,30 +95,48 @@ class DashboardModel extends Model
     /**
      * Cuenta denuncias con el estado "Nuevo" (id_estado = 1).
      */
-    public function countDenunciasNuevas()
+    public function countDenunciasNuevas($startDate = null, $endDate = null)
     {
-        return $this->db->table('denuncias')
-            ->where('estado_actual', 1)
-            ->countAllResults();
+        $builder = $this->db->table('denuncias')
+            ->where('estado_actual', 1);
+
+        if ($startDate && $endDate) {
+            $builder->where('created_at >=', $startDate)
+                ->where('created_at <=', $endDate);
+        }
+
+        return $builder->countAllResults();
     }
 
     /**
      * Cuenta denuncias con estados "En Proceso" (id_estado = 2, 3, 4, o 5).
      */
-    public function countDenunciasEnProceso()
+    public function countDenunciasEnProceso($startDate = null, $endDate = null)
     {
-        return $this->db->table('denuncias')
-            ->whereIn('estado_actual', [2, 3, 4, 5])
-            ->countAllResults();
+        $builder = $this->db->table('denuncias')
+            ->whereIn('estado_actual', [2, 3, 4, 5]);
+
+        if ($startDate && $endDate) {
+            $builder->where('created_at >=', $startDate)
+                ->where('created_at <=', $endDate);
+        }
+
+        return $builder->countAllResults();
     }
 
     /**
      * Cuenta todas las denuncias recibidas.
      */
-    public function countDenunciasRecibidas()
+    public function countDenunciasRecibidas($startDate = null, $endDate = null)
     {
-        return $this->db->table('denuncias')
-            ->countAllResults();
+        $builder = $this->db->table('denuncias');
+
+        if ($startDate && $endDate) {
+            $builder->where('created_at >=', $startDate)
+                ->where('created_at <=', $endDate);
+        }
+
+        return $builder->countAllResults();
     }
 
     /**

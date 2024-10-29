@@ -10,25 +10,27 @@ class DashboardController extends BaseController
     {
         $model = new DashboardModel();
 
-        // Obtener datos de las denuncias por mes
-        $denunciasPorMes = $model->getDenunciasPorMes();
+        // Obtener el mes y año actuales para el filtro inicial
+        $startDate = date('Y-m-01'); // Primer día del mes actual
+        $endDate = date('Y-m-t');    // Último día del mes actual
 
-        // Otros datos
-        $estatusDenuncias = $model->getDenunciasPorEstatus();
-        $denunciasPorDepto = $model->getDenunciasPorDepartamento();
-        $denunciasPorSucursal = $model->getDenunciasPorSucursal();
-        $denunciasPorConocimiento = $model->getDenunciasPorConocimiento();
+        // Obtener datos con el filtro de fechas
+        $denunciasPorMes = $model->getDenunciasPorMes($startDate, $endDate);
+        $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate);
+        $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate);
+        $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);
+        $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate);
 
-        // Obtener contadores para las categorías solicitadas
-        $totalDenunciasNuevas = $model->countDenunciasNuevas();
-        $totalDenunciasProceso = $model->countDenunciasEnProceso();
-        $totalDenunciasRecibidas = $model->countDenunciasRecibidas();
+        // Contadores de denuncias según los criterios
+        $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate);
+        $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate);
+        $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate);
 
+        // Calcular totales
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
         $totalDeptos = array_sum(array_column($denunciasPorDepto, 'total'));
         $totalSucursales = array_sum(array_column($denunciasPorSucursal, 'total'));
         $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
-
 
         $data = [
             'title' => 'Dashboard',
@@ -44,6 +46,8 @@ class DashboardController extends BaseController
             'totalDenunciasNuevas' => $totalDenunciasNuevas,
             'totalDenunciasProceso' => $totalDenunciasProceso,
             'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
+            'startDate' => $startDate,
+            'endDate' => $endDate
         ];
 
         return view('dashboard/index', $data);
@@ -53,14 +57,21 @@ class DashboardController extends BaseController
     {
         $model = new DashboardModel();
 
+        // Obtener las fechas desde la petición POST
         $startDate = $this->request->getPost('start_date');
         $endDate = $this->request->getPost('end_date');
 
+        // Obtener datos con el filtro de fechas
         $denunciasPorMes = $model->getDenunciasPorMes($startDate, $endDate);
         $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate);
         $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate);
         $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate);
         $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate);
+
+        // Contadores de denuncias según los criterios
+        $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate);
+        $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate);
+        $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate);
 
         // Calcular totales
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
@@ -78,6 +89,9 @@ class DashboardController extends BaseController
             'totalDeptos' => $totalDeptos,
             'totalSucursales' => $totalSucursales,
             'totalConocimiento' => $totalConocimiento,
+            'totalDenunciasNuevas' => $totalDenunciasNuevas,
+            'totalDenunciasProceso' => $totalDenunciasProceso,
+            'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
         ]);
     }
 }

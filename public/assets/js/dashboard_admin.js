@@ -253,6 +253,11 @@ function loadDashboardData(startDate = null, endDate = null) {
 
 // Función para actualizar los datos de los gráficos
 function updateCharts(data) {
+    //Total denuncias
+    $('#totalDenunciasNuevas').html(data.totalDenunciasNuevas);
+    $('#totalDenunciasProceso').html(data.totalDenunciasProceso);
+    $('#totalDenunciasRecibidas').html(data.totalDenunciasRecibidas);
+
     if (data.denunciasPorMes && mesDenunciasChart) {
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         mesDenunciasChart.data.labels = data.denunciasPorMes.map(item => meses[item.mes - 1]);

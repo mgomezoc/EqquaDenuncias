@@ -6,6 +6,21 @@
 <?php echo view('partials/_pageHeader', ['controlador' => 'Dashboard', 'vista' => 'Dashboard']); ?>
 
 <div class="container mt-5">
+    <!-- Filtro de fechas -->
+    <form action="<?= base_url('dashboard/filtrar') ?>" method="post" class="mb-4" id="dateFilterForm">
+        <div class="row">
+            <div class="col-md-3">
+                <input type="text" id="startDate" name="start_date" class="form-control" placeholder="Fecha inicio" value="<?= $startDate ?? '' ?>">
+            </div>
+            <div class="col-md-3">
+                <input type="text" id="endDate" name="end_date" class="form-control" placeholder="Fecha fin" value="<?= $endDate ?? '' ?>">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" id="filterButton" class="btn btn-primary w-100">Filtrar</button>
+            </div>
+        </div>
+    </form>
+
     <!-- Contadores de denuncias -->
     <div class="row mb-4">
         <div class="col-md-4">
@@ -33,21 +48,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Filtro de fechas -->
-    <form action="<?= base_url('dashboard/filtrar') ?>" method="post" class="mb-4" id="dateFilterForm">
-        <div class="row">
-            <div class="col-md-3">
-                <input type="text" id="startDate" name="start_date" class="form-control" placeholder="Fecha inicio" value="<?= $startDate ?? '' ?>">
-            </div>
-            <div class="col-md-3">
-                <input type="text" id="endDate" name="end_date" class="form-control" placeholder="Fecha fin" value="<?= $endDate ?? '' ?>">
-            </div>
-            <div class="col-md-3">
-                <button type="button" id="filterButton" class="btn btn-primary w-100">Filtrar</button>
-            </div>
-        </div>
-    </form>
 
     <!-- Gráficos -->
     <div class="row">
