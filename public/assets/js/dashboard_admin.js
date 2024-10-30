@@ -5,7 +5,7 @@ let mesDenunciasChart = [];
 
 // Función para inicializar los gráficos
 function initCharts() {
-    const colors = ['#f4b400', '#db4437', '#0f9d58', '#4285f4', '#34a853', '#ff6d00', '#ffeb3b', '#1e88e5', '#6a5acd', '#d81b60'];
+    const colors = ['#f4b400', '#db4437', '#4285f4', '#34a853', '#ff6d00', '#ffeb3b', '#1e88e5', '#6a5acd', '#d81b60'];
 
     // Inicializar gráfico de Medio de Recepción de Denuncias
     const ctxDenunciante = document.getElementById('chartDenunciante').getContext('2d');
@@ -159,29 +159,45 @@ function initCharts() {
     estatusChart = new Chart(ctxEstatus, {
         type: 'doughnut',
         data: {
-            labels: [],
+            labels: [], // Las etiquetas dinámicas se cargarán aquí
             datasets: [
                 {
-                    data: [],
-                    backgroundColor: colors
+                    data: [], // Los datos dinámicos se cargarán aquí
+                    backgroundColor: colors // Colores personalizados
                 }
             ]
         },
         options: {
             plugins: {
                 legend: {
-                    position: 'left',
+                    position: 'left', // Cambiar la posición de la leyenda a la izquierda para una lista vertical
+                    align: 'center', // Centrar la leyenda verticalmente
                     labels: {
-                        font: { size: 14 }
+                        // Modificamos el texto de la leyenda para mostrar nombre y cantidad
+                        generateLabels: function (chart) {
+                            const dataset = chart.data.datasets[0];
+                            return chart.data.labels.map((label, index) => {
+                                const value = dataset.data[index];
+                                return {
+                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
+                                    fillStyle: dataset.backgroundColor[index],
+                                    strokeStyle: dataset.backgroundColor[index],
+                                    hidden: false,
+                                    index: index
+                                };
+                            });
+                        },
+                        font: { size: 14 },
+                        boxWidth: 12, // Ancho de la caja de color
+                        padding: 10 // Espaciado entre elementos
                     }
                 },
                 tooltip: {
                     callbacks: {
                         label: function (tooltipItem) {
-                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
+                            const label = tooltipItem.label || '';
                             const value = tooltipItem.raw;
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                            return `${label}: ${value} denuncias`;
                         }
                     }
                 },
@@ -192,14 +208,43 @@ function initCharts() {
                         const percentage = ((value / total) * 100).toFixed(2);
                         return `${percentage}%`;
                     },
-                    anchor: 'end',
-                    align: 'start',
                     offset: 10,
-                    font: { weight: 'bold', size: 12 }
+                    font: { weight: 'bold', size: 14 }
                 }
             }
         },
-        plugins: [ChartDataLabels]
+        plugins: [
+            ChartDataLabels,
+            {
+                // Plugin para mostrar el total en el centro de la dona
+                id: 'centerText',
+                afterDatasetsDraw: chart => {
+                    const { ctx, chartArea } = chart;
+
+                    // Calcular el total usando los datos actuales
+                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+
+                    // Estilo del texto
+                    ctx.save();
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+                    // Configurar fuente y color para el texto
+                    ctx.font = 'bold 24px sans-serif';
+                    ctx.fillStyle = '#231f20';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    // Dibujar "Total" en el centro
+                    ctx.fillText('Total', centerX, centerY - 10);
+
+                    // Dibujar el número total debajo de "Total"
+                    ctx.font = 'bold 30px sans-serif';
+                    ctx.fillText(total, centerX, centerY + 20);
+                    ctx.restore();
+                }
+            }
+        ]
     });
 
     // Inicializar gráfico de Conocimiento del Incidente
@@ -368,7 +413,7 @@ function updateCharts(data) {
 
     if (data.estatusDenuncias && estatusChart) {
         estatusChart.data.labels = data.estatusDenuncias.map(item => item.estatus);
-        estatusChart.data.datasets[0].data = data.estatusDenuncias.map(item => item.total);
+        estatusChart.data.datasets[0].data = data.estatusDenuncias.map(item => parseInt(item.total));
         estatusChart.update();
     }
 

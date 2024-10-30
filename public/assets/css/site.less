@@ -259,3 +259,22 @@ label.error {
 .bootstrap-table .fixed-table-container .fixed-table-body {
     overflow: visible !important;
 }
+
+/* Forzar la leyenda en una lista vertical */
+.chartjs-legend {
+    display: flex;
+    flex-direction: column; /* Cambiar a columna para una lista vertical */
+    align-items: flex-start; /* Alinear al inicio */
+    margin: 0;
+    padding: 0;
+}
+
+.chartjs-legend li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.chartjs-legend li span {
+    margin-left: 5px;
+}

@@ -145,10 +145,14 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Estatus de Denuncias</h4>
-                <canvas id="chartEstatusDenuncias"></canvas>
-                <p class="text-center mt-3" id="totalEstatus"></p>
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Estatus de Denuncias</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartEstatusDenuncias"></canvas>
+                    <p class="text-center mt-3" id="totalEstatus"></p>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
