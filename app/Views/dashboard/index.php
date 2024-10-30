@@ -156,41 +156,57 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Denuncias Anónimas</h4>
-                <canvas id="chartDenunciasAnonimas"></canvas>
-                <p class="text-center mt-3" id="totalDenunciasAnonimas"></p>
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Denuncias Anónimas</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDenunciasAnonimas"></canvas>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Tipo de Denunciante</h4>
-                <canvas id="chartDenunciante"></canvas>
-                <p class="text-center mt-3" id="totalDenunciasPorMedio"></p>
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Tipo de Denunciante</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDenunciante"></canvas>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Conocimiento del Incidente</h4>
-                <canvas id="chartConocimiento"></canvas>
-                <p class="text-center mt-3" id="totalConocimiento"></p>
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Conocimiento del Incidente</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartConocimiento"></canvas>
+                </div>
             </div>
         </div>
         <div class="col-md-12">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Denuncias por Departamento</h4>
-                <div class="table-responsive">
-                    <table id="tableDenunciasDepartamento" class="table table-eqqua table-sm table-striped table-bordered">
-                    </table>
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title mb-3 mb-sm-0">Denuncias por Departamento</div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tableDenunciasDepartamento" class="table table-eqqua table-sm table-striped table-bordered">
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-12">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Denuncias por Sucursal</h4>
-                <canvas id="chartSucursalesDenuncias"></canvas>
-                <p class="text-center mt-3" id="totalSucursales"></p>
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title mb-3 mb-sm-0">Denuncias por Departamento</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartSucursalesDenuncias"></canvas>
+                </div>
             </div>
         </div>
     </div>
