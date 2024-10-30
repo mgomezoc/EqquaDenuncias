@@ -58,6 +58,13 @@
         <?php endif; ?>
     </div>
 
+    <!-- Scroll To Top -->
+    <div class="scrollToTop">
+        <span class="arrow">
+            <i class="fa-solid fa-chevron-up fs-20"></i>
+        </span>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="<?= base_url('assets/js/popper.min.js') ?>"></script>

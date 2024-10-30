@@ -1,6 +1,7 @@
 // Define variables globales para cada gráfico
-let estatusChart, conocimientoChart, sucursalesChart, mesDenunciasChart, anonimatoChart, denuncianteChart;
+let estatusChart, conocimientoChart, sucursalesChart, anonimatoChart, denuncianteChart;
 let $tableDenunciasDepartamento;
+let mesDenunciasChart = [];
 
 // Función para inicializar los gráficos
 function initCharts() {
@@ -108,12 +109,14 @@ function initCharts() {
                 {
                     label: 'Total de denuncias',
                     data: [], // Totales
-                    backgroundColor: '#4285f4',
+                    backgroundColor: '#6460a9',
                     borderWidth: 1
                 }
             ]
         },
         options: {
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -124,7 +127,7 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    color: '#ff0000',
+                    color: '#ee3741',
                     anchor: 'end',
                     align: 'top',
                     formatter: value => value,
@@ -132,8 +135,20 @@ function initCharts() {
                 }
             },
             scales: {
-                x: { title: { display: true, text: 'Mes' } },
-                y: { title: { display: true, text: 'Total de denuncias' }, beginAtZero: true }
+                x: { grid: { display: false } },
+                y: {
+                    beginAtZero: true,
+                    grid: { display: false },
+                    ticks: { stepSize: 1 },
+                    afterDataLimits: axis => {
+                        try {
+                            const maxValue = Math.max(...mesDenunciasChart.data.datasets[0].data);
+                            axis.max = maxValue + 1;
+                        } catch {
+                            console.log('No hay datos para mostrar');
+                        }
+                    }
+                }
             }
         },
         plugins: [ChartDataLabels]
@@ -283,15 +298,21 @@ function initCharts() {
 }
 
 // Cargar datos con AJAX
-function loadDashboardData(startDate = null, endDate = null) {
+function loadDashboardData(startDate = null, endDate = null, sucursal = '', departamento = '', anonimo = '') {
     $.ajax({
         url: `${Server}dashboard/filtrar`,
         method: 'POST',
-        data: { start_date: startDate, end_date: endDate },
+        data: {
+            start_date: startDate,
+            end_date: endDate,
+            sucursal: sucursal,
+            departamento: departamento,
+            anonimo: anonimo
+        },
         dataType: 'json',
         success: function (data) {
             updateCharts(data);
-            updateDepartmentTable(data);
+            updateDepartmentTable(data); // Actualizar la tabla de departamentos con los filtros
         },
         error: function (xhr, status, error) {
             console.error('Error al cargar datos del dashboard:', error);
@@ -331,9 +352,18 @@ function updateCharts(data) {
 
     if (data.denunciasPorMes && mesDenunciasChart) {
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+        // Asigna los nombres de los meses como etiquetas
         mesDenunciasChart.data.labels = data.denunciasPorMes.map(item => meses[item.mes - 1]);
+
+        // Asigna los valores de total para cada mes
         mesDenunciasChart.data.datasets[0].data = data.denunciasPorMes.map(item => item.total);
+
+        // Actualiza la gráfica
         mesDenunciasChart.update();
+
+        const totalDenuncias = data.denunciasPorMes.reduce((sum, item) => sum + item.total, 0);
+        $('#totalMesDenuncias').html(totalDenuncias);
     }
 
     if (data.estatusDenuncias && estatusChart) {
@@ -360,14 +390,14 @@ function updateDepartmentTable(data) {
     let tableHTML = '';
 
     // Validación para verificar si hay sucursales y si el único dato en denunciasPorDepto es un total vacío
-    if (data.sucursales.length === 0 || (Object.keys(data.denunciasPorDepto).length === 1 && data.denunciasPorDepto.Total && data.denunciasPorDepto.Total.Total === 0)) {
+    if (data.denunciasPorDeptoSucursales.length === 0 || (Object.keys(data.denunciasPorDepto).length === 1 && data.denunciasPorDepto.Total && data.denunciasPorDepto.Total.Total === 0)) {
         // Mostrar mensaje de "Sin información disponible" si no hay datos significativos
         tableHTML = '<tr><td colspan="100%" class="text-center">Sin información disponible</td></tr>';
         $('#tableDenunciasDepartamento').html(`<thead><tr><th>Departamento</th></tr></thead><tbody>${tableHTML}</tbody>`);
         return;
     }
 
-    const sucursales = data.sucursales;
+    const sucursales = data.denunciasPorDeptoSucursales;
 
     // Generar encabezado de la tabla
     tableHTML += '<thead><tr><th>Departamento</th>';
@@ -393,29 +423,80 @@ function updateDepartmentTable(data) {
 
 // Configurar Flatpickr para seleccionar fechas
 $(document).ready(function () {
-    flatpickr('#startDate', {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
+    const startDatePicker = flatpickr('#startDate', {
         dateFormat: 'Y-m-d',
-        defaultDate: 'today',
-        locale: 'es'
+        locale: 'es',
+        onChange: function (selectedDates, dateStr) {
+            if (selectedDates.length > 0) {
+                endDatePicker.set('minDate', dateStr);
+                const endDate = $('#endDate').val();
+                if (endDate && new Date(endDate) < new Date(dateStr)) {
+                    $('#endDate').val(dateStr);
+                }
+            } else {
+                endDatePicker.set('minDate', null);
+            }
+        }
     });
 
-    flatpickr('#endDate', {
+    const endDatePicker = flatpickr('#endDate', {
         dateFormat: 'Y-m-d',
-        defaultDate: 'today',
-        locale: 'es'
+        locale: 'es',
+        onChange: function (selectedDates, dateStr) {
+            if (selectedDates.length > 0) {
+                startDatePicker.set('maxDate', dateStr);
+                const startDate = $('#startDate').val();
+                if (startDate && new Date(startDate) > new Date(dateStr)) {
+                    $('#startDate').val(dateStr);
+                }
+            } else {
+                startDatePicker.set('maxDate', null);
+            }
+        }
+    });
+
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        allowClear: true,
+        width: '100%',
+        dropdownAutoWidth: true
     });
 
     // Inicializar los gráficos
     initCharts();
 
     // Cargar datos iniciales del dashboard
-    loadDashboardData();
+    const startDate = $('#startDate').val();
+    const endDate = $('#endDate').val();
+    loadDashboardData(startDate, endDate);
 
     // Aplicar filtros al enviar el formulario
     $('#dateFilterForm').submit(function (e) {
         e.preventDefault();
+
         const startDate = $('#startDate').val();
         const endDate = $('#endDate').val();
-        loadDashboardData(startDate, endDate);
+        const sucursal = $('#sucursalFilter').val();
+        const departamento = $('#departamentoFilter').val();
+        const anonimo = $('#anonimoFilter').val();
+
+        loadDashboardData(startDate, endDate, sucursal, departamento, anonimo);
+    });
+
+    // Función para resetear los filtros
+    $('#resetButton').click(function () {
+        // Limpiar los campos de fecha
+        $('#startDate').val('');
+        $('#endDate').val('');
+
+        // Limpiar y actualizar select2
+        $('#sucursalFilter').val('').trigger('change');
+        $('#departamentoFilter').val('').trigger('change');
+        $('#anonimoFilter').val('').trigger('change');
+
+        // Recargar los datos con filtros vacíos (para mostrar toda la información)
+        loadDashboardData();
     });
 });
