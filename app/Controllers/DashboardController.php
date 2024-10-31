@@ -10,6 +10,8 @@ class DashboardController extends BaseController
     {
         $model = new DashboardModel();
 
+        $clientes = $model->getClientes();
+
         // Obtener el mes y año actuales para el filtro inicial
         $startDate = date('Y-m-01'); // Primer día del mes actual
         $endDate = date('Y-m-t');    // Último día del mes actual
@@ -40,6 +42,7 @@ class DashboardController extends BaseController
 
         $data = [
             'title' => 'Dashboard',
+            'clientes' => $clientes,
             'denunciasPorMes' => $denunciasPorMes,
             'estatusDenuncias' => $estatusDenuncias,
             'denunciasPorDepto' => $denunciasPorDepto['data'],
@@ -75,20 +78,21 @@ class DashboardController extends BaseController
         $sucursal = $this->request->getPost('sucursal');
         $departamento = $this->request->getPost('departamento');
         $anonimo = $this->request->getPost('anonimo');
+        $cliente = $this->request->getPost('cliente');
 
         // Obtener datos aplicando los filtros
-        $denunciasPorMes = $model->getDenunciasPorMes($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $denunciasAnonimas = $model->getDenunciasAnonimas($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $denunciasPorMedio = $model->getDenunciasPorMedioRecepcion($startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $denunciasPorMes = $model->getDenunciasPorMes($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $estatusDenuncias = $model->getDenunciasPorEstatus($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $denunciasPorDepto = $model->getDenunciasPorDepartamento($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $denunciasPorSucursal = $model->getDenunciasPorSucursal($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $denunciasPorConocimiento = $model->getDenunciasPorConocimiento($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $denunciasAnonimas = $model->getDenunciasAnonimas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $denunciasPorMedio = $model->getDenunciasPorMedioRecepcion($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         // Contadores de denuncias según los criterios y filtros aplicados
-        $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate, $sucursal, $departamento, $anonimo);
-        $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         // Calcular totales
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));

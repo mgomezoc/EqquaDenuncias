@@ -24,18 +24,26 @@ class DashboardModel extends Model
             ->getResultArray();
     }
 
+    public function getClientes()
+    {
+        return $this->db->table('clientes')
+            ->select('id, nombre_empresa')
+            ->get()
+            ->getResultArray();
+    }
+
 
     /**
      * Obtiene el total de denuncias agrupadas por estatus.
      */
-    public function getDenunciasPorEstatus($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasPorEstatus($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('estados_denuncias.nombre as estatus, COUNT(denuncias.id) as total')
             ->join('estados_denuncias', 'denuncias.estado_actual = estados_denuncias.id', 'left')
             ->groupBy('estados_denuncias.nombre');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->get()->getResultArray();
     }
@@ -43,7 +51,7 @@ class DashboardModel extends Model
     /**
      * Obtiene el total de denuncias agrupadas por departamento y sucursal.
      */
-    public function getDenunciasPorDepartamento($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasPorDepartamento($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('departamentos.nombre AS departamento, sucursales.nombre AS sucursal, COUNT(denuncias.id) AS total')
@@ -53,7 +61,7 @@ class DashboardModel extends Model
             ->orderBy('departamentos.nombre', 'ASC')
             ->orderBy('sucursales.nombre', 'ASC');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         $result = $builder->get()->getResultArray();
 
@@ -100,14 +108,14 @@ class DashboardModel extends Model
     /**
      * Obtiene el total de denuncias agrupadas por sucursal.
      */
-    public function getDenunciasPorSucursal($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasPorSucursal($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('sucursales.nombre as nombre, COUNT(denuncias.id) as total')
             ->join('sucursales', 'denuncias.id_sucursal = sucursales.id', 'left')
             ->groupBy('sucursales.nombre');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->get()->getResultArray();
     }
@@ -115,13 +123,13 @@ class DashboardModel extends Model
     /**
      * Obtiene el total de denuncias agrupadas por conocimiento del incidente.
      */
-    public function getDenunciasPorConocimiento($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasPorConocimiento($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('denuncias.como_se_entero as como_se_entero, COUNT(denuncias.id) as total')
             ->groupBy('denuncias.como_se_entero');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->get()->getResultArray();
     }
@@ -129,12 +137,12 @@ class DashboardModel extends Model
     /**
      * Cuenta denuncias con el estado "Nuevo" (id_estado = 1).
      */
-    public function countDenunciasNuevas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function countDenunciasNuevas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->where('estado_actual', 1);
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->countAllResults();
     }
@@ -142,12 +150,12 @@ class DashboardModel extends Model
     /**
      * Cuenta denuncias con estados "En Proceso" (id_estado = 2, 3, 4, o 5).
      */
-    public function countDenunciasEnProceso($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function countDenunciasEnProceso($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->whereIn('estado_actual', [2, 3, 4, 5]);
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->countAllResults();
     }
@@ -155,11 +163,11 @@ class DashboardModel extends Model
     /**
      * Cuenta todas las denuncias recibidas.
      */
-    public function countDenunciasRecibidas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function countDenunciasRecibidas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->countAllResults();
     }
@@ -167,7 +175,7 @@ class DashboardModel extends Model
     /**
      * Obtiene la cantidad de denuncias agrupadas por mes en un periodo específico.
      */
-    public function getDenunciasPorMes($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasPorMes($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         //exit("DEBUG");
         $builder = $this->db->table('denuncias')
@@ -175,7 +183,7 @@ class DashboardModel extends Model
             ->groupBy("MONTH(created_at)")
             ->orderBy("mes", "ASC");
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         // Ejecutar la consulta y obtener los resultados
         $result = $builder->get()->getResultArray();
@@ -201,13 +209,13 @@ class DashboardModel extends Model
     /**
      * Filtra denuncias anónimas
      */
-    public function getDenunciasAnonimas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasAnonimas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('IF(anonimo = 1, "Sí", "No") as anonimato, COUNT(id) as total')
             ->groupBy('anonimo');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->get()->getResultArray();
     }
@@ -215,13 +223,13 @@ class DashboardModel extends Model
     /**
      * Filtra denuncias por medio de recepción
      */
-    public function getDenunciasPorMedioRecepcion($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null)
+    public function getDenunciasPorMedioRecepcion($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->select('medio_recepcion, COUNT(id) as total')
             ->groupBy('medio_recepcion');
 
-        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo);
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->get()->getResultArray();
     }
@@ -229,7 +237,7 @@ class DashboardModel extends Model
     /**
      * Helper para aplicar filtros de fecha, sucursal, departamento y anonimato.
      */
-    private function applyFilters(&$builder, $startDate, $endDate, $sucursal, $departamento, $anonimo)
+    private function applyFilters(&$builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente = null)
     {
         if ($startDate && $endDate) {
             $builder->where('denuncias.created_at >=', $startDate)
@@ -243,6 +251,9 @@ class DashboardModel extends Model
         }
         if ($anonimo) {
             $builder->where('denuncias.anonimo', $anonimo);
+        }
+        if ($cliente) {
+            $builder->where('denuncias.id_cliente', $cliente);
         }
     }
 }

@@ -552,7 +552,7 @@ function initCharts() {
 }
 
 // Cargar datos con AJAX
-function loadDashboardData(startDate = null, endDate = null, sucursal = '', departamento = '', anonimo = '') {
+function loadDashboardData(startDate = null, endDate = null, sucursal = '', departamento = '', anonimo = '', cliente = '') {
     $.ajax({
         url: `${Server}dashboard/filtrar`,
         method: 'POST',
@@ -561,7 +561,8 @@ function loadDashboardData(startDate = null, endDate = null, sucursal = '', depa
             end_date: endDate,
             sucursal: sucursal,
             departamento: departamento,
-            anonimo: anonimo
+            anonimo: anonimo,
+            cliente: cliente
         },
         dataType: 'json',
         success: function (data) {
@@ -733,8 +734,9 @@ $(document).ready(function () {
         const sucursal = $('#sucursalFilter').val();
         const departamento = $('#departamentoFilter').val();
         const anonimo = $('#anonimoFilter').val();
+        const cliente = $('#clienteFilter').val();
 
-        loadDashboardData(startDate, endDate, sucursal, departamento, anonimo);
+        loadDashboardData(startDate, endDate, sucursal, departamento, anonimo, cliente);
     });
 
     // Función para resetear los filtros

@@ -8,7 +8,7 @@
 <div class="container mt-5">
     <!-- Filtro de fechas -->
     <form action="<?= base_url('dashboard/filtrar') ?>" method="post" class="mb-4" id="dateFilterForm">
-        <div class="row">
+        <div class="row g-3">
             <!-- Filtros de Fecha -->
             <div class="col-md-2">
                 <input type="text" id="startDate" name="start_date" class="form-control" placeholder="Fecha inicio" value="<?= $startDate ?? '' ?>">
@@ -16,7 +16,16 @@
             <div class="col-md-2">
                 <input type="text" id="endDate" name="end_date" class="form-control" placeholder="Fecha fin" value="<?= $endDate ?? '' ?>">
             </div>
-
+            <!-- Filtro de Cliente -->
+            <div class="col-md-2">
+                <select id="clienteFilter" name="cliente" class="form-select select2">
+                    <option selected disabled>Cliente</option>
+                    <option value="">TODOS</option>
+                    <?php foreach ($clientes as $cliente): ?>
+                        <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <!-- Filtro de Sucursal -->
             <div class="col-md-2">
                 <select id="sucursalFilter" name="sucursal" class="form-select select2">
@@ -28,7 +37,6 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <!-- Filtro de Departamento -->
             <div class="col-md-2">
                 <select id="departamentoFilter" name="departamento" class="form-select select2">
@@ -39,7 +47,6 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <!-- Filtro de Anónimo -->
             <div class="col-md-2">
                 <select id="anonimoFilter" name="anonimo" class="form-select select2">
@@ -50,12 +57,10 @@
 
                 </select>
             </div>
-
             <!-- Botón de Filtrar -->
             <div class="col-md-1">
                 <button type="submit" id="filterButton" class="btn btn-primary w-100">Filtrar</button>
             </div>
-
             <!-- Botón de Reset -->
             <div class="col-md-1">
                 <button type="button" id="resetButton" class="btn btn-secondary w-100">Reset</button>
