@@ -7,285 +7,7 @@ let mesDenunciasChart = [];
 function initCharts() {
     const colors = ['#f4b400', '#db4437', '#4285f4', '#34a853', '#ff6d00', '#ffeb3b', '#1e88e5', '#6a5acd', '#d81b60'];
 
-    // Estatus de Denuncias
-    const ctxEstatus = document.getElementById('chartEstatusDenuncias').getContext('2d');
-    estatusChart = new Chart(ctxEstatus, {
-        type: 'doughnut',
-        data: {
-            labels: [], // Las etiquetas dinámicas se cargarán aquí
-            datasets: [
-                {
-                    data: [], // Los datos dinámicos se cargarán aquí
-                    backgroundColor: colors // Colores personalizados
-                }
-            ]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left', // Cambiar la posición de la leyenda a la izquierda para una lista vertical
-                    align: 'center', // Centrar la leyenda verticalmente
-                    labels: {
-                        // Modificamos el texto de la leyenda para mostrar nombre y cantidad
-                        generateLabels: function (chart) {
-                            const dataset = chart.data.datasets[0];
-                            return chart.data.labels.map((label, index) => {
-                                const value = dataset.data[index];
-                                return {
-                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
-                                    fillStyle: dataset.backgroundColor[index],
-                                    strokeStyle: dataset.backgroundColor[index],
-                                    hidden: false,
-                                    index: index
-                                };
-                            });
-                        },
-                        font: { size: 14 },
-                        boxWidth: 12, // Ancho de la caja de color
-                        padding: 10 // Espaciado entre elementos
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            const label = tooltipItem.label || '';
-                            const value = tooltipItem.raw;
-                            return `${label}: ${value} denuncias`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 14 }
-                }
-            }
-        },
-        plugins: [
-            ChartDataLabels,
-            {
-                // Plugin para mostrar el total en el centro de la dona
-                id: 'centerText',
-                afterDatasetsDraw: chart => {
-                    const { ctx, chartArea } = chart;
-
-                    // Calcular el total usando los datos actuales
-                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
-
-                    // Estilo del texto
-                    ctx.save();
-                    const centerX = (chartArea.left + chartArea.right) / 2;
-                    const centerY = (chartArea.top + chartArea.bottom) / 2;
-
-                    // Configurar fuente y color para el texto
-                    ctx.font = 'bold 24px sans-serif';
-                    ctx.fillStyle = '#231f20';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    // Dibujar "Total" en el centro
-                    ctx.fillText('Total', centerX, centerY - 10);
-
-                    // Dibujar el número total debajo de "Total"
-                    ctx.font = 'bold 30px sans-serif';
-                    ctx.fillText(total, centerX, centerY + 20);
-                    ctx.restore();
-                }
-            }
-        ]
-    });
-
-    // Inicializar gráfico de Tipo de Denunciante
-    const ctxDenunciante = document.getElementById('chartDenunciante').getContext('2d');
-    denuncianteChart = new Chart(ctxDenunciante, {
-        type: 'doughnut',
-        data: {
-            labels: [], // Etiquetas dinámicas
-            datasets: [
-                {
-                    data: [], // Datos dinámicos
-                    backgroundColor: colors // Colores personalizados
-                }
-            ]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left', // Leyenda en la izquierda para lista vertical
-                    align: 'center', // Centrar verticalmente
-                    labels: {
-                        generateLabels: function (chart) {
-                            const dataset = chart.data.datasets[0];
-                            return chart.data.labels.map((label, index) => {
-                                const value = dataset.data[index];
-                                return {
-                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
-                                    fillStyle: dataset.backgroundColor[index],
-                                    strokeStyle: dataset.backgroundColor[index],
-                                    hidden: false,
-                                    index: index
-                                };
-                            });
-                        },
-                        font: { size: 14 },
-                        boxWidth: 12, // Tamaño de la caja de color
-                        padding: 10 // Espaciado entre elementos
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            const label = tooltipItem.label || '';
-                            const value = tooltipItem.raw;
-                            return `${label}: ${value} denuncias`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 14 }
-                }
-            }
-        },
-        plugins: [
-            ChartDataLabels,
-            {
-                // Plugin para mostrar el total en el centro de la dona
-                id: 'centerText',
-                afterDatasetsDraw: chart => {
-                    const { ctx, chartArea } = chart;
-
-                    // Calcular el total usando los datos actuales
-                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
-
-                    // Estilo del texto
-                    ctx.save();
-                    const centerX = (chartArea.left + chartArea.right) / 2;
-                    const centerY = (chartArea.top + chartArea.bottom) / 2;
-
-                    // Configurar fuente y color para el texto
-                    ctx.font = 'bold 24px sans-serif';
-                    ctx.fillStyle = '#231f20';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    // Dibujar "Total" en el centro
-                    ctx.fillText('Total', centerX, centerY - 10);
-
-                    // Dibujar el número total debajo de "Total"
-                    ctx.font = 'bold 30px sans-serif';
-                    ctx.fillText(total, centerX, centerY + 20);
-                    ctx.restore();
-                }
-            }
-        ]
-    });
-
-    // Inicializar gráfico de Denuncias Anónimas
-    const ctxAnonimato = document.getElementById('chartDenunciasAnonimas').getContext('2d');
-    anonimatoChart = new Chart(ctxAnonimato, {
-        type: 'doughnut',
-        data: {
-            labels: [], // Etiquetas dinámicas ("Sí", "No")
-            datasets: [
-                {
-                    data: [], // Datos dinámicos para "Sí" y "No"
-                    backgroundColor: ['#4CAF50', '#FF5722'] // Colores personalizados para cada opción
-                }
-            ]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left', // Posición de la leyenda a la izquierda para lista vertical
-                    align: 'center', // Centrar la leyenda verticalmente
-                    labels: {
-                        // Generar etiquetas personalizadas para mostrar "Nombre: Cantidad"
-                        generateLabels: function (chart) {
-                            const dataset = chart.data.datasets[0];
-                            return chart.data.labels.map((label, index) => {
-                                const value = dataset.data[index];
-                                return {
-                                    text: `${label}: ${value}`, // Mostrar "Sí: Cantidad" o "No: Cantidad"
-                                    fillStyle: dataset.backgroundColor[index],
-                                    strokeStyle: dataset.backgroundColor[index],
-                                    hidden: false,
-                                    index: index
-                                };
-                            });
-                        },
-                        font: { size: 14 },
-                        boxWidth: 12, // Tamaño de la caja de color
-                        padding: 10 // Espaciado entre elementos
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            const label = tooltipItem.label || '';
-                            const value = tooltipItem.raw;
-                            return `${label}: ${value} denuncias`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 14 }
-                }
-            }
-        },
-        plugins: [
-            ChartDataLabels,
-            {
-                // Plugin para mostrar el total en el centro de la dona
-                id: 'centerText',
-                afterDatasetsDraw: chart => {
-                    const { ctx, chartArea } = chart;
-
-                    // Calcular el total usando los datos actuales
-                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
-
-                    // Estilo del texto
-                    ctx.save();
-                    const centerX = (chartArea.left + chartArea.right) / 2;
-                    const centerY = (chartArea.top + chartArea.bottom) / 2;
-
-                    // Configurar fuente y color para el texto
-                    ctx.font = 'bold 24px sans-serif';
-                    ctx.fillStyle = '#231f20';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    // Dibujar "Total" en el centro
-                    ctx.fillText('Total', centerX, centerY - 10);
-
-                    // Dibujar el número total debajo de "Total"
-                    ctx.font = 'bold 30px sans-serif';
-                    ctx.fillText(total, centerX, centerY + 20);
-                    ctx.restore();
-                }
-            }
-        ]
-    });
-
-    // Inicializar gráfico de Mes de recepción de denuncia
+    // Mes de recepción de denuncia
     const ctxMesDenuncias = document.getElementById('chartMesDenuncias').getContext('2d');
     mesDenunciasChart = new Chart(ctxMesDenuncias, {
         type: 'bar',
@@ -340,25 +62,26 @@ function initCharts() {
         plugins: [ChartDataLabels]
     });
 
-    // Inicializar gráfico de Conocimiento del Incidente
-    const ctxConocimiento = document.getElementById('chartConocimiento').getContext('2d');
-    conocimientoChart = new Chart(ctxConocimiento, {
+    // Estatus de Denuncias
+    const ctxEstatus = document.getElementById('chartEstatusDenuncias').getContext('2d');
+    estatusChart = new Chart(ctxEstatus, {
         type: 'doughnut',
         data: {
-            labels: [], // Etiquetas dinámicas
+            labels: [],
             datasets: [
                 {
-                    data: [], // Datos dinámicos
-                    backgroundColor: colors // Colores personalizados
+                    data: [],
+                    backgroundColor: colors
                 }
             ]
         },
         options: {
             plugins: {
                 legend: {
-                    position: 'left', // Leyenda en la izquierda para lista vertical
-                    align: 'center', // Centrar verticalmente
+                    position: 'left',
+                    align: 'center',
                     labels: {
+                        // Modificamos el texto de la leyenda para mostrar nombre y cantidad
                         generateLabels: function (chart) {
                             const dataset = chart.data.datasets[0];
                             return chart.data.labels.map((label, index) => {
@@ -372,9 +95,19 @@ function initCharts() {
                                 };
                             });
                         },
-                        font: { size: 14 },
-                        boxWidth: 12, // Tamaño de la caja de color
-                        padding: 10 // Espaciado entre elementos
+                        font: {
+                            family: 'Nunito',
+                            size: 13,
+                            style: 'italic',
+                            weight: 'bold'
+                        },
+                        boxWidth: 40,
+                        boxHeight: 30,
+                        color: '#231f20',
+                        padding: 25,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        textAlign: 'left'
                     }
                 },
                 tooltip: {
@@ -415,7 +148,7 @@ function initCharts() {
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
 
                     // Configurar fuente y color para el texto
-                    ctx.font = 'bold 24px sans-serif';
+                    ctx.font = 'bold 24px Nunito';
                     ctx.fillStyle = '#231f20';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -424,7 +157,7 @@ function initCharts() {
                     ctx.fillText('Total', centerX, centerY - 10);
 
                     // Dibujar el número total debajo de "Total"
-                    ctx.font = 'bold 30px sans-serif';
+                    ctx.font = 'bold 30px Nunito';
                     ctx.fillText(total, centerX, centerY + 20);
                     ctx.restore();
                 }
@@ -432,7 +165,296 @@ function initCharts() {
         ]
     });
 
-    // Inicializar gráfico de Denuncias por Sucursal
+    // Denuncias Anónimas
+    const ctxAnonimato = document.getElementById('chartDenunciasAnonimas').getContext('2d');
+    anonimatoChart = new Chart(ctxAnonimato, {
+        type: 'doughnut',
+        data: {
+            labels: [], // Etiquetas dinámicas ("Sí", "No")
+            datasets: [
+                {
+                    data: [], // Datos dinámicos para "Sí" y "No"
+                    backgroundColor: ['#49beaf', '#6460a9'] // Colores personalizados para cada opción
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'right',
+                    align: 'center',
+                    labels: {
+                        // Generar etiquetas personalizadas para mostrar "Nombre: Cantidad"
+                        generateLabels: function (chart) {
+                            const dataset = chart.data.datasets[0];
+                            return chart.data.labels.map((label, index) => {
+                                const value = dataset.data[index];
+                                return {
+                                    text: `${label}: ${value}`, // Mostrar "Sí: Cantidad" o "No: Cantidad"
+                                    fillStyle: dataset.backgroundColor[index],
+                                    strokeStyle: dataset.backgroundColor[index],
+                                    hidden: false,
+                                    index: index
+                                };
+                            });
+                        },
+                        font: {
+                            family: 'Nunito',
+                            size: 16,
+                            style: 'italic',
+                            weight: 'bold'
+                        },
+                        boxWidth: 40,
+                        boxHeight: 30,
+                        color: '#231f20',
+                        padding: 50,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        textAlign: 'left'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            const label = tooltipItem.label || '';
+                            const value = tooltipItem.raw;
+                            return `${label}: ${value} denuncias`;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(2);
+                        return `${percentage}%`;
+                    },
+                    offset: 10,
+                    font: { weight: 'bold', size: 14 }
+                }
+            }
+        },
+        plugins: [
+            ChartDataLabels,
+            {
+                id: 'centerText',
+                afterDatasetsDraw: chart => {
+                    const { ctx, chartArea } = chart;
+
+                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+
+                    ctx.save();
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+                    ctx.font = 'bold 24px Nunito';
+                    ctx.fillStyle = '#231f20';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    ctx.fillText('Total', centerX, centerY - 10);
+
+                    ctx.font = 'bold 30px Nunito';
+                    ctx.fillText(total, centerX, centerY + 20);
+                    ctx.restore();
+                }
+            }
+        ]
+    });
+
+    // Tipo de Denunciante
+    const ctxDenunciante = document.getElementById('chartDenunciante').getContext('2d');
+    denuncianteChart = new Chart(ctxDenunciante, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    data: [],
+                    backgroundColor: colors
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'left',
+                    align: 'center',
+                    labels: {
+                        generateLabels: function (chart) {
+                            const dataset = chart.data.datasets[0];
+                            return chart.data.labels.map((label, index) => {
+                                const value = dataset.data[index];
+                                return {
+                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
+                                    fillStyle: dataset.backgroundColor[index],
+                                    strokeStyle: dataset.backgroundColor[index],
+                                    hidden: false,
+                                    index: index
+                                };
+                            });
+                        },
+                        font: {
+                            family: 'Nunito',
+                            size: 16,
+                            style: 'italic',
+                            weight: 'bold'
+                        },
+                        boxWidth: 40,
+                        boxHeight: 30,
+                        color: '#231f20',
+                        padding: 50,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        textAlign: 'left'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            const label = tooltipItem.label || '';
+                            const value = tooltipItem.raw;
+                            return `${label}: ${value} denuncias`;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(2);
+                        return `${percentage}%`;
+                    },
+                    offset: 10,
+                    font: { weight: 'bold', size: 14 }
+                }
+            }
+        },
+        plugins: [
+            ChartDataLabels,
+            {
+                id: 'centerText',
+                afterDatasetsDraw: chart => {
+                    const { ctx, chartArea } = chart;
+
+                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+
+                    ctx.save();
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+                    ctx.font = 'bold 24px Nunito';
+                    ctx.fillStyle = '#231f20';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    ctx.fillText('Total', centerX, centerY - 10);
+
+                    ctx.font = 'bold 30px Nunito';
+                    ctx.fillText(total, centerX, centerY + 20);
+                    ctx.restore();
+                }
+            }
+        ]
+    });
+
+    // Conocimiento del Incidente
+    const ctxConocimiento = document.getElementById('chartConocimiento').getContext('2d');
+    conocimientoChart = new Chart(ctxConocimiento, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    data: [],
+                    backgroundColor: colors
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'right',
+                    align: 'center',
+                    labels: {
+                        generateLabels: function (chart) {
+                            const dataset = chart.data.datasets[0];
+                            return chart.data.labels.map((label, index) => {
+                                const value = dataset.data[index];
+                                return {
+                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
+                                    fillStyle: dataset.backgroundColor[index],
+                                    strokeStyle: dataset.backgroundColor[index],
+                                    hidden: false,
+                                    index: index
+                                };
+                            });
+                        },
+                        font: {
+                            family: 'Nunito',
+                            size: 14,
+                            style: 'italic',
+                            weight: 'bold'
+                        },
+                        boxWidth: 40,
+                        boxHeight: 30,
+                        color: '#231f20',
+                        padding: 40,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        textAlign: 'left'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            const label = tooltipItem.label || '';
+                            const value = tooltipItem.raw;
+                            return `${label}: ${value} denuncias`;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(2);
+                        return `${percentage}%`;
+                    },
+                    offset: 10,
+                    font: { weight: 'bold', size: 14 }
+                }
+            }
+        },
+        plugins: [
+            ChartDataLabels,
+            {
+                id: 'centerText',
+                afterDatasetsDraw: chart => {
+                    const { ctx, chartArea } = chart;
+
+                    const total = chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+
+                    ctx.save();
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+                    ctx.font = 'bold 24px Nunito';
+                    ctx.fillStyle = '#231f20';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    ctx.fillText('Total', centerX, centerY - 10);
+
+                    ctx.font = 'bold 30px Nunito';
+                    ctx.fillText(total, centerX, centerY + 20);
+                    ctx.restore();
+                }
+            }
+        ]
+    });
+
+    // Denuncias por Sucursal
     const ctxSucursales = document.getElementById('chartSucursalesDenuncias').getContext('2d');
     sucursalesChart = new Chart(ctxSucursales, {
         type: 'line',
@@ -478,20 +500,26 @@ function initCharts() {
             scales: {
                 x: {
                     ticks: {
-                        color: '#ee3741', // Color de las etiquetas en rojo
-                        maxRotation: 90, // Rotación máxima para evitar que se corten
-                        minRotation: 45, // Rotación mínima
-                        padding: 5, // Espaciado entre las etiquetas y el eje
+                        color: '#ee3741',
+                        maxRotation: 90,
+                        minRotation: 0,
+                        padding: 5,
                         font: {
-                            weight: 'bold',
-                            size: 12
+                            family: 'Nunito',
+                            size: 12,
+                            style: 'italic',
+                            weight: 'bold'
                         }
                     },
                     title: {
                         display: true,
                         text: 'Sucursal',
                         color: '#3b82f6',
-                        font: { size: 14, weight: 'bold' }
+                        font: {
+                            family: 'Nunito',
+                            size: 16,
+                            weight: 'bold'
+                        }
                     }
                 },
                 y: {
@@ -499,8 +527,10 @@ function initCharts() {
                     ticks: {
                         color: '#3b82f6',
                         font: {
-                            weight: 'bold',
-                            size: 12
+                            family: 'Nunito',
+                            size: 14,
+                            style: 'italic',
+                            weight: 'bold'
                         },
                         stepSize: 2 // Ajuste del intervalo de las etiquetas del eje Y
                     },
@@ -508,7 +538,11 @@ function initCharts() {
                         display: true,
                         text: 'Número de denuncias',
                         color: '#3b82f6',
-                        font: { size: 14, weight: 'bold' }
+                        font: {
+                            family: 'Nunito',
+                            size: 14,
+                            weight: 'bold'
+                        }
                     }
                 }
             }
@@ -559,7 +593,7 @@ function updateCharts(data) {
 
     if (data.denunciasAnonimas && anonimatoChart) {
         // Asignar etiquetas y datos de la gráfica
-        anonimatoChart.data.labels = data.denunciasAnonimas.map(item => item.anonimato);
+        anonimatoChart.data.labels = data.denunciasAnonimas.map(item => `${item.anonimato}`);
         anonimatoChart.data.datasets[0].data = data.denunciasAnonimas.map(item => parseInt(item.total));
         anonimatoChart.update();
 
