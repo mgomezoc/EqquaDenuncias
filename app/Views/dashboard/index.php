@@ -202,10 +202,10 @@
         <div class="col-md-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title mb-3 mb-sm-0">Denuncias por Departamento</div>
+                    <div class="card-title mb-3 mb-sm-0">Denuncias por Sucursal</div>
                 </div>
                 <div class="card-body">
-                    <canvas id="chartSucursalesDenuncias"></canvas>
+                    <canvas id="chartSucursalesDenuncias" style="min-height: 400px;"></canvas>
                 </div>
             </div>
         </div>

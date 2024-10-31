@@ -435,45 +435,81 @@ function initCharts() {
     // Inicializar gráfico de Denuncias por Sucursal
     const ctxSucursales = document.getElementById('chartSucursalesDenuncias').getContext('2d');
     sucursalesChart = new Chart(ctxSucursales, {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: [],
+            labels: [], // Nombres de las sucursales
             datasets: [
                 {
-                    label: 'Denuncias',
-                    data: [],
-                    backgroundColor: colors.slice(0, 10), // Selecciona colores para las primeras 10 barras
-                    borderWidth: 1
+                    label: 'Número de denuncias',
+                    data: [], // Totales de denuncias por sucursal
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)', // Fondo del área bajo la línea
+                    borderColor: '#6460a9', // Color de la línea
+                    borderWidth: 2,
+                    pointBackgroundColor: '#6460a9',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true
                 }
             ]
         },
         options: {
-            scales: {
-                x: {
-                    grid: { display: false },
-                    title: { display: true, text: 'Sucursales', font: { size: 16 } }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: { display: false },
-                    title: { display: true, text: 'Número de Denuncias', font: { size: 16 } }
-                }
-            },
+            maintainAspectRatio: false,
             plugins: {
-                legend: { display: true, position: 'top', labels: { font: { size: 14 } } },
+                legend: {
+                    display: false // Ocultar la leyenda
+                },
                 tooltip: {
                     callbacks: {
                         label: function (tooltipItem) {
-                            return `Denuncias: ${tooltipItem.raw}`;
+                            return `Número de denuncias: ${tooltipItem.raw}`;
                         }
                     }
                 },
                 datalabels: {
+                    color: '#ee3741',
+                    align: 'top',
                     anchor: 'end',
-                    align: 'start',
-                    color: '#000',
                     font: { weight: 'bold', size: 12 },
                     formatter: value => value
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#ee3741', // Color de las etiquetas en rojo
+                        maxRotation: 90, // Rotación máxima para evitar que se corten
+                        minRotation: 45, // Rotación mínima
+                        padding: 5, // Espaciado entre las etiquetas y el eje
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Sucursal',
+                        color: '#3b82f6',
+                        font: { size: 14, weight: 'bold' }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#3b82f6',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        stepSize: 2 // Ajuste del intervalo de las etiquetas del eje Y
+                    },
+                    title: {
+                        display: true,
+                        text: 'Número de denuncias',
+                        color: '#3b82f6',
+                        font: { size: 14, weight: 'bold' }
+                    }
                 }
             }
         },
@@ -562,7 +598,7 @@ function updateCharts(data) {
 
     if (data.denunciasPorSucursal && sucursalesChart) {
         sucursalesChart.data.labels = data.denunciasPorSucursal.map(item => item.nombre);
-        sucursalesChart.data.datasets[0].data = data.denunciasPorSucursal.map(item => parseInt(item.total));
+        sucursalesChart.data.datasets[0].data = data.denunciasPorSucursal.map(item => item.total);
         sucursalesChart.update();
     }
 }
