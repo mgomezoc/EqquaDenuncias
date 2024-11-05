@@ -68,9 +68,6 @@ $(function () {
                     },
                     id_cliente: {
                         required: true
-                    },
-                    direccion: {
-                        required: true
                     }
                 },
                 messages: {
@@ -79,9 +76,6 @@ $(function () {
                     },
                     id_cliente: {
                         required: 'Por favor seleccione un cliente'
-                    },
-                    direccion: {
-                        required: 'Por favor ingrese la dirección'
                     }
                 }
             });
@@ -95,9 +89,6 @@ $(function () {
             },
             id_cliente: {
                 required: true
-            },
-            direccion: {
-                required: true
             }
         },
         messages: {
@@ -106,9 +97,6 @@ $(function () {
             },
             id_cliente: {
                 required: 'Por favor seleccione un cliente'
-            },
-            direccion: {
-                required: 'Por favor ingrese la dirección'
             }
         },
         submitHandler: function (form) {
@@ -176,6 +164,7 @@ $(function () {
         $form[0].reset();
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
+        $form.find('.select2').val(null).trigger('change');
     });
 });
 

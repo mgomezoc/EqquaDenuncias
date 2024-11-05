@@ -51,7 +51,7 @@
                 </div>
                 <div class="col-md-12">
                     <label for="direccion-{{id}}" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion-{{id}}" name="direccion" value="{{direccion}}" required>
+                    <input type="text" class="form-control" id="direccion-{{id}}" name="direccion" value="{{direccion}}">
                 </div>
                 <div class="col-md-12">
                     <button type="submit" class="btn btn-primary">
@@ -83,15 +83,17 @@
                         </div>
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>
-                            <select class="form-select select2" id="id_cliente" name="id_cliente" required>
-                                <?php foreach ($clientes as $cliente) : ?>
-                                    <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="d-flex flex-column-reverse">
+                                <select class="form-select select2" id="id_cliente" name="id_cliente" required>
+                                    <?php foreach ($clientes as $cliente) : ?>
+                                        <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-12">
                             <label for="direccion" class="form-label">Dirección</label>
-                            <input type="text" class="form-control" id="direccion" name="direccion" required>
+                            <input type="text" class="form-control" id="direccion" name="direccion">
                         </div>
                     </div>
                 </div>
