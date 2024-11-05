@@ -163,5 +163,5 @@
 <script>
     const slug = '<?= $cliente['slug'] ?>';
 </script>
-<script src="<?= base_url("assets/js/denuncias_public.js") ?>"></script>
+<script src="<?= base_url("assets/js/denuncias_public.js") ?>?v=<?= time() ?>"></script>
 <?= $this->endSection() ?>

@@ -7,7 +7,7 @@
 <div class="card custom-card">
     <div class="card-header">
         <h3>Información del Cliente</h3>
-        <a href="<?= base_url("public/cliente/" . $cliente['slug']) ?>" class="btn btn-link" target="_blank">Ver pagina</a>
+        <a href="<?= base_url("/" . $cliente['slug']) ?>" class="btn btn-link" target="_blank">Ver pagina</a>
     </div>
     <div class="card-body">
         <form id="formActualizarPerfil" action="<?= base_url('cliente/perfil/actualizar') ?>" method="post">

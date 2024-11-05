@@ -99,7 +99,7 @@
                         </a>
                     </li>
                     <li class="slide">
-                        <a href="<?= base_url('public/cliente/' . session()->get('slug')) ?>" class="side-menu__item" target="_blank">
+                        <a href="<?= base_url('c/' . session()->get('slug')) ?>" class="side-menu__item" target="_blank">
                             <i class="fa-solid fa-external-link-alt side-menu__icon"></i> <!-- Ícono para representar un portal o enlace externo -->
                             <span class="side-menu__label">Portal</span>
                         </a>

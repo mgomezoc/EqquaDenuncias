@@ -66,7 +66,7 @@ $(document).ready(function () {
         }
 
         const dropzoneOptions = {
-            url: `${Server}public/denuncias/subir-anexo-public`,
+            url: `${Server}denuncias/subir-anexo-public`,
             maxFiles: MAX_FILES, // Máximo 5 archivos
             maxFilesize: MAX_FILE_SIZE_MB, // Limitar el tamaño de cada archivo a 10 MB
             acceptedFiles: 'image/*,application/pdf,video/mp4,video/webm,video/ogg', // Tipos permitidos: imágenes, PDFs y videos cortos
@@ -187,7 +187,7 @@ $(document).ready(function () {
      */
     function loadSubcategorias(categoriaId) {
         $.ajax({
-            url: `${Server}public/categorias/listarSubcategorias`,
+            url: `${Server}categorias/listarSubcategorias`,
             method: 'GET',
             data: { id_categoria: categoriaId },
             success: function (data) {
@@ -207,7 +207,7 @@ $(document).ready(function () {
      */
     function loadDepartamentos(sucursalId) {
         $.ajax({
-            url: `${Server}public/departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
+            url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
             method: 'GET',
             success: function (data) {
                 $('#id_departamento').empty().append('<option value="">Seleccione un departamento</option>');
@@ -329,7 +329,7 @@ $(document).ready(function () {
         const formData = new FormData(this);
 
         $.ajax({
-            url: `${Server}public/denuncias/guardar-public`,
+            url: `${Server}denuncias/guardar-public`,
             method: 'POST',
             data: formData,
             processData: false,
@@ -342,7 +342,7 @@ $(document).ready(function () {
                         text: `Tu denuncia ha sido registrada con éxito. El número de folio es: ${response.folio}`,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        window.location = `${Server}public/cliente/${slug}/seguimiento-denuncia?folio=${response.folio}`;
+                        window.location = `${Server}c/${slug}/seguimiento-denuncia?folio=${response.folio}`;
                     });
                 } else {
                     Swal.fire('Error', 'Ocurrió un error al guardar la denuncia. Por favor, intenta de nuevo.', 'error');

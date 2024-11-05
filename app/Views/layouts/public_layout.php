@@ -35,7 +35,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
-            <a class="navbar-brand" href="<?= base_url("public/cliente/" . esc($cliente['slug'])) ?>">
+            <a class="navbar-brand" href="<?= base_url("c/" . esc($cliente['slug'])) ?>">
                 <img src="<?= base_url('assets/images/logo.png') ?>" alt="Logo Eqqua" style="height: 45px;">
                 <span class="navbar-brand-client"><?= $cliente['nombre_empresa'] ?></span>
             </a>
@@ -45,13 +45,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url("public/cliente/" . esc($cliente['slug'])) ?>">Inicio</a>
+                        <a class="nav-link" href="<?= base_url("c/" . esc($cliente['slug'])) ?>">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url("public/cliente/" . esc($cliente['slug']) . "/formulario-denuncia") ?>">Registrar Denuncia</a>
+                        <a class="nav-link" href="<?= base_url("c/" . esc($cliente['slug']) . "/formulario-denuncia") ?>">Registrar Denuncia</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url("public/cliente/" . esc($cliente['slug']) . "/seguimiento-denuncia") ?>">Seguimiento de Folio</a>
+                        <a class="nav-link" href="<?= base_url("c/" . esc($cliente['slug']) . "/seguimiento-denuncia") ?>">Seguimiento de Folio</a>
                     </li>
                 </ul>
             </div>

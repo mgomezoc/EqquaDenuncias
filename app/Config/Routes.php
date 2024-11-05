@@ -12,11 +12,11 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('send-email', 'MailController::sendEmail');
 
-$routes->group('public', function ($routes) {
+$routes->group('', function ($routes) {
     // Rutas para la página pública de denuncias
-    $routes->get('cliente/(:segment)', 'Publico::verCliente/$1');
-    $routes->get('cliente/(:segment)/formulario-denuncia', 'Publico::formularioDenuncia/$1');
-    $routes->get('cliente/(:segment)/seguimiento-denuncia', 'Publico::seguimientoDenuncia/$1');
+    $routes->get('c/(:segment)', 'Publico::verCliente/$1');
+    $routes->get('c/(:segment)/formulario-denuncia', 'Publico::formularioDenuncia/$1');
+    $routes->get('c/(:segment)/seguimiento-denuncia', 'Publico::seguimientoDenuncia/$1');
 
     // Rutas públicas para obtener categorías y subcategorías
     $routes->get('categorias/listarSubcategorias', 'CategoriasController::listarSubcategorias'); // Obtener subcategorías según la categoría

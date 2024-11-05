@@ -31,7 +31,7 @@ $(document).ready(function () {
     $listaArchivos = $('#listaArchivos');
     $archivosAdjuntos = $('#archivosAdjuntos');
 
-    const CONSULTA_URL = `${Server}/public/denuncias/consultar`;
+    const CONSULTA_URL = `${Server}/denuncias/consultar`;
     const COMENTARIO_URL = `${Server}/comentarios/guardar`;
 
     // Evento para buscar la denuncia

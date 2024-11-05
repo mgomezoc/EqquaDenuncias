@@ -57,6 +57,7 @@ class UsuariosController extends Controller
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Cliente no válido']);
         }
 
+        // Datos básicos
         $data = [
             'nombre_usuario' => $this->request->getVar('nombre_usuario'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
@@ -64,6 +65,12 @@ class UsuariosController extends Controller
             'id_cliente' => $id_cliente ?: null,
             'activo' => 1
         ];
+
+        // Solo incluir la contraseña si se envía una
+        $contrasena = $this->request->getVar('contrasena');
+        if (!empty($contrasena)) {
+            $data['contrasena'] = $contrasena;
+        }
 
         // Validar la unicidad del nombre de usuario y correo electrónico solo para usuarios activos
         $usuarioExistente = null;
@@ -109,7 +116,7 @@ class UsuariosController extends Controller
             $this->enviarCorreoBienvenida(
                 $data['correo_electronico'],
                 $data['nombre_usuario'],
-                $this->request->getVar('contrasena') // Solo si se proporciona una contraseña
+                $contrasena // Solo si se proporciona una contraseña
             );
         }
 
@@ -124,6 +131,7 @@ class UsuariosController extends Controller
 
         return $this->response->setJSON(['message' => 'Usuario guardado correctamente']);
     }
+
 
 
     /**
