@@ -18,7 +18,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Nombre del Departamento</th>
+                        <th>Nombre</th>
                         <th>Cliente</th>
                         <th>Sucursal</th>
                         <th>Acciones</th>
@@ -54,21 +54,30 @@
                         <label for="nombre" class="form-label">Nombre</label>
                         <input type="text" class="form-control" id="nombre" name="nombre" required>
                     </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="es_general" name="es_general">
+                        <label class="form-check-label" for="es_general">Es general (Sin cliente ni sucursal)</label>
+                    </div>
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
-                        <select class="form-select select2" id="id_cliente" name="id_cliente" required style="width: 100%;">
-                            <option value="">Seleccione un cliente</option>
-                            <!-- Opciones dinámicas desde el JS -->
-                        </select>
+                        <div class="d-flex flex-column-reverse">
+                            <select class="form-select select2" id="id_cliente" name="id_cliente" style="width: 100%;">
+                                <option value="">Seleccione un cliente</option>
+                                <!-- Opciones dinámicas desde el JS -->
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="id_sucursal" class="form-label">Sucursal</label>
-                        <select class="form-select select2" id="id_sucursal" name="id_sucursal" required style="width: 100%;">
-                            <option value="">Seleccione una sucursal</option>
-                            <!-- Opciones dinámicas desde el JS -->
-                        </select>
+                        <div class="d-flex flex-md-column-reverse">
+                            <select class="form-select select2" id="id_sucursal" name="id_sucursal" style="width: 100%;">
+                                <option value="">Seleccione una sucursal</option>
+                                <!-- Opciones dinámicas desde el JS -->
+                            </select>
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>

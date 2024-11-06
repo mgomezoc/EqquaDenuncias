@@ -33,9 +33,11 @@ class DepartamentosController extends Controller
         $departamentoModel = new DepartamentoModel();
         $id = $this->request->getVar('id');
 
+        // Si es_general es 1, id_sucursal debe ser NULL
         $data = [
             'nombre' => $this->request->getVar('nombre'),
-            'id_sucursal' => $this->request->getVar('id_sucursal')
+            'es_general' => $this->request->getVar('es_general'),
+            'id_sucursal' => $this->request->getVar('es_general') == 1 ? null : $this->request->getVar('id_sucursal')
         ];
 
         if ($id) {
@@ -46,6 +48,7 @@ class DepartamentosController extends Controller
 
         return $this->response->setJSON(['message' => 'Departamento guardado correctamente']);
     }
+
 
     public function eliminarDepartamento($id)
     {
@@ -74,7 +77,14 @@ class DepartamentosController extends Controller
     public function obtener($id)
     {
         $departamentoModel = new DepartamentoModel();
-        $departamento = $departamentoModel->find($id);
+
+        $departamento = $departamentoModel
+            ->select('departamentos.*, sucursales.id_cliente, sucursales.nombre AS sucursal_nombre, clientes.nombre_empresa AS cliente_nombre')
+            ->join('sucursales', 'sucursales.id = departamentos.id_sucursal', 'left')  // Cambiar a LEFT JOIN
+            ->join('clientes', 'clientes.id = sucursales.id_cliente', 'left')          // Cambiar a LEFT JOIN
+            ->where('departamentos.id', $id)
+            ->where('(departamentos.es_general = 1 OR departamentos.id_sucursal IS NOT NULL)') // Incluir generales o con sucursal
+            ->first();
 
         if (!$departamento) {
             return $this->response->setStatusCode(404)->setJSON(['error' => 'Departamento no encontrado']);
@@ -86,7 +96,17 @@ class DepartamentosController extends Controller
     public function listarDepartamentosPorSucursal($id_sucursal)
     {
         $departamentoModel = new DepartamentoModel();
-        $departamentos = $departamentoModel->where('id_sucursal', $id_sucursal)->findAll();
+
+        // Obtener departamentos de la sucursal específica o los departamentos generales
+        $departamentos = $departamentoModel
+            ->where('id_sucursal', $id_sucursal)
+            ->orWhere('es_general', 1)
+            ->findAll();
+
+        // Verificar si se obtuvieron resultados
+        if (!$departamentos) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'No se encontraron departamentos para la sucursal especificada o departamentos generales.']);
+        }
 
         return $this->response->setJSON($departamentos);
     }
