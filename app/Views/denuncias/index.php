@@ -281,13 +281,54 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="medio_recepcion" value="Plataforma">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalCrearDenunciaLabel">Agregar Denuncia</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-4">
+                        <!-- Sección 0: Opciones de Denuncia -->
+                        <div class="col-md-6">
+                            <label for="medio_recepcion" class="form-label">Medio de Recepción</label>
+                            <select name="medio_recepcion" id="medio_recepcion" class="form-select select2" required>
+                                <option value="" selected disabled></option>
+                                <option value="Llamada">Llamada</option>
+                                <option value="Formulario">Formulario</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Email">Email</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">¿Es anónimo?</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" checked required>
+                                    <label class="form-check-label" for="anonimo-si">Sí</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
+                                    <label class="form-check-label" for="anonimo-no">No</label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Información adicional cuando no es anónimo -->
+                        <div id="infoAdicional" class="row g-3" style="display: none;" aria-hidden="true">
+                            <div class="col-md-6">
+                                <label for="nombre_completo" class="form-label">Nombre Completo</label>
+                                <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" placeholder="Ingrese su nombre completo">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="correo_electronico" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="correo_electronico" name="correo_electronico" placeholder="Ingrese su correo electrónico">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="telefono" class="form-label">Teléfono (opcional)</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su teléfono (opcional)">
+                            </div>
+                        </div>
+                        <hr>
                         <!-- Sección 1: Información del Cliente -->
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>
@@ -361,25 +402,6 @@
                         <div class="col-md-12">
                             <label for="descripcion" class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="7"></textarea>
-                        </div>
-
-                        <!-- Sección 4: Opciones de Denuncia -->
-                        <div class="col-md-6">
-                            <label class="form-label">Anónimo</label>
-                            <div class="d-flex gap-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" required checked>
-                                    <label class="form-check-label" for="anonimo-si">
-                                        Sí
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
-                                    <label class="form-check-label" for="anonimo-no">
-                                        No
-                                    </label>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Sección 5: Archivos Adjuntos -->

@@ -14,6 +14,14 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearDenuncia = $('#modalCrearDenuncia');
 
+    $('input[name="anonimo"]').on('change', function () {
+        if ($(this).val() == '0') {
+            $('#infoAdicional').show(); // Mostrar los campos adicionales si no es anónimo
+        } else {
+            $('#infoAdicional').hide(); // Ocultar los campos adicionales si es anónimo
+        }
+    });
+
     // Inicializar select2 en los selects dentro del modal
     $('#modalCrearDenuncia .select2').select2({
         placeholder: 'Seleccione una opción',
@@ -389,7 +397,7 @@ $(function () {
                 $.get(`${Server}categorias/listarCategorias`),
                 $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
                 $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
-                $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`), // <-- Añadido aquí
+                $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`),
                 $.get(`${Server}denuncias/detalle/${row.id}`),
                 $.get(`${Server}denuncias/obtenerEstados`),
                 $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
@@ -400,7 +408,7 @@ $(function () {
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
                     subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
-                    departamentos: departamentos[0].map(departamento => ({ id: departamento.id, name: departamento.nombre })), // <-- Añadido aquí
+                    departamentos: departamentos[0].map(departamento => ({ id: departamento.id, name: departamento.nombre })),
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
                     anexos: anexos[0], // Añadir los anexos a los datos
                     id_cliente: row.id_cliente,
@@ -411,7 +419,7 @@ $(function () {
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
                     departamento_nombre: row.departamento_nombre,
-                    id_departamento: row.id_departamento, // <-- Añadido aquí
+                    id_departamento: row.id_departamento,
                     fecha_incidente: denunciaDetalles[0].fecha_incidente,
                     como_se_entero: denunciaDetalles[0].como_se_entero,
                     area_incidente: denunciaDetalles[0].area_incidente,

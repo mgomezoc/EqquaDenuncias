@@ -14,6 +14,14 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearDenuncia = $('#modalCrearDenuncia');
 
+    $('input[name="anonimo"]').on('change', function () {
+        if ($(this).val() == '0') {
+            $('#infoAdicional').show(); // Mostrar los campos adicionales si no es anónimo
+        } else {
+            $('#infoAdicional').hide(); // Ocultar los campos adicionales si es anónimo
+        }
+    });
+
     // Inicializar select2 en los selects dentro del modal
     $('#modalCrearDenuncia .select2').select2({
         placeholder: 'Seleccione una opción',
@@ -149,12 +157,16 @@ $(function () {
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
 
-        // Reinicializar select2
-        $form.find('.select2').val(null).trigger('change'); // <--- Asegúrate de reinicializar los select2
+        // Reinicializar todos los select2
+        $form.find('.select2').val(null).trigger('change');
 
         // Resetear los archivos subidos en Dropzone
         if (dropzones['archivosAdjuntos']) {
+            // Llama a removeAllFiles y establece el parámetro en true para asegurarte de eliminar completamente los archivos
             dropzones['archivosAdjuntos'].removeAllFiles(true);
+
+            // También restablece el estado visual del contenedor de Dropzone (por si acaso)
+            dropzones['archivosAdjuntos'].element.classList.remove('dz-started');
         }
     });
 
@@ -366,6 +378,10 @@ $(function () {
                 formatter: operateFormatterEstado
             },
             {
+                field: 'medio_recepcion',
+                title: 'Medio de Recepcion'
+            },
+            {
                 field: 'fecha_hora_reporte',
                 title: 'Fecha'
             },
@@ -394,20 +410,23 @@ $(function () {
                 $.get(`${Server}categorias/listarCategorias`),
                 $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
                 $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
+                $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`),
                 $.get(`${Server}denuncias/detalle/${row.id}`),
                 $.get(`${Server}denuncias/obtenerEstados`),
-                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados, anexos) {
+                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`)
+            ).done(function (clientes, categorias, subcategorias, sucursales, departamentos, denunciaDetalles, estados, anexos) {
                 const data = {
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
                     subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
+                    departamentos: departamentos[0].map(departamento => ({ id: departamento.id, name: departamento.nombre })),
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
-                    anexos: anexos[0], // Añadir los anexos a los datos
+                    anexos: anexos[0],
                     id_cliente: row.id_cliente,
                     id_sucursal: row.id_sucursal,
+                    id_departamento: row.id_departamento,
                     categoria: row.categoria,
                     subcategoria: row.subcategoria,
                     estado_actual: row.estado_actual,
@@ -537,6 +556,12 @@ $(function () {
                 $detail.find(`#id_cliente-${row.id}`).change(function () {
                     const clienteId = $(this).val();
                     loadSucursales(clienteId, `#id_sucursal-${row.id}`);
+                });
+
+                // Cargar dinámicamente los departamentos según la sucursal seleccionada
+                $detail.find(`#id_departamento-${row.id}`).change(function () {
+                    const sucursalId = $(this).val();
+                    loadDepartamentos(sucursalId, `#id_departamento-${row.id}`); // <-- Añadido aquí
                 });
 
                 // Inicializar Dropzone para subir nuevos archivos
