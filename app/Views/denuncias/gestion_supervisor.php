@@ -23,6 +23,7 @@
                         <th>Subcategoría</th>
                         <th>Departamento</th>
                         <th>Estado</th>
+                        <th>medio_recepcion</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
@@ -101,7 +102,7 @@
                 <div class="col-md-4">
                     <label for="como_se_entero-{{id}}" class="form-label">¿Cómo se Enteró?</label>
                     <select name="como_se_entero" id="como_se_entero-{{id}}" class="form-select select2" required>
-                        {{{selectOptions como_se_entero como_se_entero_actual}}}
+                        {{{selectOptions comboComoSeEntero como_se_entero}}}
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -116,7 +117,13 @@
                     <label for="descripcion-{{id}}" class="form-label">Descripción</label>
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" required>{{descripcion}}</textarea>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label for="medio_recepcion-{{id}}" class="form-label">Medio de Recepción</label>
+                    <select name="medio_recepcion" id="medio_recepcion-{{id}}" class="form-select select2" required>
+                        {{{selectOptions comboMedioRecepcion medio_recepcion}}}
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Anónimo</label>
                     <div class="d-flex align-items-center">
                         {{#ifCond anonimo '==' '1'}}
@@ -126,13 +133,30 @@
                         {{/ifCond}}
                     </div>
                 </div>
+                <hr>
+                {{#if esAnonimo}}
+                    <div class="col-md-4">
+                        <label for="nombre_completo-{{id}}" class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" id="nombre_completo-{{id}}" name="nombre_completo" value="{{nombre_completo}}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="correo_electronico-{{id}}" class="form-label">Correo Electrónico</label>
+                        <input type="text" class="form-control" id="correo_electronico-{{id}}" name="correo_electronico" value="{{correo_electronico}}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="telefono-{{id}}" class="form-label">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono-{{id}}" name="telefono" value="{{telefono}}" readonly>
+                    </div>
+                {{/if}}
 
                 <!-- Botón de Actualizar -->
-                <div class="mt-5">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Actualizar
-                    </button>
-                </div>
+                {{#if esEditable}}
+                    <div class="mt-5">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Actualizar
+                        </button>
+                    </div>
+                {{/if}}
             </div>
         </form>
         <!-- Formulario para actualizar imágenes -->
@@ -166,24 +190,28 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Sección para Subir Nuevos Archivos -->
-                    <div class="col-md-6">
-                        <div class="card border-light mb-3">
-                            <div class="card-header text-center bg-light">
-                                <h5 class="mb-0">Subir Nuevos Archivos</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <div id="dropzoneArchivos-{{id}}" class="dropzone mb-3"></div>
-                                <small class="text-muted d-block">Solo si adjuntas nuevos archivos, estos se agregarán a la denuncia.</small>
+                    {{#if esEditable}}
+                        <!-- Sección para Subir Nuevos Archivos -->
+                        <div class="col-md-6">
+                            <div class="card border-light mb-3">
+                                <div class="card-header text-center bg-light">
+                                    <h5 class="mb-0">Subir Nuevos Archivos</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div id="dropzoneArchivos-{{id}}" class="dropzone mb-3"></div>
+                                    <small class="text-muted d-block">Solo si adjuntas nuevos archivos, estos se agregarán a la denuncia.</small>
+                                </div>
                             </div>
                         </div>
+                    {{/if}}
+                </div>
+                {{#if esEditable}}
+                    <div class="mt-4 text-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Actualizar Archivos
+                        </button>
                     </div>
-                </div>
-                <div class="mt-4 text-center">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Actualizar Archivos
-                    </button>
-                </div>
+                {{/if}}
             </div>
         </form>
     </div>

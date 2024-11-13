@@ -8,7 +8,7 @@
 <div class="card custom-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Departamentos</span>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearDepartamento">
+        <button id="btnCrearDepartamento" class="btn btn-primary">
             <i class="fa fa-plus"></i> Agregar Departamento
         </button>
     </div>
@@ -54,18 +54,18 @@
                         <label for="nombre" class="form-label">Nombre</label>
                         <input type="text" class="form-control" id="nombre" name="nombre" required>
                     </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="es_general" name="es_general">
-                        <label class="form-check-label" for="es_general">Es general (Sin cliente ni sucursal)</label>
-                    </div>
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
                         <div class="d-flex flex-column-reverse">
-                            <select class="form-select select2" id="id_cliente" name="id_cliente" style="width: 100%;">
+                            <select class="form-select select2" id="id_cliente" name="id_cliente" style="width: 100%;" required>
                                 <option value="">Seleccione un cliente</option>
                                 <!-- Opciones dinámicas desde el JS -->
                             </select>
                         </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="es_general" name="es_general">
+                        <label class="form-check-label" for="es_general">Es general (Sin sucursal)</label>
                     </div>
                     <div class="mb-3">
                         <label for="id_sucursal" class="form-label">Sucursal</label>
@@ -101,5 +101,5 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
-<script src="<?= base_url('assets/js/departamentos.js') ?>"></script>
+<script src="<?= base_url('assets/js/departamentos.js') ?>?v=1.0.1"></script>
 <?= $this->endSection() ?>

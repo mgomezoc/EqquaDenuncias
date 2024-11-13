@@ -23,20 +23,15 @@ $(function () {
     $esGeneral.on('change', function () {
         const isGeneral = $esGeneral.is(':checked');
 
-        // Deshabilitar y limpiar Cliente y Sucursal si "Es general" está marcado
-        $idCliente.prop('disabled', isGeneral);
+        // Deshabilitar y limpiar Sucursal si "Es general" está marcado
         $idSucursal.prop('disabled', isGeneral);
 
         if (isGeneral) {
-            $idCliente.val(null).trigger('change'); // Limpiar selección de cliente
             $idSucursal.val(null).trigger('change'); // Limpiar selección de sucursal
 
             // Ocultar mensajes de error de validación si existen
-            $formCrearDepartamento.validate().element($idCliente);
             $formCrearDepartamento.validate().element($idSucursal);
         } else {
-            // Habilitar Cliente y Sucursal si "Es general" está desmarcado
-            $idCliente.prop('disabled', false);
             $idSucursal.prop('disabled', false);
         }
     });
@@ -95,9 +90,11 @@ $(function () {
     }
 
     // Cargar sucursales al seleccionar un cliente
-    $idCliente.on('change', function () {
-        const clienteId = $(this).val();
-        loadSucursales(clienteId);
+    $idCliente.on('change', function (e, isChange) {
+        if (!isChange) {
+            const clienteId = $(this).val();
+            loadSucursales(clienteId);
+        }
     });
 
     // Función para cargar clientes
@@ -131,12 +128,10 @@ $(function () {
                 $modalCrearDepartamento.modal('show');
                 $('#formCrearDepartamento input[name="id"]').val(data.id);
                 $('#formCrearDepartamento input[name="nombre"]').val(data.nombre);
-                $('#id_cliente').val(data.id_cliente).trigger('change');
+                $('#id_cliente').val(data.id_cliente).trigger('change', true);
 
                 // Cargar sucursales una vez que el cliente está seleccionado
-                loadSucursales(data.id_cliente, data.id_sucursal);
-
-                $('#id_sucursal').val(data.id_sucursal).trigger('change');
+                loadSucursales(data.id_cliente, data.id_sucursal, data.id_sucursal);
 
                 if (data.es_general == '1') {
                     $esGeneral.prop('checked', true);
@@ -151,7 +146,11 @@ $(function () {
     });
 
     // Función para cargar las sucursales
-    function loadSucursales(clienteId, id_sucursal = null) {
+    function loadSucursales(clienteId, id_sucursal = null, selected = null) {
+        if (!clienteId) {
+            return;
+        }
+
         $.ajax({
             url: `${Server}departamentos/listarSucursales/${clienteId}`,
             method: 'GET',
@@ -162,7 +161,12 @@ $(function () {
                     const selected = sucursal.id == id_sucursal ? 'selected' : '';
                     options += `<option value="${sucursal.id}" ${selected}>${sucursal.nombre}</option>`;
                 });
+
                 $('#id_sucursal').html(options).trigger('change');
+
+                if (selected) {
+                    $('#id_sucursal').val(selected).trigger('change');
+                }
             },
             error: function () {
                 console.error('Error al cargar las sucursales.');
@@ -232,5 +236,11 @@ $(function () {
         // Habilita nuevamente los selects en caso de que hayan sido deshabilitados
         $idCliente.prop('disabled', false);
         $idSucursal.prop('disabled', false);
+    });
+
+    $('#btnCrearDepartamento').on('click', function () {
+        $('#formCrearDepartamento input[name="id"]').val(null);
+
+        $modalCrearDepartamento.modal('show');
     });
 });

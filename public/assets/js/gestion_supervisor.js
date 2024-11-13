@@ -223,6 +223,10 @@ $(function () {
                 formatter: operateFormatterEstado
             },
             {
+                field: 'medio_recepcion',
+                title: 'Medio de Recepcion'
+            },
+            {
                 field: 'fecha_hora_reporte',
                 title: 'Fecha'
             },
@@ -239,11 +243,19 @@ $(function () {
         detailView: true,
         onExpandRow: function (index, row, $detail) {
             $detail.html('Cargando...');
-            const como_se_entero = [
+            const comboComoSeEntero = [
                 { id: 'Fui víctima', name: 'Fui víctima' },
                 { id: 'Fui testigo', name: 'Fui testigo' },
                 { id: 'Estaba involucrado', name: 'Estaba involucrado' },
                 { id: 'Otro', name: 'Otro' }
+            ];
+
+            const comboMedioRecepcion = [
+                { id: 'Llamada', name: 'Llamada' },
+                { id: 'Formulario', name: 'Formulario' },
+                { id: 'WhatsApp', name: 'WhatsApp' },
+                { id: 'Email', name: 'Email' },
+                { id: 'Plataforma Pública', name: 'Plataforma Pública' }
             ];
 
             $.when(
@@ -254,7 +266,12 @@ $(function () {
                 $.get(`${Server}denuncias/detalle/${row.id}`),
                 $.get(`${Server}denuncias/obtenerEstados`),
                 $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetalles, estados, anexos) {
+            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetallesXHR, estados, anexos) {
+                const denunciaDetalles = denunciaDetallesXHR[0];
+                const estatusEditables = ['Recepción', 'Clasificada', 'Revisada por Calidad'];
+                const esEditable = estatusEditables.indexOf(denunciaDetalles.estado_nombre) !== -1;
+                const esAnonimo = denunciaDetalles.anonimo === '0';
+
                 const data = {
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
@@ -262,7 +279,7 @@ $(function () {
                     subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
-                    anexos: anexos[0], // Añadir los anexos a los datos
+                    anexos: anexos[0],
                     id_cliente: row.id_cliente,
                     id_sucursal: row.id_sucursal,
                     categoria: row.categoria,
@@ -270,18 +287,31 @@ $(function () {
                     estado_actual: row.estado_actual,
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
+                    esAnonimo: esAnonimo,
+                    nombre_completo: denunciaDetalles.nombre_completo,
+                    correo_electronico: denunciaDetalles.correo_electronico,
+                    telefono: denunciaDetalles.telefono,
                     departamento_nombre: row.departamento_nombre,
-                    fecha_incidente: denunciaDetalles[0].fecha_incidente,
-                    como_se_entero: denunciaDetalles[0].como_se_entero,
-                    area_incidente: denunciaDetalles[0].area_incidente,
-                    denunciar_a_alguien: denunciaDetalles[0].denunciar_a_alguien,
-                    como_se_entero: como_se_entero
+                    fecha_incidente: denunciaDetalles.fecha_incidente,
+                    como_se_entero: denunciaDetalles.como_se_entero,
+                    area_incidente: denunciaDetalles.area_incidente,
+                    denunciar_a_alguien: denunciaDetalles.denunciar_a_alguien,
+                    medio_recepcion: denunciaDetalles.medio_recepcion,
+                    comboComoSeEntero: comboComoSeEntero,
+                    comboMedioRecepcion: comboMedioRecepcion,
+                    esEditable: esEditable
                 };
+
+                console.log(data);
 
                 const renderData = Handlebars.compile(tplDetalleTabla)(data);
 
                 // Renderizar y mostrar el detalle
                 $detail.html(renderData);
+
+                if (!esEditable) {
+                    $detail.find('input, select, textarea, button').prop('disabled', true);
+                }
 
                 // Inicializar select2 para los nuevos selectores
                 $detail.find('select').select2();

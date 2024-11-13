@@ -25,7 +25,7 @@
                         <th>Categoría</th>
                         <th>Subcategoría</th>
                         <th>Departamento</th>
-                        <th data-align="center">Estado</th>
+                        <th>Estado</th>
                         <th>medio_recepcion</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
@@ -276,7 +276,7 @@
     </div>
 </div>
 
-<!-- Modal Crear Denuncia Mejorado -->
+<!-- Modal Crear Denuncia -->
 <div class="modal fade" id="modalCrearDenuncia" tabindex="-1" aria-labelledby="modalCrearDenunciaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
