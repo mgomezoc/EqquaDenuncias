@@ -25,6 +25,11 @@ function initCharts() {
         options: {
             maintainAspectRatio: false,
             aspectRatio: 2,
+            layout: {
+                padding: {
+                    top: 20 // Añadir un relleno superior para evitar el corte
+                }
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -51,7 +56,7 @@ function initCharts() {
                     afterDataLimits: axis => {
                         try {
                             const maxValue = Math.max(...mesDenunciasChart.data.datasets[0].data);
-                            axis.max = maxValue + 1;
+                            axis.max = maxValue + 2; // Incrementa el valor máximo para añadir espacio adicional
                         } catch {
                             console.log('No hay datos para mostrar');
                         }
