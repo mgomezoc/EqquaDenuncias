@@ -559,7 +559,7 @@ function initCharts() {
 // Cargar datos con AJAX
 function loadDashboardData(startDate = null, endDate = null, sucursal = '', departamento = '', anonimo = '', cliente = '') {
     $.ajax({
-        url: `${Server}dashboard/filtrar`,
+        url: `${Server}cliente/dashboard/filtrar`,
         method: 'POST',
         data: {
             start_date: startDate,
@@ -753,7 +753,7 @@ $(document).ready(function () {
         // Limpiar y actualizar select2
         $('#sucursalFilter').val('').trigger('change');
         $('#departamentoFilter').val('').trigger('change');
-        $('#anonimoFilter').val('').trigger('change');
+        $('#anonimoFilter').val('1381609').trigger('change');
 
         // Recargar los datos con filtros vacíos (para mostrar toda la información)
         loadDashboardData(null, null, null, null, '1381609', null);

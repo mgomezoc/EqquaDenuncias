@@ -4,22 +4,24 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class DashboardModel extends Model
+class DashboardClienteModel extends Model
 {
     protected $table = 'denuncias';
 
-    public function getSucursales()
+    public function getSucursales($id_cliente)
     {
         return $this->db->table('sucursales')
             ->select('id, nombre')
+            ->where('id_cliente', $id_cliente)
             ->get()
             ->getResultArray();
     }
 
-    public function getDepartamentos()
+    public function getDepartamentos($id_cliente)
     {
         return $this->db->table('departamentos')
             ->select('id, nombre')
+            ->where('id_cliente', $id_cliente)
             ->get()
             ->getResultArray();
     }
@@ -239,6 +241,10 @@ class DashboardModel extends Model
      */
     private function applyFilters(&$builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente = null)
     {
+        $estadosPermitidos = [4, 5, 6];
+        $builder->where('denuncias.id_cliente', $cliente);
+        $builder->whereIn('denuncias.estado_actual', $estadosPermitidos);
+
         if ($startDate) {
             $builder->where('denuncias.created_at >=', $startDate);
         }
@@ -253,9 +259,6 @@ class DashboardModel extends Model
         }
         if ($anonimo !== '1381609') {
             $builder->where('denuncias.anonimo', $anonimo);
-        }
-        if (!empty($cliente)) {
-            $builder->where('denuncias.id_cliente', $cliente);
         }
     }
 }

@@ -6,380 +6,225 @@
 <?php echo view('partials/_pageHeader', ['controlador' => 'Dashboard', 'vista' => 'Dashboard']); ?>
 
 <div class="container mt-5">
-
     <!-- Filtro de fechas -->
-    <form action="<?= base_url('cliente/dashboard/filtrar') ?>" method="post" class="mb-4" id="dateFilterForm">
-        <div class="row">
-            <div class="col-md-4">
+    <form action="<?= base_url('dashboard/filtrar') ?>" method="post" class="mb-4" id="dateFilterForm">
+        <div class="row g-3">
+            <!-- Filtros de Fecha -->
+            <div class="col-md-2">
                 <input type="text" id="startDate" name="start_date" class="form-control" placeholder="Fecha inicio" value="<?= $startDate ?? '' ?>">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <input type="text" id="endDate" name="end_date" class="form-control" placeholder="Fecha fin" value="<?= $endDate ?? '' ?>">
             </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100" id="filterButton">Filtrar</button>
+            <!-- Filtro de Sucursal -->
+            <div class="col-md-2">
+                <select id="sucursalFilter" name="sucursal" class="form-select select2">
+                    <option selected disabled>Sucursal</option>
+                    <option value="">TODAS</option>
+
+                    <?php foreach ($sucursales as $sucursal): ?>
+                        <option value="<?= $sucursal['id'] ?>"><?= $sucursal['nombre'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <!-- Filtro de Departamento -->
+            <div class="col-md-2">
+                <select id="departamentoFilter" name="departamento" class="form-select select2">
+                    <option selected disabled>Departamento</option>
+                    <option value="">TODOS</option>
+                    <?php foreach ($departamentos as $departamento): ?>
+                        <option value="<?= $departamento['id'] ?>"><?= $departamento['nombre'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <!-- Filtro de Anónimo -->
+            <div class="col-md-2">
+                <select id="anonimoFilter" name="anonimo" class="form-select select2">
+                    <option selected disabled>Anónimo</option>
+                    <option value="1">Sí</option>
+                    <option value="0">No</option>
+                    <option value="1381609">TODOS</option>
+
+                </select>
+            </div>
+            <!-- Botón de Filtrar -->
+            <div class="col-md-1">
+                <button type="submit" id="filterButton" class="btn btn-primary w-100">Filtrar</button>
+            </div>
+            <!-- Botón de Reset -->
+            <div class="col-md-1">
+                <button type="button" id="resetButton" class="btn btn-secondary w-100">Reset</button>
             </div>
         </div>
     </form>
 
-    <div class="row">
-        <!-- Gráfico de Estatus de Denuncias -->
-        <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Estatus de Denuncias</h4>
-                <canvas id="chartEstatusDenuncias"></canvas>
-                <p class="text-center mt-3">
-                    Basado en un total de <?= $totalEstatus ?> denuncias.
-                    <br>
-                    Periodo: <?= $startDate ?? 'Mes actual' ?> - <?= $endDate ?? 'Hoy' ?>
-                </p>
+    <!-- Contadores de denuncias -->
+    <div class="card custom-card overflow-hidden">
+        <div class="row">
+            <!-- Denuncias Nuevas -->
+            <div class="col-lg-4 border-end">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <p class="mb-0 fw-semibold text-muted">Denuncias Nuevas</p>
+                            <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasNuevas"><?= $totalDenunciasNuevas ?></h3>
+                        </div>
+                        <div class="col mt-3 col-auto">
+                            <span class="avatar text-primary p-4 bg-primary-transparent fs-24 rounded-circle text-center"
+                                data-bs-toggle="tooltip"
+                                title="Contabiliza denuncias en estatus de: Recepción">
+                                <i class="fa fa-folder-plus"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Gráfico de Denuncias por Departamento -->
-        <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Denuncias por Departamento</h4>
-                <canvas id="chartDeptosDenuncias"></canvas>
-                <p class="text-center mt-3">
-                    Basado en un total de <?= $totalDeptos ?> denuncias.
-                    <br>
-                    Periodo: <?= $startDate ?? 'Mes actual' ?> - <?= $endDate ?? 'Hoy' ?>
-                </p>
+            <!-- Denuncias en Proceso -->
+            <div class="col-lg-4 border-end">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <p class="mb-0 fw-semibold text-muted">Denuncias en Proceso</p>
+                            <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasProceso"><?= $totalDenunciasProceso ?></h3>
+                        </div>
+                        <div class="col mt-3 col-auto">
+                            <span class="avatar text-secondary p-4 bg-secondary-transparent fs-24 rounded-circle text-center"
+                                data-bs-toggle="tooltip"
+                                title="Contabiliza denuncias en estatus de: Clasificada, Revisada por Calidad, Liberada al Cliente, En Revisión por Cliente">
+                                <i class="fa fa-sync"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Gráfico de Conocimiento del Incidente -->
-        <div class="col-md-6">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Conocimiento del Incidente</h4>
-                <canvas id="chartConocimiento"></canvas>
-                <p class="text-center mt-3">
-                    Basado en un total de <?= $totalConocimiento ?> denuncias.
-                    <br>
-                    Periodo: <?= $startDate ?? 'Mes actual' ?> - <?= $endDate ?? 'Hoy' ?>
-                </p>
-            </div>
-        </div>
-
-        <!-- Gráfico de Denuncias por Sucursal -->
-        <div class="col-md-12">
-            <div class="card mb-4 p-4 shadow-sm">
-                <h4 class="text-center mb-3">Denuncias por Sucursal</h4>
-                <canvas id="chartSucursalesDenuncias"></canvas>
-                <p class="text-center mt-3">
-                    Basado en un total de <?= $totalSucursales ?> denuncias.
-                    <br>
-                    Periodo: <?= $startDate ?? 'Mes actual' ?> - <?= $endDate ?? 'Hoy' ?>
-                </p>
+            <!-- Denuncias Recibidas -->
+            <div class="col-lg-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <p class="mb-0 fw-semibold text-muted">Denuncias Recibidas</p>
+                            <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasRecibidas"><?= $totalDenunciasRecibidas ?></h3>
+                        </div>
+                        <div class="col mt-3 col-auto">
+                            <span class="avatar text-danger p-4 bg-danger-transparent fs-24 rounded-circle text-center"
+                                data-bs-toggle="tooltip"
+                                title="Contabiliza todas las denuncias en estatus: Recepción, Clasificada, Revisada por Calidad, Liberada al Cliente, En Revisión por Cliente, Cerrada">
+                                <i class="fa fa-inbox"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+
+    <!-- Gráficos -->
+    <div class="row g-3">
+        <!-- Gráfico de Mes de recepción de denuncia -->
+        <div class="col-md-12">
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Mes de recepción de denuncia</div>
+                    <div class="ms-auto">
+                        <a href="javascript:void(0);" class="btn btn-sm border-0 text-dark fs-13 fw-semibold">
+                            Total: <span id="totalMesDenuncias"></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartMesDenuncias"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Estatus de Denuncias</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartEstatusDenuncias"></canvas>
+                    <p class="text-center mt-3" id="totalEstatus"></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Denuncias Anónimas</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDenunciasAnonimas"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Tipo de Denunciante</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDenunciante"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card custom-card">
+                <div class="card-header border-bottom d-block d-sm-flex">
+                    <div class="card-title mb-3 mb-sm-0">Conocimiento del Incidente</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartConocimiento"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title mb-3 mb-sm-0">Denuncias por Departamento</div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tableDenunciasDepartamento" class="table table-eqqua table-sm table-striped table-bordered">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title mb-3 mb-sm-0">Denuncias por Sucursal</div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartSucursalesDenuncias" style="min-height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<!-- Incluir Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<!-- Incluir Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.22.1/locale/bootstrap-table-es-MX.min.js"></script>
+<script src="<?= base_url('assets/js/bootstrap-table-config.js') ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<!-- Scripts de Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Agregar plugin de Chart.js Data Labels -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-<script>
-    // Configuración de Flatpickr para los campos de fecha
-    flatpickr("#startDate", {
-        dateFormat: "Y-m-d",
-        defaultDate: "<?= $startDate ?? 'today' ?>",
-        locale: "es"
-    });
-
-    flatpickr("#endDate", {
-        dateFormat: "Y-m-d",
-        defaultDate: "<?= $endDate ?? 'today' ?>",
-        locale: "es"
-    });
-
-    // Validación de las fechas antes de enviar el formulario
-    document.getElementById("dateFilterForm").addEventListener("submit", function(e) {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-
-        if (!startDate || !endDate) {
-            e.preventDefault();
-            alert('Por favor selecciona ambas fechas de inicio y fin.');
-        } else if (new Date(startDate) > new Date(endDate)) {
-            e.preventDefault();
-            alert('La fecha de inicio no puede ser mayor que la fecha de fin.');
-        }
-    });
-
-    const totalDenuncias = (dataset) => dataset.reduce((a, b) => a + b, 0);
-
-    // Paleta de colores personalizada
-    const colors = ['#f4b400', '#db4437', '#0f9d58', '#4285f4', '#ff6d00', '#34a853', '#ffeb3b', '#6a5acd', '#d81b60'];
-
-    // Gráfico de Estatus de Denuncias
-    const ctxEstatus = document.getElementById('chartEstatusDenuncias').getContext('2d');
-    const estatusChart = new Chart(ctxEstatus, {
-        type: 'doughnut',
-        data: {
-            labels: <?= json_encode(array_column($estatusDenuncias, 'estatus')) ?>,
-            datasets: [{
-                data: <?= json_encode(array_column($estatusDenuncias, 'total')) ?>,
-                backgroundColor: colors
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left', // Alinear leyenda a la izquierda
-                    labels: {
-                        font: {
-                            size: 14
-                        },
-                        generateLabels: function(chart) {
-                            const dataset = chart.data.datasets[0];
-                            const total = totalDenuncias(dataset.data);
-                            return chart.data.labels.map((label, i) => ({
-                                text: `${label}: ${dataset.data[i]} (${((dataset.data[i] / total) * 100).toFixed(2)}%)`,
-                                fillStyle: dataset.backgroundColor[i],
-                                boxWidth: 20 // Tamaño de las cajas de color
-                            }));
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = tooltipItem.raw;
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff', // Color de los porcentajes dentro del gráfico
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`; // Muestra solo el porcentaje
-                    },
-                    anchor: 'end',
-                    align: 'start',
-                    offset: 10,
-                    font: {
-                        weight: 'bold',
-                        size: 12
-                    }
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
-
-    // Gráfico de Denuncias por Departamento
-    const ctxDepto = document.getElementById('chartDeptosDenuncias').getContext('2d');
-    const deptoChart = new Chart(ctxDepto, {
-        type: 'pie',
-        data: {
-            labels: <?= json_encode(array_column($denunciasPorDepto, 'departamento')) ?>,
-            datasets: [{
-                data: <?= json_encode(array_column($denunciasPorDepto, 'total')) ?>,
-                backgroundColor: colors
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left', // Alinear leyenda a la izquierda
-                    labels: {
-                        font: {
-                            size: 14
-                        },
-                        generateLabels: function(chart) {
-                            const dataset = chart.data.datasets[0];
-                            const total = totalDenuncias(dataset.data);
-                            return chart.data.labels.map((label, i) => ({
-                                text: `${label}: ${dataset.data[i]} (${((dataset.data[i] / total) * 100).toFixed(2)}%)`,
-                                fillStyle: dataset.backgroundColor[i],
-                                boxWidth: 20
-                            }));
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = tooltipItem.raw;
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    anchor: 'end',
-                    align: 'start',
-                    offset: 10,
-                    font: {
-                        weight: 'bold',
-                        size: 12
-                    }
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
-
-    // Gráfico de Conocimiento del Incidente
-    const ctxConocimiento = document.getElementById('chartConocimiento').getContext('2d');
-    const conocimientoChart = new Chart(ctxConocimiento, {
-        type: 'doughnut',
-        data: {
-            labels: <?= json_encode(array_column($denunciasPorConocimiento, 'como_se_entero')) ?>,
-            datasets: [{
-                data: <?= json_encode(array_column($denunciasPorConocimiento, 'total')) ?>,
-                backgroundColor: colors
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'left', // Alinear leyenda a la izquierda
-                    labels: {
-                        font: {
-                            size: 14
-                        },
-                        generateLabels: function(chart) {
-                            const dataset = chart.data.datasets[0];
-                            const total = totalDenuncias(dataset.data);
-                            return chart.data.labels.map((label, i) => ({
-                                text: `${label}: ${dataset.data[i]} (${((dataset.data[i] / total) * 100).toFixed(2)}%)`,
-                                fillStyle: dataset.backgroundColor[i],
-                                boxWidth: 20
-                            }));
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = tooltipItem.raw;
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    anchor: 'end',
-                    align: 'start',
-                    offset: 10,
-                    font: {
-                        weight: 'bold',
-                        size: 12
-                    }
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
-
-    // Gráfico de Denuncias por Sucursal
-    const ctxSucursales = document.getElementById('chartSucursalesDenuncias').getContext('2d');
-    const sucursalCount = <?= count($denunciasPorSucursal) ?>;
-    const sucursalColors = colors.slice(0, sucursalCount); // Limitar la paleta de colores según la cantidad de sucursales
-
-    const sucursalesChart = new Chart(ctxSucursales, {
-        type: 'bar',
-        data: {
-            labels: <?= json_encode(array_column($denunciasPorSucursal, 'nombre')) ?>,
-            datasets: [{
-                label: 'Denuncias',
-                data: <?= json_encode(array_column($denunciasPorSucursal, 'total')) ?>,
-                backgroundColor: sucursalColors, // Color personalizado para cada sucursal
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                x: {
-                    grid: {
-                        display: false // Ocultar la cuadrícula en el eje X
-                    },
-                    title: {
-                        display: true,
-                        text: 'Sucursales',
-                        font: {
-                            size: 16
-                        }
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        display: false // Ocultar la cuadrícula en el eje Y
-                    },
-                    title: {
-                        display: true,
-                        text: 'Número de Denuncias',
-                        font: {
-                            size: 16
-                        }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top', // Leyenda en la parte superior
-                    labels: {
-                        font: {
-                            size: 14
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            const value = tooltipItem.raw;
-                            return `Denuncias: ${value}`; // Mostrar el número de denuncias en el tooltip
-                        }
-                    }
-                },
-                // Habilitar datalabels para mostrar los totales en la parte superior
-                datalabels: {
-                    anchor: 'end',
-                    align: 'start',
-                    color: '#000', // Color del texto
-                    font: {
-                        weight: 'bold',
-                        size: 12
-                    },
-                    formatter: (value) => value, // Mostrar el valor como etiqueta
-                }
-            }
-        },
-        plugins: [ChartDataLabels] // Activar el plugin de datalabels
-    });
-</script>
+<script src="<?= base_url('assets/js/dashboard_cliente.js') ?>"></script>
 <?= $this->endSection() ?>
