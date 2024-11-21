@@ -8,7 +8,7 @@ Handlebars.registerHelper('select', function (value, options) {
 });
 
 Handlebars.registerHelper('selectOptions', function (options, selected) {
-    var html = '';
+    var html = `<option value="" selected disabled>Selecciona una opcion</option>`;
 
     // Verificar si options es undefined, null, o no es un array
     if (!Array.isArray(options)) {
@@ -50,7 +50,23 @@ Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
     }
 });
 
-$(document).ready(function () {});
+$(document).ready(function () {
+    // Obtener la URL actual
+    var currentUrl = window.location.href;
+
+    // Buscar todos los enlaces del menú
+    $('.main-menu .side-menu__item').each(function () {
+        var linkUrl = $(this).attr('href'); // URL del enlace del menú
+
+        // Comprobar si la URL actual contiene la URL del enlace
+        if (currentUrl.includes(linkUrl)) {
+            // Remover la clase 'active' de otros elementos (por seguridad)
+            $('.main-menu .side-menu__item').removeClass('active');
+            // Agregar la clase 'active' al enlace actual
+            $(this).addClass('active');
+        }
+    });
+});
 
 function initSelect2() {
     $('.select2').select2({

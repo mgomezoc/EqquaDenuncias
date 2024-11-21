@@ -45,6 +45,7 @@
                                 <option value="Colaborador">Colaborador</option>
                                 <option value="Proveedor">Proveedor</option>
                                 <option value="Cliente">Cliente</option>
+                                <option value="No se">No se</option>
                             </select>
                         </div>
                         <div class="col-md-6">

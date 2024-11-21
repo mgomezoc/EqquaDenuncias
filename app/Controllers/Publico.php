@@ -77,8 +77,6 @@ class Publico extends BaseController
             'id_cliente' => $this->request->getPost('id_cliente'),
             'id_sucursal' => $this->request->getPost('id_sucursal'),
             'tipo_denunciante' => $anonimo ? 'Anonimo' : 'No Anonimo',
-            'categoria' => $this->request->getPost('categoria'),
-            'subcategoria' => $this->request->getPost('subcategoria'),
             'id_departamento' => $this->request->getPost('id_departamento'),
             'anonimo' => $anonimo,
             'nombre_completo' => $nombre_completo,

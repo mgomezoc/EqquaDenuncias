@@ -60,24 +60,6 @@
             </div>
 
             <div class="col-md-6">
-                <label for="categoria" class="form-label">Categoría <span class="text-danger">*</span></label>
-                <select class="form-select select2" id="categoria" name="categoria" required>
-                    <option value="">Seleccione una categoría</option>
-                    <?php foreach ($categorias as $categoria): ?>
-                        <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Subcategoría y Departamento -->
-            <div class="col-md-6">
-                <label for="subcategoria" class="form-label">Subcategoría <span class="text-danger">*</span></label>
-                <select class="form-select select2" id="subcategoria" name="subcategoria" required>
-                    <option value="">Seleccione una subcategoría</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
                 <label for="id_departamento" class="form-label">Departamento</label>
                 <select class="form-select select2" id="id_departamento" name="id_departamento">
                     <option value="">Seleccione un departamento</option>
