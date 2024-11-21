@@ -95,5 +95,5 @@
 <script>
     var clienteId = "<?= $clienteId ?>";
 </script>
-<script src="<?= base_url('assets/js/reporte-cliente.js') ?>"></script>
+<script src="<?= base_url('assets/js/reporte-cliente.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

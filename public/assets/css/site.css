@@ -148,7 +148,8 @@ label.error {
   /* Color más oscuro para otros iconos */
 }
 /* Sobrescribir el estilo de Sparic para usar Font Awesome */
-.dropdown-toggle::after {
+.dropdown-toggle::after,
+.dropup .dropdown-toggle::after {
   display: inline-block;
   margin-inline-start: 0.5rem;
   vertical-align: 0;

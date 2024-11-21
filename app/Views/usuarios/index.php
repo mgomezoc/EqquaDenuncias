@@ -144,5 +144,5 @@
     roles = JSON.parse(roles);
     clientes = JSON.parse(clientes);
 </script>
-<script src="<?= base_url('assets/js/usuarios.js') ?>"></script>
+<script src="<?= base_url('assets/js/usuarios.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>
