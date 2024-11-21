@@ -243,6 +243,8 @@ $(function () {
         detailView: true,
         onExpandRow: function (index, row, $detail) {
             $detail.html('Cargando...');
+
+            // Opciones estáticas
             const comboComoSeEntero = [
                 { id: 'Fui víctima', name: 'Fui víctima' },
                 { id: 'Fui testigo', name: 'Fui testigo' },
@@ -258,25 +260,48 @@ $(function () {
                 { id: 'Plataforma Pública', name: 'Plataforma Pública' }
             ];
 
-            $.when(
-                $.get(`${Server}clientes/listar`),
-                $.get(`${Server}categorias/listarCategorias`),
-                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
-                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
-                $.get(`${Server}denuncias/detalle/${row.id}`),
-                $.get(`${Server}denuncias/obtenerEstados`),
-                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
-            ).done(function (clientes, categorias, subcategorias, sucursales, denunciaDetallesXHR, estados, anexos) {
+            // Construimos dinámicamente las solicitudes AJAX
+            const requests = [$.get(`${Server}clientes/listar`), $.get(`${Server}categorias/listarCategorias`), $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), $.get(`${Server}denuncias/detalle/${row.id}`), $.get(`${Server}denuncias/obtenerEstados`), $.get(`${Server}denuncias/obtenerAnexos/${row.id}`)];
+
+            // Solo agregar la llamada a listarSubcategorias si row.categoria no está vacío
+            if (row.categoria) {
+                requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
+            }
+
+            // Ejecutamos todas las solicitudes en paralelo
+            $.when(...requests).done(function (...responses) {
+                // Desestructuramos las respuestas
+                const [
+                    clientes,
+                    categorias,
+                    sucursales,
+                    denunciaDetallesXHR,
+                    estados,
+                    anexos,
+                    subcategorias = [{ 0: [] }] // Respuesta por defecto si no se llamó listarSubcategorias
+                ] = responses;
+
+                // Parseamos detalles de la denuncia
                 const denunciaDetalles = denunciaDetallesXHR[0];
+
+                // Determinamos si la denuncia es editable
                 const estatusEditables = ['Recepción', 'Clasificada', 'Revisada por Calidad'];
                 const esEditable = estatusEditables.indexOf(denunciaDetalles.estado_nombre) !== -1;
+
+                // Verificamos si es anónimo
                 const esAnonimo = denunciaDetalles.anonimo === '0';
 
+                // Mapeamos los datos para renderizarlos en el template
                 const data = {
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
-                    subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
+                    subcategorias: Array.isArray(subcategorias[0])
+                        ? subcategorias[0].map(subcategoria => ({
+                              id: subcategoria.id,
+                              name: subcategoria.nombre
+                          }))
+                        : [], // Array vacío si no se realizó la llamada
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
                     anexos: anexos[0],
@@ -304,30 +329,30 @@ $(function () {
 
                 console.log(data);
 
+                // Renderizamos los datos usando Handlebars
                 const renderData = Handlebars.compile(tplDetalleTabla)(data);
-
-                // Renderizar y mostrar el detalle
                 $detail.html(renderData);
 
+                // Si no es editable, deshabilitamos todos los campos y botones
                 if (!esEditable) {
                     $detail.find('input, select, textarea, button').prop('disabled', true);
                 }
 
-                // Inicializar select2 para los nuevos selectores
+                // Inicializamos select2 para selectores dinámicos
                 $detail.find('select').select2();
-                // Aplicar flatpickr a "Fecha del Incidente" en la edición
+
+                // Inicializamos flatpickr para los campos de fecha
                 initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
 
+                // Validamos el formulario
                 $detail.find('.formEditarDenuncia').validate({
                     errorClass: 'is-invalid',
                     validClass: 'is-valid',
                     errorElement: 'div',
                     errorPlacement: function (error, element) {
                         if (element.hasClass('select2-hidden-accessible')) {
-                            // Para campos Select2, coloca el error después del contenedor de Select2
                             error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
                         } else if (element.is(':checkbox') || element.is(':radio')) {
-                            // Para checkboxes y radios
                             error.addClass('invalid-feedback').insertAfter(element.closest('div'));
                         } else {
                             error.addClass('invalid-feedback').insertAfter(element);
@@ -348,44 +373,20 @@ $(function () {
                         }
                     },
                     rules: {
-                        id_cliente: {
-                            required: true
-                        },
-                        id_sucursal: {
-                            required: true
-                        },
-                        categoria: {
-                            required: true
-                        },
-                        subcategoria: {
-                            required: true
-                        },
-                        estado_actual: {
-                            required: true
-                        },
-                        descripcion: {
-                            required: true
-                        }
+                        id_cliente: { required: true },
+                        id_sucursal: { required: true },
+                        categoria: { required: true },
+                        subcategoria: { required: true },
+                        estado_actual: { required: true },
+                        descripcion: { required: true }
                     },
                     messages: {
-                        id_cliente: {
-                            required: 'Por favor seleccione un cliente'
-                        },
-                        id_sucursal: {
-                            required: 'Por favor seleccione una sucursal'
-                        },
-                        categoria: {
-                            required: 'Por favor seleccione una categoría'
-                        },
-                        subcategoria: {
-                            required: 'Por favor seleccione una subcategoría'
-                        },
-                        estado_actual: {
-                            required: 'Por favor seleccione un estado'
-                        },
-                        descripcion: {
-                            required: 'Por favor ingrese la descripción'
-                        }
+                        id_cliente: 'Por favor seleccione un cliente',
+                        id_sucursal: 'Por favor seleccione una sucursal',
+                        categoria: 'Por favor seleccione una categoría',
+                        subcategoria: 'Por favor seleccione una subcategoría',
+                        estado_actual: 'Por favor seleccione un estado',
+                        descripcion: 'Por favor ingrese la descripción'
                     },
                     submitHandler: function (form) {
                         const $frm = $(form);
@@ -393,7 +394,7 @@ $(function () {
 
                         loadingFormXHR($frm, true);
 
-                        // Enviar la solicitud AJAX para actualizar la denuncia
+                        // Enviamos la solicitud para actualizar la denuncia
                         $.ajax({
                             url: `${Server}denuncias/guardar`,
                             method: 'POST',
@@ -414,28 +415,24 @@ $(function () {
                     }
                 });
 
-                // Cargar dinámicamente las subcategorías según la categoría seleccionada
+                // Eventos adicionales
                 $detail.find(`#categoria-${row.id}`).change(function () {
                     const categoriaId = $(this).val();
                     loadSubcategorias(categoriaId, `#subcategoria-${row.id}`);
                 });
 
-                // Cargar dinámicamente las sucursales según el cliente seleccionado
                 $detail.find(`#id_cliente-${row.id}`).change(function () {
                     const clienteId = $(this).val();
                     loadSucursales(clienteId, `#id_sucursal-${row.id}`);
                 });
 
-                // Inicializar Dropzone para subir nuevos archivos
                 initializeDropzone(`dropzoneArchivos-${row.id}`, `formActualizarAnexos-${row.id}`);
 
-                // Manejo de la eliminación de anexos
                 $detail.on('click', '.delete-anexo', function () {
                     const anexoId = $(this).data('id');
                     eliminarAnexo(anexoId, row.id);
                 });
 
-                // Manejo del formulario de actualización de anexos
                 $detail.find(`#formActualizarAnexos-${row.id}`).submit(function (e) {
                     e.preventDefault();
                     const formData = new FormData(this);

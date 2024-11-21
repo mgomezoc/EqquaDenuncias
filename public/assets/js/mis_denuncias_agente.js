@@ -398,46 +398,81 @@ $(function () {
         detailView: true,
         onExpandRow: function (index, row, $detail) {
             $detail.html('Cargando...');
-            const como_se_entero = [
+            const comboComoSeEntero = [
                 { id: 'Fui víctima', name: 'Fui víctima' },
                 { id: 'Fui testigo', name: 'Fui testigo' },
                 { id: 'Estaba involucrado', name: 'Estaba involucrado' },
                 { id: 'Otro', name: 'Otro' }
             ];
 
-            $.when(
+            const comboMedioRecepcion = [
+                { id: 'Llamada', name: 'Llamada' },
+                { id: 'Formulario', name: 'Formulario' },
+                { id: 'WhatsApp', name: 'WhatsApp' },
+                { id: 'Email', name: 'Email' },
+                { id: 'Plataforma Pública', name: 'Plataforma Pública' }
+            ];
+
+            const requests = [
                 $.get(`${Server}clientes/listar`),
                 $.get(`${Server}categorias/listarCategorias`),
-                $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }),
                 $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
                 $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`),
                 $.get(`${Server}denuncias/detalle/${row.id}`),
                 $.get(`${Server}denuncias/obtenerEstados`),
-                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`)
-            ).done(function (clientes, categorias, subcategorias, sucursales, departamentos, denunciaDetalles, estados, anexos) {
+                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
+            ];
+
+            // Solo incluir la llamada a listarSubcategorias si row.categoria no está vacío
+            if (row.categoria) {
+                requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
+            }
+
+            $.when(...requests).done(function (...responses) {
+                const [
+                    clientes,
+                    categorias,
+                    sucursales,
+                    departamentos,
+                    denunciaDetalles,
+                    estados,
+                    anexos,
+                    subcategorias = [{ 0: [] }] // Si no se llamó listarSubcategorias, este es el valor por defecto
+                ] = responses;
+
+                const safeSubcategorias = Array.isArray(subcategorias[0]) ? subcategorias[0] : [];
+
+                const esAnonimo = row.anonimo === '0';
+
                 const data = {
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
-                    subcategorias: subcategorias[0].map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
+                    subcategorias: safeSubcategorias.map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
                     sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
                     departamentos: departamentos[0].map(departamento => ({ id: departamento.id, name: departamento.nombre })),
                     estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
                     anexos: anexos[0],
                     id_cliente: row.id_cliente,
                     id_sucursal: row.id_sucursal,
-                    id_departamento: row.id_departamento,
                     categoria: row.categoria,
                     subcategoria: row.subcategoria,
                     estado_actual: row.estado_actual,
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
+                    esAnonimo: esAnonimo,
+                    nombre_completo: row.nombre_completo,
+                    correo_electronico: row.correo_electronico,
+                    telefono: row.telefono,
                     departamento_nombre: row.departamento_nombre,
+                    id_departamento: row.id_departamento,
                     fecha_incidente: denunciaDetalles[0].fecha_incidente,
                     como_se_entero: denunciaDetalles[0].como_se_entero,
                     area_incidente: denunciaDetalles[0].area_incidente,
                     denunciar_a_alguien: denunciaDetalles[0].denunciar_a_alguien,
-                    como_se_entero: como_se_entero
+                    comboComoSeEntero: comboComoSeEntero,
+                    comboMedioRecepcion: comboMedioRecepcion,
+                    medio_recepcion: row.medio_recepcion
                 };
 
                 const renderData = Handlebars.compile(tplDetalleTabla)(data);
@@ -445,11 +480,18 @@ $(function () {
                 // Renderizar y mostrar el detalle
                 $detail.html(renderData);
 
+                // Si la denuncia está cerrada, deshabilitar los campos y ocultar el botón de actualización
+                if (row.estado_actual == 6) {
+                    $detail.find('input, select, textarea').prop('disabled', true);
+                    $detail.find('.btn-actualizar-denuncia').hide();
+                }
+
                 // Inicializar select2 para los nuevos selectores
                 $detail.find('select').select2();
                 // Aplicar flatpickr a "Fecha del Incidente" en la edición
                 initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
 
+                // Validación del formulario y configuración de eventos
                 $detail.find('.formEditarDenuncia').validate({
                     errorClass: 'is-invalid',
                     validClass: 'is-valid',
@@ -486,10 +528,7 @@ $(function () {
                         id_sucursal: {
                             required: true
                         },
-                        categoria: {
-                            required: true
-                        },
-                        subcategoria: {
+                        id_departamento: {
                             required: true
                         },
                         estado_actual: {
@@ -506,11 +545,9 @@ $(function () {
                         id_sucursal: {
                             required: 'Por favor seleccione una sucursal'
                         },
-                        categoria: {
-                            required: 'Por favor seleccione una categoría'
-                        },
-                        subcategoria: {
-                            required: 'Por favor seleccione una subcategoría'
+                        id_departamento: {
+                            // <-- Añadido aquí
+                            required: 'Por favor seleccione un departamento'
                         },
                         estado_actual: {
                             required: 'Por favor seleccione un estado'
@@ -559,12 +596,12 @@ $(function () {
                 });
 
                 // Cargar dinámicamente los departamentos según la sucursal seleccionada
-                $detail.find(`#id_departamento-${row.id}`).change(function () {
+                $detail.find(`#id_sucursal-${row.id}`).change(function () {
                     const sucursalId = $(this).val();
-                    loadDepartamentos(sucursalId, `#id_departamento-${row.id}`); // <-- Añadido aquí
+                    loadDepartamentos(sucursalId, `#id_departamento-${row.id}`);
                 });
 
-                // Inicializar Dropzone para subir nuevos archivos
+                // Inicializar Dropzone
                 initializeDropzone(`dropzoneArchivos-${row.id}`, `formActualizarAnexos-${row.id}`);
 
                 // Manejo de la eliminación de anexos

@@ -111,7 +111,7 @@
                 <div class="col-md-4">
                     <label for="como_se_entero-{{id}}" class="form-label">¿Cómo se Enteró?</label>
                     <select name="como_se_entero" id="como_se_entero-{{id}}" class="form-select select2" required>
-                        {{{selectOptions como_se_entero como_se_entero_actual}}}
+                        {{{selectOptions comboComoSeEntero como_se_entero}}}
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -126,7 +126,13 @@
                     <label for="descripcion-{{id}}" class="form-label">Descripción</label>
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" required>{{descripcion}}</textarea>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label for="medio_recepcion-{{id}}" class="form-label">Medio de Recepción</label>
+                    <select name="medio_recepcion" id="medio_recepcion-{{id}}" class="form-select select2" required>
+                        {{{selectOptions comboMedioRecepcion medio_recepcion}}}
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Anónimo</label>
                     <div class="d-flex align-items-center">
                         {{#ifCond anonimo '==' '1'}}
@@ -136,8 +142,23 @@
                         {{/ifCond}}
                     </div>
                 </div>
+                <hr>
+                {{#if esAnonimo}}
+                    <div class="col-md-4">
+                        <label for="nombre_completo-{{id}}" class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" id="nombre_completo-{{id}}" name="nombre_completo" value="{{nombre_completo}}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="correo_electronico-{{id}}" class="form-label">Correo Electrónico</label>
+                        <input type="text" class="form-control" id="correo_electronico-{{id}}" name="correo_electronico" value="{{correo_electronico}}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="telefono-{{id}}" class="form-label">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono-{{id}}" name="telefono" value="{{telefono}}" readonly>
+                    </div>
+                {{/if}}
 
-                <!-- Botón de Actualizar -->
+                <!-- Botón de Actualizar 666-->
                 <div class="mt-5">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
