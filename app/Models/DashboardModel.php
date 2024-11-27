@@ -251,7 +251,7 @@ class DashboardModel extends Model
         if (!empty($departamento)) {
             $builder->where('denuncias.id_departamento', $departamento);
         }
-        if ($anonimo !== '1381609') {
+        if ($anonimo !== '') {
             $builder->where('denuncias.anonimo', $anonimo);
         }
         if (!empty($cliente)) {

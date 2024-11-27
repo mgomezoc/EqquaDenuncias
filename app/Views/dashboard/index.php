@@ -53,7 +53,7 @@
                     <option selected disabled>Anónimo</option>
                     <option value="1">Sí</option>
                     <option value="0">No</option>
-                    <option value="1381609">TODOS</option>
+                    <option value="">TODOS</option>
 
                 </select>
             </div>
@@ -173,7 +173,7 @@
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Tipo de Denunciante</div>
+                    <div class="card-title mb-3 mb-sm-0">Canal de denuncia</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartDenunciante"></canvas>

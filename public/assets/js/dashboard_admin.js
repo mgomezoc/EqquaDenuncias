@@ -728,7 +728,7 @@ $(document).ready(function () {
     // Cargar datos iniciales del dashboard
     const startDate = $('#startDate').val();
     const endDate = $('#endDate').val();
-    loadDashboardData(startDate, endDate, null, null, '1381609', null);
+    loadDashboardData(startDate, endDate, null, null, '', null);
 
     // Aplicar filtros al enviar el formulario
     $('#dateFilterForm').submit(function (e) {
@@ -754,8 +754,9 @@ $(document).ready(function () {
         $('#sucursalFilter').val('').trigger('change');
         $('#departamentoFilter').val('').trigger('change');
         $('#anonimoFilter').val('').trigger('change');
+        $('#clienteFilter').val('').trigger('change');
 
         // Recargar los datos con filtros vacíos (para mostrar toda la información)
-        loadDashboardData(null, null, null, null, '1381609', null);
+        loadDashboardData(null, null, null, null, '', null);
     });
 });
