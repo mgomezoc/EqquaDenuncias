@@ -42,6 +42,30 @@ $(document).ready(function () {
                 }
             },
             {
+                field: 'tiempo_atencion_cliente',
+                title: 'Tiempo atención cliente',
+                sortable: true,
+                formatter: function (value, row, index) {
+                    if (!value) return '-'; // Si el valor es nulo o no existe
+                    const hours = Math.floor(value / 3600); // Horas
+                    const minutes = Math.floor((value % 3600) / 60); // Minutos restantes
+                    const seconds = value % 60; // Segundos restantes
+
+                    // Formatear el tiempo como "HH:mm:ss"
+                    let formattedTime = '';
+                    if (hours > 0) {
+                        formattedTime += `${hours}h `;
+                    }
+                    if (minutes > 0 || hours > 0) {
+                        // Incluir minutos si hay horas
+                        formattedTime += `${minutes}m `;
+                    }
+                    formattedTime += `${seconds}s`;
+
+                    return formattedTime; // Resultado formateado
+                }
+            },
+            {
                 field: 'cliente_nombre',
                 title: 'Cliente',
                 sortable: true
@@ -64,6 +88,7 @@ $(document).ready(function () {
             {
                 field: 'subcategoria_nombre',
                 title: 'SubCategoría',
+                visible: false,
                 sortable: true
             },
             {

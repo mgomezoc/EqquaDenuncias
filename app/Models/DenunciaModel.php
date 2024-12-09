@@ -31,7 +31,8 @@ class DenunciaModel extends Model
         'id_creador',
         'visible_para_agente',
         'visible_para_calidad',
-        'visible_para_cliente'
+        'visible_para_cliente',
+        'tiempo_atencion_cliente',
     ];
 
     protected $useTimestamps    = true;

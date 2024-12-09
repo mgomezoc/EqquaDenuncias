@@ -301,9 +301,7 @@ class DenunciasController extends Controller
     public function cambiarEstado()
     {
         $denunciaModel = new DenunciaModel();
-        $usuarioModel = new UsuarioModel();
-        $emailService = new EmailService();
-
+        $seguimientoModel = new SeguimientoDenunciaModel();
         $id = $this->request->getVar('id');
         $estado_nuevo = $this->request->getVar('estado_nuevo');
 
@@ -311,23 +309,43 @@ class DenunciasController extends Controller
         $denuncia = $denunciaModel->find($id);
         $estado_anterior = $denuncia['estado_actual'];
 
+        // Si el nuevo estado es 5 y el anterior era 4, calcular tiempo de atención
+        if ($estado_anterior == 4 && $estado_nuevo == 5) {
+            // Obtener el registro de seguimiento con estado 4 más reciente
+            $seguimiento = $seguimientoModel
+                ->where('id_denuncia', $id)
+                ->where('estado_nuevo', 4)
+                ->orderBy('fecha', 'DESC')
+                ->first();
+
+            if ($seguimiento) {
+                $fechaLiberacion = strtotime($seguimiento['fecha']);
+                $fechaActual = time(); // Fecha actual en segundos
+                $tiempoAtencion = $fechaActual - $fechaLiberacion; // Tiempo en segundos
+
+                // Actualizar el campo 'tiempo_atencion_cliente' en la denuncia
+                $denunciaModel->update($id, ['tiempo_atencion_cliente' => $tiempoAtencion]);
+            }
+        }
+
         // Realizar el cambio de estado
         $denunciaModel->cambiarEstado($id, $estado_nuevo);
 
         // Guardar en el historial de seguimiento
-        $seguimientoModel = new SeguimientoDenunciaModel();
         $seguimientoModel->save([
             'id_denuncia' => $id,
             'estado_anterior' => $estado_anterior,
             'estado_nuevo' => $estado_nuevo,
             'comentario' => $this->request->getVar('comentario'),
             'id_usuario' => session()->get('id'),
+            'fecha' => date('Y-m-d H:i:s') // Asegúrate de guardar la fecha
         ]);
 
         registrarAccion(session()->get('id'), 'Cambio de estado de denuncia', 'ID: ' . $id);
 
         // Verificar si el estado es "Liberada al Cliente" (estado 4)
         if ($estado_nuevo == 4) {
+            $usuarioModel = new UsuarioModel();
             // Obtener la información del cliente asignado a la denuncia
             $clienteId = $denuncia['id_cliente'];
             $cliente = $usuarioModel->where('id', $clienteId)->first();
@@ -340,6 +358,7 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
     }
+
 
     public function subirAnexo()
     {
