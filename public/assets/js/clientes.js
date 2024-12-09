@@ -56,7 +56,8 @@ $(function () {
                 valign: 'middle',
                 clickToSelect: false,
                 formatter: operateFormatter,
-                events: window.operateEvents
+                events: window.operateEvents,
+                visible: rol == 'ADMIN'
             }
         ],
         detailView: true,

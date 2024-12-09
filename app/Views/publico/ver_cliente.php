@@ -45,7 +45,7 @@
 <!-- Services Section -->
 <section>
     <div class="container">
-        <h2 class="section-title" data-aos="fade-up">Nuestros Servicios</h2>
+        <h2 class="section-title" data-aos="fade-up">Beneficios</h2>
         <div class="row">
             <!-- Seguridad -->
             <div class="col-md-4">

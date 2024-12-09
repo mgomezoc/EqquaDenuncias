@@ -124,6 +124,12 @@
 
                 <?php if ($rol == 'SUPERVISOR_CALIDAD'): ?>
                     <li class="slide">
+                        <a href="<?= base_url('clientes') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-building side-menu__icon"></i>
+                            <span class="side-menu__label">Clientes</span>
+                        </a>
+                    </li>
+                    <li class="slide">
                         <a href="<?= base_url('denuncias/supervision/gestion') ?>" class="side-menu__item">
                             <i class="fa-solid fa-exclamation-triangle side-menu__icon"></i>
                             <span class="side-menu__label">Mis Denuncias</span>

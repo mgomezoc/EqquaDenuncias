@@ -10,10 +10,13 @@ class ClientesController extends Controller
 {
     public function index()
     {
+        $session = session();
+
         $data = [
             'title' => 'Administración de Clientes',
             'controlador' => 'Clientes',
             'vista' => 'Clientes',
+            'rol_slug' => $session->get('rol_slug'),
         ];
 
         return view('clientes/index', $data);

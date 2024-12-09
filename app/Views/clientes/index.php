@@ -8,9 +8,11 @@
 <div class="card custom-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Clientes</span>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearCliente">
-            <i class="fa fa-plus"></i> Agregar Cliente
-        </button>
+        <?php if ($rol_slug == 'ADMIN'): ?>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearCliente">
+                <i class="fa fa-plus"></i> Agregar Cliente
+            </button>
+        <?php endif; ?>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -21,7 +23,9 @@
                         <th>Nombre Empresa</th>
                         <th>Correo Contacto</th>
                         <th>Teléfono Contacto</th>
-                        <th>Acciones</th>
+                        <?php if ($rol_slug == 'ADMIN'): ?>
+                            <th>Acciones</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
             </table>
@@ -30,12 +34,14 @@
 </div>
 
 <template id="tplAccionesTabla">
-    <button class="btn btn-sm btn-danger remove">
-        <i class="fa fa-trash"></i>
-    </button>
-    <button class="btn btn-sm btn-info view-public">
-        <i class="fa fa-eye"></i>
-    </button>
+    <?php if ($rol_slug == 'ADMIN'): ?>
+        <button class="btn btn-sm btn-danger remove">
+            <i class="fa fa-trash"></i>
+        </button>
+        <button class="btn btn-sm btn-info view-public">
+            <i class="fa fa-eye"></i>
+        </button>
+    <?php endif; ?>
 </template>
 
 <template id="tplDetalleTabla">
@@ -91,11 +97,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-5">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Actualizar
-                    </button>
-                </div>
+                <?php if ($rol_slug == 'ADMIN'): ?>
+                    <div class="mt-5">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Actualizar
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         </form>
 
@@ -113,9 +121,11 @@
                                 <a href="{{logo}}" data-lightbox="cliente-{{id}}-logo" data-title="Logo de {{nombre_empresa}}">
                                     <img src="{{logo}}" alt="logo" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                                 </a>
-                                <label for="logo" class="form-label d-block">Subir Nuevo Logo</label>
-                                <div id="dropzoneLogo-{{id}}" class="dropzone mb-3"></div>
-                                <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                                <?php if ($rol_slug == 'ADMIN'): ?>
+                                    <label for="logo" class="form-label d-block">Subir Nuevo Logo</label>
+                                    <div id="dropzoneLogo-{{id}}" class="dropzone mb-3"></div>
+                                    <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -129,18 +139,22 @@
                                 <a href="{{banner}}" data-lightbox="cliente-{{id}}-banner" data-title="Banner de {{nombre_empresa}}">
                                     <img src="{{banner}}" alt="banner" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                                 </a>
-                                <label for="banner" class="form-label d-block">Subir Nuevo Banner</label>
-                                <div id="dropzoneBanner-{{id}}" class="dropzone mb-3"></div>
-                                <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                                <?php if ($rol_slug == 'ADMIN'): ?>
+                                    <label for="banner" class="form-label d-block">Subir Nuevo Banner</label>
+                                    <div id="dropzoneBanner-{{id}}" class="dropzone mb-3"></div>
+                                    <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-4 text-center">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Actualizar Imágenes
-                    </button>
-                </div>
+                <?php if ($rol_slug == 'ADMIN'): ?>
+                    <div class="mt-4 text-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Actualizar Imágenes
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -241,5 +255,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+<script>
+    const rol = '<?= $rol_slug ?>';
+</script>
 <script src="<?= base_url('assets/js/clientes.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>
