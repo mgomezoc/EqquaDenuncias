@@ -232,6 +232,7 @@ class DenunciasController extends Controller
             return $value !== null; // Filtrar solo valores no nulos
         });
 
+
         $db = \Config\Database::connect();
         $db->transStart(); // Inicia una transacción
 

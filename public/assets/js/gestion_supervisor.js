@@ -177,7 +177,9 @@ $(function () {
     function initializeFlatpickrForEdit(selector) {
         $(selector).flatpickr({
             dateFormat: 'Y-m-d',
-            maxDate: 'today' // Restringe la selección a fechas anteriores o iguales a la actual
+            altInput: true,
+            altFormat: 'd/m/Y',
+            maxDate: 'today'
         });
     }
 
@@ -228,7 +230,8 @@ $(function () {
             },
             {
                 field: 'fecha_hora_reporte',
-                title: 'Fecha'
+                title: 'Fecha',
+                formatter: operateFormatterFecha
             },
             {
                 field: 'operate',

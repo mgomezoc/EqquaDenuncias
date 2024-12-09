@@ -349,3 +349,7 @@ window.onscroll = () => {
 scrollToTop.onclick = () => {
     window.scrollTo(0, 0);
 };
+
+function operateFormatterFecha(value, row, index) {
+    return moment(value).format('DD/MM/YYYY');
+}

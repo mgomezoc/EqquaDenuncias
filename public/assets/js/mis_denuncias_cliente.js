@@ -231,7 +231,8 @@ $(function () {
             },
             {
                 field: 'fecha_hora_reporte',
-                title: 'Fecha'
+                title: 'Fecha',
+                formatter: operateFormatterFecha
             },
             {
                 field: 'operate',
