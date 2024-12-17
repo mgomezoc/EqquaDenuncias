@@ -22,7 +22,8 @@
                         <th>Correo</th>
                         <th>Última Conexión</th>
                         <th>Rol</th>
-                        <th>Cliente</th> <!-- Nueva columna -->
+                        <th>Cliente</th>
+                        <th>Recibe Notificaciones</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -64,6 +65,20 @@
                     </select>
                 </div>
                 <div class="col-md-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                            id="recibe_notificaciones-{{id}}"
+                            name="recibe_notificaciones"
+                            value="1" {{recibe_notificaciones_checked}}>
+                        <label class="form-check-label" for="recibe_notificaciones-{{id}}">Recibir notificaciones del sistema</label>
+                    </div>
+                </div>
+                <div class="col-md-4" id="correoNotificacionesContainer-{{id}}" style="display: none;">
+                    <label for="correo_notificaciones-{{id}}" class="form-label">Correo para Notificaciones</label>
+                    <input type="email" class="form-control" id="correo_notificaciones-{{id}}" name="correo_notificaciones" value="{{correo_notificaciones}}">
+                </div>
+
+                <div class="col-md-12 mt-5">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
                     </button>
@@ -113,6 +128,17 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="recibe_notificaciones" name="recibe_notificaciones" value="1">
+                            <label class="form-check-label" for="recibe_notificaciones">Recibir notificaciones del sistema</label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="correoNotificacionesContainer" style="display: none;">
+                        <label for="correo_notificaciones" class="form-label">Correo para Notificaciones</label>
+                        <input type="email" class="form-control" id="correo_notificaciones" name="correo_notificaciones" placeholder="Opcional, si no se repite el correo principal">
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>

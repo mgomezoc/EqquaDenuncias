@@ -7,8 +7,8 @@ $(document).ready(function () {
         method: 'post',
         pagination: true,
         sidePagination: 'server',
-        pageSize: 10,
-        pageList: [10, 25, 50, 100],
+        pageSize: 50,
+        pageList: [50, 100, 150, 200],
         search: true,
         searchAlign: 'left',
         showRefresh: true,
@@ -47,13 +47,13 @@ $(document).ready(function () {
 
     // Inicializar flatpickr en los campos de fecha con el mes en curso
     flatpickr('#fecha_inicio', {
-        dateFormat: 'Y-m-d',
-        defaultDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // Primer día del mes actual
+        dateFormat: 'Y-m-d'
+        //defaultDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // Primer día del mes actual
     });
 
     flatpickr('#fecha_fin', {
-        dateFormat: 'Y-m-d',
-        defaultDate: new Date() // Fecha actual como fecha de fin por defecto
+        dateFormat: 'Y-m-d'
+        //defaultDate: new Date() // Fecha actual como fecha de fin por defecto
     });
 
     // Cargar sucursales del cliente al cargar la página

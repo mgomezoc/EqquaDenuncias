@@ -17,7 +17,9 @@ class UsuarioModel extends Model
         'rol_id',
         'ultima_conexion',
         'id_cliente',
-        'activo'
+        'activo',
+        'recibe_notificaciones',
+        'correo_notificaciones'
     ];
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];

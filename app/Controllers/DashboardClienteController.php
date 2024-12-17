@@ -33,6 +33,7 @@ class DashboardClienteController extends BaseController
         $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate);
         $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate);
         $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate);
+        $totalDenunciasCerradas = $model->countDenunciasCerradas($startDate, $endDate);
 
         // Calcular totales
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
@@ -59,6 +60,7 @@ class DashboardClienteController extends BaseController
             'totalDenunciasNuevas' => $totalDenunciasNuevas,
             'totalDenunciasProceso' => $totalDenunciasProceso,
             'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
+            'totalDenunciasCerradas' => $totalDenunciasCerradas,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'sucursales' => $sucursales,           // Nuevos datos para el filtro de sucursales
@@ -101,6 +103,7 @@ class DashboardClienteController extends BaseController
         $totalDeptos = array_sum(array_column($denunciasPorDepto['data'], 'total'));
         $totalSucursales = array_sum(array_column($denunciasPorSucursal, 'total'));
         $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
+        $totalDenunciasCerradas = $model->countDenunciasCerradas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         // Retornar los datos en formato JSON
         return $this->response->setJSON([
@@ -119,6 +122,7 @@ class DashboardClienteController extends BaseController
             'totalDenunciasNuevas' => $totalDenunciasNuevas,
             'totalDenunciasProceso' => $totalDenunciasProceso,
             'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
+            'totalDenunciasCerradas' => $totalDenunciasCerradas
         ]);
     }
 }

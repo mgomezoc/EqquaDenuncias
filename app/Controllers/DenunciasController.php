@@ -346,15 +346,20 @@ class DenunciasController extends Controller
         // Verificar si el estado es "Liberada al Cliente" (estado 4)
         if ($estado_nuevo == 4) {
             $usuarioModel = new UsuarioModel();
-            // Obtener la información del cliente asignado a la denuncia
-            $clienteId = $denuncia['id_cliente'];
-            $cliente = $usuarioModel->where('id', $clienteId)->first();
+            // Obtener los usuarios relacionados al cliente que tengan notificaciones activas
+            $usuarios = $usuarioModel
+                ->where('id_cliente', $denuncia['id_cliente'])
+                ->where('recibe_notificaciones', 1) // Filtrar por usuarios con notificaciones activas
+                ->findAll();
 
-            if ($cliente) {
-                // Enviar correo al cliente
-                $this->enviarCorreoLiberacionCliente($cliente['correo_electronico'], $cliente['nombre_usuario'], $denuncia);
+            // Enviar correo a cada usuario que cumple con la condición
+            foreach ($usuarios as $usuario) {
+                $correoDestino = !empty($usuario['correo_notificaciones']) ? $usuario['correo_notificaciones'] : $usuario['correo_electronico'];
+
+                $this->enviarCorreoLiberacionCliente($correoDestino, $usuario['nombre_usuario'], $denuncia);
             }
         }
+
 
         return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
     }
@@ -561,7 +566,7 @@ class DenunciasController extends Controller
                 <table>
                     <tr>
                         <td class="header">
-                            <h1>Denuncia Liberada al Cliente</h1>
+                            <h1>Nueva Denuncia!</h1>
                         </td>
                     </tr>
                     <tr>
@@ -575,7 +580,7 @@ class DenunciasController extends Controller
                     </tr>
                     <tr>
                         <td class="footer">
-                            <p>&copy; ' . date('Y') . ' Eqqua Denuncias</p>
+                            <p>&copy; ' . date('Y') . ' Eqqua</p>
                         </td>
                     </tr>
                 </table>
@@ -583,6 +588,6 @@ class DenunciasController extends Controller
             </html>';
 
         // Enviar el correo
-        $emailService->sendEmail($email, 'Denuncia Liberada: ' . esc($denuncia['folio']), $mensaje);
+        $emailService->sendEmail($email, 'Nueva Denuncia: ' . esc($denuncia['folio']), $mensaje);
     }
 }

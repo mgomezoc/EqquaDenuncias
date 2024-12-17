@@ -586,6 +586,7 @@ function updateCharts(data) {
     $('#totalDenunciasNuevas').html(data.totalDenunciasNuevas);
     $('#totalDenunciasProceso').html(data.totalDenunciasProceso);
     $('#totalDenunciasRecibidas').html(data.totalDenunciasRecibidas);
+    $('#totalDenunciasCerradas').html(data.totalDenunciasCerradas);
 
     if (data.denunciasPorMedio && denuncianteChart) {
         denuncianteChart.data.labels = data.denunciasPorMedio.map(item => item.medio_recepcion);
@@ -728,7 +729,7 @@ $(document).ready(function () {
     // Cargar datos iniciales del dashboard
     const startDate = $('#startDate').val();
     const endDate = $('#endDate').val();
-    loadDashboardData(startDate, endDate, null, null, '1381609', null);
+    loadDashboardData(startDate, endDate, null, null, '', null);
 
     // Aplicar filtros al enviar el formulario
     $('#dateFilterForm').submit(function (e) {
@@ -753,9 +754,9 @@ $(document).ready(function () {
         // Limpiar y actualizar select2
         $('#sucursalFilter').val('').trigger('change');
         $('#departamentoFilter').val('').trigger('change');
-        $('#anonimoFilter').val('1381609').trigger('change');
+        $('#anonimoFilter').val('').trigger('change');
 
         // Recargar los datos con filtros vacíos (para mostrar toda la información)
-        loadDashboardData(null, null, null, null, '1381609', null);
+        loadDashboardData(null, null, null, null, '', null);
     });
 });

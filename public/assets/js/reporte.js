@@ -13,8 +13,8 @@ $(document).ready(function () {
         method: 'post',
         pagination: true,
         sidePagination: 'server',
-        pageSize: 50,
-        pageList: [50, 100, 150, 200],
+        pageSize: 15,
+        pageList: [15, 100, 150, 200],
         search: true,
         searchAlign: 'left',
         showRefresh: true,
@@ -38,31 +38,12 @@ $(document).ready(function () {
                 title: 'Folio',
                 sortable: true,
                 cellStyle: {
-                    css: { 'white-space': 'nowrap', 'max-width': '250px', overflow: 'hidden', 'text-overflow': 'ellipsis' }
-                }
-            },
-            {
-                field: 'tiempo_atencion_cliente',
-                title: 'Tiempo atención cliente',
-                sortable: true,
-                formatter: function (value, row, index) {
-                    if (!value) return '-'; // Si el valor es nulo o no existe
-                    const hours = Math.floor(value / 3600); // Horas
-                    const minutes = Math.floor((value % 3600) / 60); // Minutos restantes
-                    const seconds = value % 60; // Segundos restantes
-
-                    // Formatear el tiempo como "HH:mm:ss"
-                    let formattedTime = '';
-                    if (hours > 0) {
-                        formattedTime += `${hours}h `;
+                    css: {
+                        'white-space': 'nowrap',
+                        'max-width': '250px',
+                        overflow: 'hidden',
+                        'text-overflow': 'ellipsis'
                     }
-                    if (minutes > 0 || hours > 0) {
-                        // Incluir minutos si hay horas
-                        formattedTime += `${minutes}m `;
-                    }
-                    formattedTime += `${seconds}s`;
-
-                    return formattedTime; // Resultado formateado
                 }
             },
             {
@@ -88,7 +69,7 @@ $(document).ready(function () {
             {
                 field: 'subcategoria_nombre',
                 title: 'SubCategoría',
-                visible: false,
+                visible: false, // Ocultar por defecto
                 sortable: true
             },
             {
@@ -104,21 +85,51 @@ $(document).ready(function () {
             },
             {
                 field: 'updated_at',
-                title: 'Ultima Actualización',
+                title: 'Última Actualización',
+                sortable: true,
+                visible: false
+            },
+            {
+                field: 'creador_nombre',
+                title: 'Creador',
                 sortable: true
+            },
+            {
+                field: 'tiempo_atencion_cliente',
+                title: 'Tiempo atención cliente',
+                sortable: true,
+                visible: false,
+                formatter: function (value, row, index) {
+                    if (!value) return '-'; // Si el valor es nulo o no existe
+                    const hours = Math.floor(value / 3600); // Horas
+                    const minutes = Math.floor((value % 3600) / 60); // Minutos restantes
+                    const seconds = value % 60; // Segundos restantes
+
+                    // Formatear el tiempo como "HH:mm:ss"
+                    let formattedTime = '';
+                    if (hours > 0) {
+                        formattedTime += `${hours}h `;
+                    }
+                    if (minutes > 0 || hours > 0) {
+                        // Incluir minutos si hay horas
+                        formattedTime += `${minutes}m `;
+                    }
+                    formattedTime += `${seconds}s`;
+
+                    return formattedTime; // Resultado formateado
+                }
+            },
+            {
+                field: 'operate',
+                title: 'Acciones',
+                align: 'center',
+                formatter: operateFormatter,
+                events: operateEvents
             }
         ],
         queryParams: function (params) {
             const filtros = $formFiltros.serializeObject();
-
-            const queryParams = {
-                ...params,
-                ...filtros
-            };
-
-            console.log(queryParams);
-
-            return queryParams;
+            return { ...params, ...filtros };
         }
     });
 

@@ -41,14 +41,26 @@ class DashboardClienteModel extends Model
     public function getDenunciasPorEstatus($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
-            ->select('estados_denuncias.nombre as estatus, COUNT(denuncias.id) as total')
+            ->select("
+            CASE estados_denuncias.nombre
+                WHEN 'Recepción' THEN 'Nueva'
+                WHEN 'Clasificada' THEN 'En Clasificación'
+                WHEN 'Revisada por Calidad' THEN 'Revisada'
+                WHEN 'Liberada al Cliente' THEN 'Nuevas'
+                WHEN 'En Revisión por Cliente' THEN 'En Revisión'
+                WHEN 'Cerrada' THEN 'Finalizada'
+                ELSE estados_denuncias.nombre
+            END AS estatus,
+            COUNT(denuncias.id) as total
+        ")
             ->join('estados_denuncias', 'denuncias.estado_actual = estados_denuncias.id', 'left')
-            ->groupBy('estados_denuncias.nombre');
+            ->groupBy('estatus');
 
         $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         return $builder->get()->getResultArray();
     }
+
 
     /**
      * Obtiene el total de denuncias agrupadas por departamento y sucursal.
@@ -142,7 +154,7 @@ class DashboardClienteModel extends Model
     public function countDenunciasNuevas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
-            ->where('estado_actual', 1);
+            ->where('estado_actual', 4);
 
         $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
@@ -155,7 +167,7 @@ class DashboardClienteModel extends Model
     public function countDenunciasEnProceso($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
-            ->whereIn('estado_actual', [2, 3, 4, 5]);
+            ->whereIn('estado_actual', [5]);
 
         $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
@@ -168,6 +180,16 @@ class DashboardClienteModel extends Model
     public function countDenunciasRecibidas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias');
+
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+
+        return $builder->countAllResults();
+    }
+
+    public function countDenunciasCerradas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->whereIn('estado_actual', [6]);
 
         $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
@@ -257,7 +279,7 @@ class DashboardClienteModel extends Model
         if (!empty($departamento)) {
             $builder->where('denuncias.id_departamento', $departamento);
         }
-        if ($anonimo !== '1381609') {
+        if ($anonimo !== '') {
             $builder->where('denuncias.anonimo', $anonimo);
         }
     }

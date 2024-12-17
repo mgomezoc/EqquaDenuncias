@@ -63,8 +63,11 @@ class UsuariosController extends Controller
             'correo_electronico' => $this->request->getVar('correo_electronico'),
             'rol_id' => $this->request->getVar('rol_id'),
             'id_cliente' => $id_cliente ?: null,
-            'activo' => 1
+            'activo' => 1,
+            'recibe_notificaciones' => $this->request->getVar('recibe_notificaciones') ? 1 : 0,
+            'correo_notificaciones' => $this->request->getVar('correo_notificaciones') ?: $this->request->getVar('correo_electronico'),
         ];
+
 
         // Solo incluir la contraseña si se envía una
         $contrasena = $this->request->getVar('contrasena');

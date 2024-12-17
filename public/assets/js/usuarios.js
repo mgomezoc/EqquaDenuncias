@@ -10,6 +10,10 @@ let $modalCrearUsuario;
 let optionsRoles;
 let optionsClientes;
 
+Handlebars.registerHelper('checked', function (value) {
+    return value ? 'xxxx' : 'xxxx';
+});
+
 $(function () {
     optionsRoles = roles.map(rol => ({
         id: rol.id,
@@ -63,9 +67,17 @@ $(function () {
                 title: 'Rol'
             },
             {
-                field: 'cliente_nombre', // Nueva columna para el cliente
+                field: 'cliente_nombre',
                 title: 'Cliente'
             },
+            {
+                field: 'recibe_notificaciones',
+                title: 'Notificaciones',
+                formatter: function (value, row) {
+                    return value === '1' ? 'Sí' : 'No';
+                }
+            },
+
             {
                 field: 'operate',
                 title: 'Acciones',
@@ -80,6 +92,8 @@ $(function () {
         onExpandRow: function (index, row, $detail) {
             row.roles = optionsRoles;
             row.clientes = optionsClientes;
+            row.recibe_notificaciones_checked = row.recibe_notificaciones == 1 ? 'checked' : '';
+
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
 
@@ -159,6 +173,31 @@ $(function () {
                     }
                 }
             });
+
+            // Evento para checkbox de notificaciones
+            const $checkbox = $detail.find(`#recibe_notificaciones-${row.id}`);
+            const $correoContainer = $detail.find(`#correoNotificacionesContainer-${row.id}`);
+
+            $checkbox.on('change', function () {
+                if ($(this).is(':checked')) {
+                    $correoContainer.show();
+                } else {
+                    $correoContainer.hide();
+                    $correoContainer.find('input').val(''); // Limpia el campo si se desactiva
+                }
+            });
+
+            // Disparar el evento en la carga si el checkbox está activo
+            $checkbox.trigger('change');
+        }
+    });
+
+    $('#recibe_notificaciones').on('change', function () {
+        if ($(this).is(':checked')) {
+            $('#correoNotificacionesContainer').show();
+        } else {
+            $('#correoNotificacionesContainer').hide();
+            $('#correo_notificaciones').val('');
         }
     });
 

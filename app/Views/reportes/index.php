@@ -81,22 +81,7 @@
 
         <div class="mt-4">
             <div class="table-responsive">
-                <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua">
-                    <thead>
-                        <th data-field="fecha_hora_reporte">Fecha Reporte</th>
-                        <th data-field="estado_nombre">Estatus</th>
-                        <th data-field="folio">Folio</th>
-                        <th data-field="cliente_nombre">Cliente</th>
-                        <th data-field="sucursal_nombre">Sucursal</th>
-                        <th data-field="departamento_nombre">Departamento</th>
-                        <th data-field="categoria_nombre">Categoría</th>
-                        <th data-field="subcategoria_nombre">SubCategoría</th>
-                        <th data-field="fecha_incidente">Fecha Incidente</th>
-                        <th data-field="medio_recepcion">Medio Recepción</th>
-                        <th data-field="updated_at" data-visible="false">Ultima Actualización</th>
-                        <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-align="center">Acciones</th>
-                    </thead>
-                </table>
+                <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua"></table>
             </div>
         </div>
     </div>
