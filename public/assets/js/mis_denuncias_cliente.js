@@ -29,42 +29,53 @@ $(function () {
                                 if (anexo.tipo === 'application/pdf') {
                                     // Para archivos PDF
                                     return `
-                    <div class="card mb-3">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <a href="${Server}${anexo.ruta_archivo}" data-fancybox="pdf-${anexo.id}" data-caption="${anexo.nombre_archivo}" class="pdf-viewer">${anexo.nombre_archivo}</a>
-                        </div>
-                    </div>
-                `;
+                                        <div class="card mb-3">
+                                            <div class="card-body d-flex justify-content-between align-items-center">
+                                                <a href="${Server}${anexo.ruta_archivo}" data-fancybox="pdf-${anexo.id}" data-caption="${anexo.nombre_archivo}" class="pdf-viewer">${anexo.nombre_archivo}</a>
+                                            </div>
+                                        </div>
+                                    `;
                                 } else if (anexo.tipo === 'video/webm') {
                                     // Para archivos WebM (videos)
                                     return `
-                    <div class="card mb-3">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <a href="${Server}${anexo.ruta_archivo}" data-fancybox="video-${anexo.id}" data-caption="${anexo.nombre_archivo}">
-                                <video controls style="max-width: 100px;">
-                                    <source src="${Server}${anexo.ruta_archivo}" type="video/webm">
-                                    Tu navegador no soporta el formato WebM.
-                                </video>
-                            </a>
-                        </div>
-                    </div>
-                `;
+                                        <div class="card mb-3">
+                                            <div class="card-body d-flex justify-content-between align-items-center">
+                                                <a href="${Server}${anexo.ruta_archivo}" data-fancybox="video-${anexo.id}" data-caption="${anexo.nombre_archivo}">
+                                                    <video controls style="max-width: 100px;">
+                                                        <source src="${Server}${anexo.ruta_archivo}" type="video/webm">
+                                                        Tu navegador no soporta el formato WebM.
+                                                    </video>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    `;
                                 } else {
                                     // Para otros archivos (imágenes, etc.)
                                     return `
-                    <div class="card mb-3">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <a href="${Server}${anexo.ruta_archivo}" data-fancybox="image-${anexo.id}" data-caption="${anexo.nombre_archivo}">
-                                <img src="${Server}${anexo.ruta_archivo}" alt="${anexo.nombre_archivo}" class="img-thumbnail" style="max-width: 100px;">
-                            </a>
-                        </div>
-                    </div>
-                `;
+                                        <div class="card mb-3">
+                                            <div class="card-body d-flex justify-content-between align-items-center">
+                                                <a href="${Server}${anexo.ruta_archivo}" data-fancybox="image-${anexo.id}" data-caption="${anexo.nombre_archivo}">
+                                                    <img src="${Server}${anexo.ruta_archivo}" alt="${anexo.nombre_archivo}" class="img-thumbnail" style="max-width: 100px;">
+                                                </a>
+                                            </div>
+                                        </div>
+                                    `;
                                 }
                             })
                             .join('');
                     } else {
                         anexosHtml = '<p class="text-center">No hay archivos adjuntos.</p>';
+                    }
+
+                    let denuncianteHtml = '';
+                    if (data.anonimo === '0') {
+                        denuncianteHtml = `
+                            <p><strong>Denunciante:</strong> ${data.nombre_completo || 'N/A'}</p>
+                            <p><strong>Correo Electrónico:</strong> ${data.correo_electronico || 'N/A'}</p>
+                            <p><strong>Teléfono:</strong> ${data.telefono || 'N/A'}</p>
+                        `;
+                    } else {
+                        denuncianteHtml = '<p><strong>Denunciante:</strong> Anónimo</p>';
                     }
 
                     const contenido = `
@@ -90,6 +101,7 @@ $(function () {
                                 <p><strong>Descripción:</strong></p>
                                 <p>${data.descripcion || 'N/A'}</p>
                             </div>
+                            <div class="col-12 mt-3">${denuncianteHtml}</div>
                             <div class="col-12 mt-3">
                                 <p><strong>Archivos Adjuntos:</strong></p>
                                 ${anexosHtml}
