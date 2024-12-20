@@ -39,4 +39,9 @@ class SucursalModel extends Model
     {
         return $this->delete($id);
     }
+
+    public function obtenerSucursalesPorCliente($clienteId)
+    {
+        return $this->where('id_cliente', $clienteId)->findAll();
+    }
 }

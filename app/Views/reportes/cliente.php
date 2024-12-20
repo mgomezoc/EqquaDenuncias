@@ -12,6 +12,7 @@
 
     <div class="card-body">
         <form id="formFiltros">
+            <input type="hidden" name="id_cliente" value="<?= $clienteId ?>">
             <div class="row mb-4">
                 <div class="col-md-3">
                     <label for="fecha_inicio">Fecha Inicio</label>
@@ -23,10 +24,14 @@
                 </div>
                 <div class="col-md-3">
                     <label for="id_sucursal">Sucursal</label>
-                    <select class="form-control select2" id="id_sucursal" name="id_sucursal" disabled>
-                        <option value="">Seleccionar Sucursal</option>
+                    <select class="form-control select2" id="id_sucursal" name="id_sucursal">
+                        <option value="">Todas</option>
+                        <?php foreach ($sucursales as $sucursal): ?>
+                            <option value="<?= $sucursal['id'] ?>"><?= $sucursal['nombre'] ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label for="id_departamento">Departamento</label>
                     <select class="form-control select2" id="id_departamento" name="id_departamento" disabled>
@@ -53,7 +58,11 @@
                     </select>
                 </div>
             </div>
-            <button type="button" class="btn btn-primary" id="btnFiltrar">Filtrar</button>
+            <div class="mb-4">
+                <button type="button" class="btn btn-primary" id="btnFiltrar">Filtrar</button>
+                <button type="button" class="btn btn-secondary" id="btnReset">Reset</button>
+            </div>
+
         </form>
 
         <div class="mt-4">

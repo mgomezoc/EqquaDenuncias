@@ -20,6 +20,7 @@ class ReportesController extends Controller
     protected $anexoDenunciaModel;
     protected $comentarioDenunciaModel;
     protected $seguimientoDenunciaModel;
+    protected $sucursalModel;
     protected $db;
 
     public function __construct()
@@ -28,6 +29,7 @@ class ReportesController extends Controller
         $this->anexoDenunciaModel = new AnexoDenunciaModel();
         $this->comentarioDenunciaModel = new ComentarioDenunciaModel();
         $this->seguimientoDenunciaModel = new SeguimientoDenunciaModel();
+        $this->sucursalModel = new SucursalModel();
         $this->db = Database::connect();
     }
 
@@ -177,9 +179,13 @@ class ReportesController extends Controller
             $estadosAmigables[] = $estado;
         }
 
+        $sucursalModel = new SucursalModel();
+        $sucursales = $sucursalModel->obtenerSucursalesPorCliente($clienteId);
+
         $data = [
             'clienteId' => $clienteId,
             'estados' => $estadosAmigables,
+            'sucursales' => $sucursales,
             'title' => 'Reporte de Denuncias'
         ];
 

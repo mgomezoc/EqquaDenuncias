@@ -93,6 +93,21 @@ $(document).ready(function () {
         }
     });
 
+    // Resetear formulario y refrescar tabla
+    $('#btnReset').on('click', function () {
+        // Resetear los valores del formulario
+        $formFiltros[0].reset();
+
+        // Resetear los selects de Select2
+        $('.select2').val(null).trigger('change');
+
+        // Resetear los departamentos y deshabilitar el select
+        $('#id_departamento').html('<option value="">Seleccionar Departamento</option>').prop('disabled', true);
+
+        // Refrescar la tabla con los valores predeterminados
+        $tablaDenuncias.bootstrapTable('refresh', { query: {} });
+    });
+
     // Filtrar las denuncias al hacer clic en el botón
     $('#btnFiltrar').on('click', function () {
         if ($formFiltros.valid()) {

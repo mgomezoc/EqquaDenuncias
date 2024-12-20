@@ -183,7 +183,7 @@
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Tipo de Denunciante</div>
+                    <div class="card-title mb-3 mb-sm-0">Canal de Denuncia</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartDenunciante"></canvas>
