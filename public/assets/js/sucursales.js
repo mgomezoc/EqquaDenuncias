@@ -197,7 +197,7 @@ function initializeDropzone(elementId, sucursalId) {
             this.on('success', function (file, response) {
                 file.serverId = response.id; // Guardar el ID del servidor en el objeto del archivo
                 showToast('¡Imagen subida exitosamente!', 'success');
-                agregarImagenActual(sucursalId, response.id, response.url);
+                agregarImagenActual(sucursalId, response.id, response.ruta_archivo);
             });
 
             this.on('error', function (file, response) {
@@ -227,7 +227,7 @@ function cargarImagenesActuales(sucursalId) {
                         <a href="${imagen.ruta_archivo}" data-lightbox="imagenes-${sucursalId}" data-title="Imagen">
                             <img src="${imagen.ruta_archivo}" alt="Imagen" class="img-thumbnail">
                         </a>
-                        <button class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="${imagen.id}" data-sucursal="${sucursalId}">
+                        <button type="button" class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="${imagen.id}" data-sucursal="${sucursalId}">
                             <i class="fa fa-trash"></i> Eliminar
                         </button>
                     </div>
@@ -247,7 +247,7 @@ function agregarImagenActual(sucursalId, idImagen, urlImagen) {
             <a href="${urlImagen}" data-lightbox="imagenes-${sucursalId}" data-title="Imagen">
                 <img src="${urlImagen}" alt="Imagen" class="img-thumbnail">
             </a>
-            <button class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="${idImagen}" data-sucursal="${sucursalId}">
+            <button type="button" class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="${idImagen}" data-sucursal="${sucursalId}">
                 <i class="fa fa-trash"></i> Eliminar
             </button>
         </div>
