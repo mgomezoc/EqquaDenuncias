@@ -153,8 +153,15 @@ class SucursalesController extends Controller
     {
         $imagenes = $this->imagenSucursalModel->obtenerImagenes($id_sucursal);
 
+        // Agregar URL pública para cada imagen
+        foreach ($imagenes as &$imagen) {
+            $imagen['ruta_archivo'] = base_url("assets/images/sucursales/{$id_sucursal}/{$imagen['nombre_archivo']}");
+        }
+
         return $this->response->setJSON($imagenes);
     }
+
+
 
     /**
      * Eliminar imagen de sucursal

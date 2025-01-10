@@ -64,6 +64,9 @@ $(function () {
 
             initializeDropzone(`dropzoneImagenes-${row.id}`, row.id);
 
+            // Cargar imágenes actuales
+            cargarImagenesActuales(row.id);
+
             // Inicializar select2 y validación para el formulario de edición
             $detail.find('select').select2();
             $detail.find('.formEditarSucursal').validate({
@@ -194,6 +197,7 @@ function initializeDropzone(elementId, sucursalId) {
             this.on('success', function (file, response) {
                 file.serverId = response.id; // Guardar el ID del servidor en el objeto del archivo
                 showToast('¡Imagen subida exitosamente!', 'success');
+                agregarImagenActual(sucursalId, response.id, response.url);
             });
 
             this.on('error', function (file, response) {
@@ -202,20 +206,72 @@ function initializeDropzone(elementId, sucursalId) {
 
             this.on('removedfile', function (file) {
                 if (file.serverId) {
-                    // Enviar solicitud para eliminar la imagen
-                    ajaxCall({
-                        url: `${Server}sucursales/eliminar-imagen`,
-                        method: 'POST',
-                        data: { id: file.serverId },
-                        success: function (response) {
-                            showToast('Imagen eliminada correctamente.', 'success');
-                        },
-                        error: function () {
-                            showToast('Error al eliminar la imagen.', 'error');
-                        }
-                    });
+                    eliminarImagenServidor(file.serverId, sucursalId);
                 }
             });
+        }
+    });
+}
+
+function cargarImagenesActuales(sucursalId) {
+    $.ajax({
+        url: `${Server}sucursales/listar-imagenes/${sucursalId}`,
+        method: 'GET',
+        success: function (response) {
+            const $contenedor = $(`#imagenesActuales-${sucursalId}`);
+            $contenedor.empty();
+
+            response.forEach(imagen => {
+                $contenedor.append(`
+                    <div class="col-md-4 mb-3">
+                        <a href="${imagen.ruta_archivo}" data-lightbox="imagenes-${sucursalId}" data-title="Imagen">
+                            <img src="${imagen.ruta_archivo}" alt="Imagen" class="img-thumbnail">
+                        </a>
+                        <button class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="${imagen.id}" data-sucursal="${sucursalId}">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                `);
+            });
+        },
+        error: function () {
+            showToast('Error al cargar las imágenes actuales.', 'error');
+        }
+    });
+}
+
+function agregarImagenActual(sucursalId, idImagen, urlImagen) {
+    const $contenedor = $(`#imagenesActuales-${sucursalId}`);
+    $contenedor.append(`
+        <div class="col-md-4 mb-3">
+            <a href="${urlImagen}" data-lightbox="imagenes-${sucursalId}" data-title="Imagen">
+                <img src="${urlImagen}" alt="Imagen" class="img-thumbnail">
+            </a>
+            <button class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="${idImagen}" data-sucursal="${sucursalId}">
+                <i class="fa fa-trash"></i> Eliminar
+            </button>
+        </div>
+    `);
+}
+
+$(document).on('click', '.btnEliminarImagen', function () {
+    const idImagen = $(this).data('id');
+    const sucursalId = $(this).data('sucursal');
+
+    eliminarImagenServidor(idImagen, sucursalId);
+});
+
+function eliminarImagenServidor(idImagen, sucursalId) {
+    $.ajax({
+        url: `${Server}sucursales/eliminar-imagen`,
+        method: 'POST',
+        data: { id: idImagen },
+        success: function () {
+            showToast('Imagen eliminada correctamente.', 'success');
+            cargarImagenesActuales(sucursalId);
+        },
+        error: function () {
+            showToast('Error al eliminar la imagen.', 'error');
         }
     });
 }

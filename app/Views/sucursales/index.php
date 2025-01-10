@@ -59,6 +59,12 @@
                     <div id="dropzoneImagenes-{{id}}" class="dropzone"></div>
                     <small class="text-muted">Máximo 3 imágenes. Formatos permitidos: JPG, PNG.</small>
                 </div>
+                <div class="col-md-12 mt-3">
+                    <h6>Imágenes actuales:</h6>
+                    <div class="row" id="imagenesActuales-{{id}}">
+                        <!-- Aquí se mostrarán las imágenes actuales -->
+                    </div>
+                </div>
                 <div class="col-md-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
@@ -66,23 +72,9 @@
                 </div>
             </div>
         </form>
-        <div class="mt-4">
-            <h6>Imágenes actuales:</h6>
-            <div class="row">
-                {{#each imagenes}}
-                    <div class="col-md-4 mb-3">
-                        <a href="{{this.url}}" data-lightbox="imagenes-{{../id}}" data-title="Imagen">
-                            <img src="{{this.url}}" alt="Imagen" class="img-thumbnail">
-                        </a>
-                        <button class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="{{this.id}}">
-                            <i class="fa fa-trash"></i> Eliminar
-                        </button>
-                    </div>
-                {{/each}}
-            </div>
-        </div>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 
