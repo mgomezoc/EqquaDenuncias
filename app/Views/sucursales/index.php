@@ -28,6 +28,7 @@
         </div>
     </div>
 </div>
+
 <template id="tplAccionesTabla">
     <button class="btn btn-sm btn-danger remove">
         <i class="fa fa-trash"></i>
@@ -54,12 +55,32 @@
                     <input type="text" class="form-control" id="direccion-{{id}}" name="direccion" value="{{direccion}}">
                 </div>
                 <div class="col-md-12">
+                    <label for="imagenes-{{id}}" class="form-label">Imágenes</label>
+                    <div id="dropzoneImagenes-{{id}}" class="dropzone"></div>
+                    <small class="text-muted">Máximo 3 imágenes. Formatos permitidos: JPG, PNG.</small>
+                </div>
+                <div class="col-md-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
                     </button>
                 </div>
             </div>
         </form>
+        <div class="mt-4">
+            <h6>Imágenes actuales:</h6>
+            <div class="row">
+                {{#each imagenes}}
+                    <div class="col-md-4 mb-3">
+                        <a href="{{this.url}}" data-lightbox="imagenes-{{../id}}" data-title="Imagen">
+                            <img src="{{this.url}}" alt="Imagen" class="img-thumbnail">
+                        </a>
+                        <button class="btn btn-sm btn-danger mt-2 btnEliminarImagen" data-id="{{this.id}}">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                {{/each}}
+            </div>
+        </div>
     </div>
 </template>
 
@@ -111,6 +132,8 @@
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -123,5 +146,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
 <script src="<?= base_url('assets/js/sucursales.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

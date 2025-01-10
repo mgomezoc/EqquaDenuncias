@@ -179,7 +179,7 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
  * Grupo de rutas exclusivas para el CLIENTE autenticado
  * Denuncias, clientes, sucursales y departamentos
  */
-$routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
+$routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
     // Denuncias del cliente
     $routes->group('denuncias', function ($routes) {
         $routes->get('mis-denuncias-cliente', 'DenunciasController::misDenunciasCliente'); // Ver denuncias del cliente autenticado
@@ -225,6 +225,10 @@ $routes->group('', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
         $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1'); // Obtener sucursal por ID
         $routes->get('listarSucursales/(:num)', 'SucursalesController::listarSucursales/$1'); // Listar sucursales por cliente
         $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1'); // Eliminar sucursal
+
+        $routes->post('subir-imagen', 'SucursalesController::subirImagen'); // Subir imagen de sucursal
+        $routes->get('listar-imagenes/(:num)', 'SucursalesController::listarImagenes/$1'); // Listar imágenes de una sucursal
+        $routes->post('eliminar-imagen', 'SucursalesController::eliminarImagen'); // Eliminar imagen de una sucursal
     });
 
     // Gestión de departamentos del cliente
