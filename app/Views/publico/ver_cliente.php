@@ -6,6 +6,7 @@
         background: url('<?= base_url($cliente['banner'] ?? 'assets/images/default-banner.jpg') ?>') no-repeat center center;
         background-size: cover;
         position: relative;
+        padding: 50px 0;
     }
 
     .hero-section::before {
@@ -15,13 +16,15 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 1;
     }
 
     .hero-section .container {
         position: relative;
         z-index: 2;
+        text-align: center;
+        color: #fff;
     }
 </style>
 <?= $this->endSection() ?>
@@ -31,23 +34,59 @@
 <section class="hero-section mb-5">
     <div class="container">
         <h1 class="animate__animated animate__fadeInDown">Línea de Denuncias</h1>
-        <p class="animate__animated animate__fadeInUp">
-            <?= esc($cliente['saludo']) ?>
-        </p>
-        <div class="logo-container">
+        <p class="animate__animated animate__fadeInUp"><?= esc($cliente['saludo']) ?></p>
+        <div class="logo-container mb-5">
             <img src="<?= base_url($cliente['logo']) ?>" alt="<?= esc($cliente['nombre_empresa']) ?> Logo" class="animate__animated animate__zoomIn">
         </div>
-        <a href="<?= base_url("c/" . esc($cliente['slug']) . "/formulario-denuncia") ?>" class="btn btn-custom animate__animated animate__fadeInLeft">Reportar Denuncia</a>
-        <a href="<?= base_url("c/" . esc($cliente['slug']) . "/seguimiento-denuncia") ?>" class="btn btn-custom animate__animated animate__fadeInRight">Seguimiento a mi Denuncia</a>
+        <div class="canales">
+            <!-- Columna de canales -->
+            <div class="canales-column">
+                <h3>Reporta tu denuncia a través de los siguientes canales:</h3>
+                <ul class="canales-list">
+                    <?php if (!empty($cliente['telefono_contacto'])): ?>
+                        <li class="canales-list-item">
+                            <a href="tel:<?= esc($cliente['telefono_contacto']) ?>" class="canales-link">
+                                <i class="fas fa-phone"></i> Llamar <?= esc($cliente['telefono_contacto']) ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if (!empty($cliente['whatsapp'])): ?>
+                        <li class="canales-list-item">
+                            <a href="https://wa.me/<?= esc($cliente['whatsapp']) ?>" target="_blank" class="canales-link">
+                                <i class="fab fa-whatsapp"></i> Enviar WhatsApp
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <li class="canales-list-item">
+                        <a href="<?= base_url("c/" . esc($cliente['slug']) . "/formulario-denuncia") ?>" class="canales-link">
+                            <i class="fas fa-edit"></i> Formulario en línea
+                        </a>
+                    </li>
+                    <?php if (!empty($cliente['correo_contacto'])): ?>
+                        <li class="canales-list-item">
+                            <a href="mailto:<?= esc($cliente['correo_contacto']) ?>" class="canales-link">
+                                <i class="fas fa-envelope"></i> <?= esc($cliente['correo_contacto']) ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+            <!-- Columna de seguimiento -->
+            <div class="canales-column margin">
+                <h3>Da seguimiento a tu denuncia aquí:</h3>
+                <a href="<?= base_url("c/" . esc($cliente['slug']) . "/seguimiento-denuncia") ?>" class="canales-link">
+                    <i class="fas fa-search"></i> Seguimiento denuncia
+                </a>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- Services Section -->
+<!-- Beneficios -->
 <section>
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Beneficios</h2>
         <div class="row">
-            <!-- Seguridad -->
             <div class="col-md-4">
                 <div class="service-box" data-aos="fade-up">
                     <i class="fas fa-shield-alt"></i>
@@ -55,7 +94,6 @@
                     <p>Protegemos la privacidad de tus denuncias. Tu identidad siempre estará segura.</p>
                 </div>
             </div>
-            <!-- Gestión Eficiente -->
             <div class="col-md-4">
                 <div class="service-box" data-aos="fade-up" data-aos-delay="100">
                     <i class="fas fa-file-alt"></i>
@@ -63,7 +101,6 @@
                     <p>Sigue el estado de tu denuncia de manera clara y sencilla. Estarás informado en cada paso.</p>
                 </div>
             </div>
-            <!-- Soporte Continuo -->
             <div class="col-md-4">
                 <div class="service-box" data-aos="fade-up" data-aos-delay="200">
                     <i class="fas fa-phone-alt"></i>
@@ -74,45 +111,4 @@
         </div>
     </div>
 </section>
-
-
-<!-- Contact Section -->
-<section class="contact-section mt-5">
-    <!-- Línea telefónica -->
-    <div class="contact-item">
-        <i class="fas fa-phone"></i>
-        <p>Línea telefónica</p>
-        <!-- Validación del número de teléfono antes de mostrar el enlace -->
-        <?php if (!empty($cliente['telefono_contacto'])): ?>
-            <a href="tel:<?= esc($cliente['telefono_contacto']) ?>"><?= esc($cliente['telefono_contacto']) ?></a>
-        <?php else: ?>
-            <p>No disponible</p>
-        <?php endif; ?>
-    </div>
-
-    <!-- Email -->
-    <div class="contact-item">
-        <i class="fas fa-envelope"></i>
-        <p>Email</p>
-        <!-- Validación del correo electrónico antes de mostrar el enlace -->
-        <?php if (!empty($cliente['correo_contacto'])): ?>
-            <a href="mailto:<?= esc($cliente['correo_contacto']) ?>"><?= esc($cliente['correo_contacto']) ?></a>
-        <?php else: ?>
-            <p>No disponible</p>
-        <?php endif; ?>
-    </div>
-
-    <!-- WhatsApp -->
-    <div class="contact-item">
-        <i class="fa-brands fa-whatsapp"></i>
-        <p>WhatsApp</p>
-        <!-- Validación de número de WhatsApp antes de mostrar el enlace -->
-        <?php if (!empty($cliente['whatsapp'])): ?>
-            <a href="https://wa.me/<?= esc($cliente['whatsapp']) ?>" target="_blank">Iniciar chat</a>
-        <?php else: ?>
-            <p>No disponible</p>
-        <?php endif; ?>
-    </div>
-</section>
-
 <?= $this->endSection() ?>

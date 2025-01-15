@@ -287,3 +287,106 @@ label.is-invalid {
   border-color: #dc3545;
   /* Borde rojo para selects de select2 */
 }
+.canales {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  text-align: center;
+  margin-bottom: 4rem;
+}
+.canales-column {
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+.canales-column.margin {
+  position: relative;
+}
+.canales-column.margin::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background-color: #fff;
+}
+@media only screen and (min-width: 320px) and (max-width: 575px) {
+  .canales-column.margin {
+    padding-top: 2rem;
+  }
+  .canales-column.margin::after {
+    width: 70%;
+    height: 2px;
+    background-color: #fff;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, 0);
+  }
+}
+.canales-column h2,
+.canales-column h3 {
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.canales-column p {
+  font-size: 1rem;
+  color: #fff;
+}
+.canales-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.canales-list-item {
+  width: 100%;
+}
+.canales-list .canales-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--primary-color, #0047ba);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.canales-list .canales-link i {
+  font-size: 1.25rem;
+}
+.canales-list .canales-link:hover {
+  filter: brightness(0.9);
+  text-decoration: none;
+}
+.canales .canales-link {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--primary-color, #0047ba);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.canales .canales-link i {
+  font-size: 1.25rem;
+}
+.canales .canales-link:hover {
+  filter: brightness(0.9);
+  text-decoration: none;
+}
