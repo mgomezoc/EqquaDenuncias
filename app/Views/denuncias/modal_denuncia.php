@@ -96,7 +96,7 @@
                         </div>
                         <div class="col-md-12">
                             <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia"><?= isset($denuncia['descripcion']) ? $denuncia['descripcion'] : '' ?></textarea>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="14" required placeholder="Describa la denuncia"><?= isset($denuncia['descripcion']) ? $denuncia['descripcion'] : '' ?></textarea>
                         </div>
 
                         <!-- Sección 4: Opciones de Denuncia -->

@@ -129,7 +129,7 @@
                 </div>
                 <div class="col-md-12">
                     <label for="descripcion-{{id}}" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" required>{{descripcion}}</textarea>
+                    <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" rows="14" required>{{descripcion}}</textarea>
                 </div>
                 <div class="col-md-4">
                     <label for="medio_recepcion-{{id}}" class="form-label">Medio de Recepción</label>
@@ -423,7 +423,7 @@
                         </div>
                         <div class="col-md-12">
                             <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="7"></textarea>
+                            <textarea class="form-control" id="descripcion" name="descripcion" required placeholder="Describa la denuncia" rows="14"></textarea>
                         </div>
 
                         <!-- Sección 5: Archivos Adjuntos -->
