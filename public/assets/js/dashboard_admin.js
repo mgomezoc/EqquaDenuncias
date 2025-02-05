@@ -15,7 +15,7 @@ function initCharts() {
             labels: [], // Meses
             datasets: [
                 {
-                    label: 'Total de denuncias',
+                    label: 'Total de Denuncias',
                     data: [], // Totales
                     backgroundColor: '#6460a9',
                     borderWidth: 1
@@ -467,7 +467,7 @@ function initCharts() {
             labels: [], // Nombres de las sucursales
             datasets: [
                 {
-                    label: 'Número de denuncias',
+                    label: 'Número de Denuncias',
                     data: [], // Totales de denuncias por sucursal
                     backgroundColor: 'rgba(0, 0, 255, 0.1)', // Fondo del área bajo la línea
                     borderColor: '#6460a9', // Color de la línea
@@ -490,7 +490,7 @@ function initCharts() {
                 tooltip: {
                     callbacks: {
                         label: function (tooltipItem) {
-                            return `Número de denuncias: ${tooltipItem.raw}`;
+                            return `Número de Denuncias: ${tooltipItem.raw}`;
                         }
                     }
                 },
@@ -684,13 +684,13 @@ $(document).ready(function () {
     $('[data-bs-toggle="tooltip"]').tooltip();
 
     const startDatePicker = flatpickr('#startDate', {
-        dateFormat: 'Y-m-d',
+        dateFormat: 'd/m/Y', // Cambiado a DD/MM/YYYY
         locale: 'es',
         onChange: function (selectedDates, dateStr) {
             if (selectedDates.length > 0) {
                 endDatePicker.set('minDate', dateStr);
                 const endDate = $('#endDate').val();
-                if (endDate && new Date(endDate) < new Date(dateStr)) {
+                if (endDate && new Date(endDate.split('/').reverse().join('-')) < new Date(dateStr.split('/').reverse().join('-'))) {
                     $('#endDate').val(dateStr);
                 }
             } else {
@@ -700,13 +700,13 @@ $(document).ready(function () {
     });
 
     const endDatePicker = flatpickr('#endDate', {
-        dateFormat: 'Y-m-d',
+        dateFormat: 'd/m/Y', // Cambiado a DD/MM/YYYY
         locale: 'es',
         onChange: function (selectedDates, dateStr) {
             if (selectedDates.length > 0) {
                 startDatePicker.set('maxDate', dateStr);
                 const startDate = $('#startDate').val();
-                if (startDate && new Date(startDate) > new Date(dateStr)) {
+                if (startDate && new Date(startDate.split('/').reverse().join('-')) > new Date(dateStr.split('/').reverse().join('-'))) {
                     $('#startDate').val(dateStr);
                 }
             } else {

@@ -26,7 +26,7 @@
                         <th>Subcategoría</th>
                         <th>Departamento</th>
                         <th>Estado</th>
-                        <th>Medio de Recepción</th>
+                        <th>Canal de Recepción</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
@@ -127,7 +127,7 @@
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" rows="14" required>{{descripcion}}</textarea>
                 </div>
                 <div class="col-md-4">
-                    <label for="medio_recepcion-{{id}}" class="form-label">Medio de Recepción</label>
+                    <label for="medio_recepcion-{{id}}" class="form-label">Canal de Recepción</label>
                     <select name="medio_recepcion" id="medio_recepcion-{{id}}" class="form-select select2" required>
                         {{{selectOptions comboMedioRecepcion medio_recepcion}}}
                     </select>
@@ -305,7 +305,7 @@
                     <div class="row g-4">
                         <!-- Sección 0: Opciones de Denuncia -->
                         <div class="col-md-6">
-                            <label for="medio_recepcion" class="form-label">Medio de Recepción</label>
+                            <label for="medio_recepcion" class="form-label">Canal de Recepción</label>
                             <select name="medio_recepcion" id="medio_recepcion" class="form-select select2" required>
                                 <option value="" selected disabled></option>
                                 <option value="Llamada">Llamada</option>

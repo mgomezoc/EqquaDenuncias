@@ -381,7 +381,7 @@ $(function () {
             },
             {
                 field: 'medio_recepcion',
-                title: 'Medio de Recepcion'
+                title: 'Canal de Recepcion'
             },
             {
                 field: 'fecha_hora_reporte',

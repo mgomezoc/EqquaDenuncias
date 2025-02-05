@@ -41,7 +41,7 @@
             </div>
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <label for="medio_recepcion">Medio de Recepción</label>
+                    <label for="medio_recepcion">Canal de Recepción</label>
                     <select class="form-control" id="medio_recepcion" name="medio_recepcion">
                         <option value="">Todos</option>
                         <option value="Plataforma">Plataforma</option>

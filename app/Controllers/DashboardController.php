@@ -12,9 +12,13 @@ class DashboardController extends BaseController
 
         $clientes = $model->getClientes();
 
-        // Obtener el mes y año actuales para el filtro inicial
-        $startDate = date('Y-m-01'); // Primer día del mes actual
-        $endDate = date('Y-m-t');    // Último día del mes actual
+        // Obtener el mes y año actuales
+        $startDateFormatted = date('d/m/Y', strtotime(date('Y-m-01'))); // DD/MM/YYYY
+        $endDateFormatted = date('d/m/Y', strtotime(date('Y-m-t')));    // DD/MM/YYYY
+
+        // Convertir fechas al formato que requiere el modelo
+        $startDate = date('Y-m-d', strtotime(date('Y-m-01'))); // YYYY-MM-DD
+        $endDate = date('Y-m-d', strtotime(date('Y-m-t')));    // YYYY-MM-DD
 
         // Obtener listas de sucursales y departamentos para los filtros
         $sucursales = $model->getSucursales(); // Método para obtener todas las sucursales
@@ -58,8 +62,8 @@ class DashboardController extends BaseController
             'totalDenunciasNuevas' => $totalDenunciasNuevas,
             'totalDenunciasProceso' => $totalDenunciasProceso,
             'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
+            'startDate' => $startDateFormatted,
+            'endDate' => $endDateFormatted,
             'sucursales' => $sucursales,           // Nuevos datos para el filtro de sucursales
             'departamentos' => $departamentos       // Nuevos datos para el filtro de departamentos
         ];
@@ -73,8 +77,14 @@ class DashboardController extends BaseController
         $model = new DashboardModel();
 
         // Obtener filtros desde la petición POST
-        $startDate = $this->request->getPost('start_date');
-        $endDate = $this->request->getPost('end_date');
+        $startDateFormatted = $this->request->getPost('start_date');
+        $endDateFormatted = $this->request->getPost('end_date');
+        $startDate = $startDateFormatted
+            ? date('Y-m-d', strtotime(str_replace('/', '-', $startDateFormatted)))
+            : null;
+        $endDate = $endDateFormatted
+            ? date('Y-m-d', strtotime(str_replace('/', '-', $endDateFormatted)))
+            : null;
         $sucursal = $this->request->getPost('sucursal');
         $departamento = $this->request->getPost('departamento');
         $anonimo = $this->request->getPost('anonimo');

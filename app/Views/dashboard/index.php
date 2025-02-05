@@ -76,7 +76,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <p class="mb-0 fw-semibold text-muted">Denuncias Nuevas</p>
+                            <p class="mb-0 text-muted titulo-dashboard">Denuncias Nuevas</p>
                             <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasNuevas"><?= $totalDenunciasNuevas ?></h3>
                         </div>
                         <div class="col mt-3 col-auto">
@@ -95,7 +95,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <p class="mb-0 fw-semibold text-muted">Denuncias en Proceso</p>
+                            <p class="mb-0 text-muted titulo-dashboard">Denuncias en Proceso</p>
                             <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasProceso"><?= $totalDenunciasProceso ?></h3>
                         </div>
                         <div class="col mt-3 col-auto">
@@ -114,7 +114,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <p class="mb-0 fw-semibold text-muted">Denuncias Recibidas</p>
+                            <p class="mb-0 text-muted titulo-dashboard">Denuncias Recibidas</p>
                             <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasRecibidas"><?= $totalDenunciasRecibidas ?></h3>
                         </div>
                         <div class="col mt-3 col-auto">
@@ -137,7 +137,7 @@
         <div class="col-md-12">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Mes de recepción de denuncia</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Mes de Recepción de Denuncia</div>
                     <div class="ms-auto">
                         <a href="javascript:void(0);" class="btn btn-sm border-0 text-dark fs-13 fw-semibold">
                             Total: <span id="totalMesDenuncias"></span>
@@ -152,7 +152,7 @@
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Estatus de Denuncias</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Estatus de Denuncias</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartEstatusDenuncias"></canvas>
@@ -163,7 +163,7 @@
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Denuncias Anónimas</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Denuncias Anónimas</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartDenunciasAnonimas"></canvas>
@@ -173,7 +173,7 @@
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Canal de denuncia</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Canal de Denuncia</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartDenunciante"></canvas>
@@ -183,7 +183,7 @@
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0">Conocimiento del Incidente</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Conocimiento del Incidente</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartConocimiento"></canvas>
@@ -193,7 +193,7 @@
         <div class="col-md-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title mb-3 mb-sm-0">Denuncias por Departamento</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Denuncias por Departamento</div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -207,7 +207,7 @@
         <div class="col-md-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title mb-3 mb-sm-0">Denuncias por Sucursal</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Denuncias por Sucursal</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartSucursalesDenuncias" style="min-height: 400px;"></canvas>

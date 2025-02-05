@@ -118,7 +118,7 @@
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" rows="14" required>{{descripcion}}</textarea>
                 </div>
                 <div class="col-md-4">
-                    <label for="medio_recepcion-{{id}}" class="form-label">Medio de Recepción</label>
+                    <label for="medio_recepcion-{{id}}" class="form-label">Canal de Recepción</label>
                     <select name="medio_recepcion" id="medio_recepcion-{{id}}" class="form-select select2" required>
                         {{{selectOptions comboMedioRecepcion medio_recepcion}}}
                     </select>
