@@ -49,55 +49,62 @@
         <form id="formEditarCliente-{{id}}" action="<?= base_url('clientes/guardar') ?>" method="post" class="formEditarCliente card custom-card card-body mb-4">
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
+                <!-- Mostrar solo para roles ADMIN o AGENTE -->
                 <div class="col-md-4">
                     <label for="nombre_empresa" class="form-label">Nombre Empresa</label>
-                    <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="{{nombre_empresa}}" required>
+                    <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="{{nombre_empresa}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
-                <div class="col-md-4">
-                    <label for="numero_identificacion" class="form-label">Número Identificación</label>
-                    <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="{{numero_identificacion}}" required>
-                </div>
+
+                <?php if ($rol_slug === 'ADMIN') : ?>
+                    <div class="col-md-4">
+                        <label for="numero_identificacion" class="form-label">Número Identificación</label>
+                        <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="{{numero_identificacion}}" required>
+                    </div>
+                <?php endif; ?>
+
                 <div class="col-md-4">
                     <label for="correo_contacto" class="form-label">Correo Contacto</label>
-                    <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="{{correo_contacto}}" required>
+                    <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="{{correo_contacto}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
                 <div class="col-md-4">
                     <label for="telefono_contacto" class="form-label">Teléfono Contacto</label>
-                    <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="{{telefono_contacto}}" required>
+                    <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="{{telefono_contacto}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
                 <div class="col-md-4">
                     <label for="direccion" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{direccion}}" required>
+                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{direccion}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
-                <div class="col-md-4">
-                    <label for="slug" class="form-label">Slug</label>
-                    <input type="text" class="form-control" id="slug" name="slug" value="{{slug}}" required>
-                </div>
-                <div class="col-md-8">
-                    <label for="saludo" class="form-label">Saludo</label>
-                    <textarea class="form-control" id="saludo" name="saludo" rows="4">{{saludo}}</textarea>
-                </div>
+
+                <?php if ($rol_slug === 'ADMIN') : ?>
+                    <div class="col-md-4">
+                        <label for="slug" class="form-label">Slug</label>
+                        <input type="text" class="form-control" id="slug" name="slug" value="{{slug}}" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label for="saludo" class="form-label">Saludo</label>
+                        <textarea class="form-control" id="saludo" name="saludo" rows="4">{{saludo}}</textarea>
+                    </div>
+                    <div class="col-12"></div>
+                    <div class="col-md-4">
+                        <label for="primary_color" class="form-label">Primary Color</label>
+                        <input type="color" class="form-control" id="primary_color" name="primary_color" value="{{primary_color}}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="secondary_color" class="form-label">Secondary Color</label>
+                        <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="{{secondary_color}}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="link_color" class="form-label">Link Color</label>
+                        <input type="color" class="form-control" id="link_color" name="link_color" value="{{link_color}}">
+                    </div>
+                <?php endif; ?>
+
                 <div class="col-md-4">
                     <label for="whatsapp" class="form-label">WhatsApp</label>
-                    <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{whatsapp}}" pattern="\d{10}">
+                    <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{whatsapp}}" <?= $rol_slug === 'ADMIN' ? '' : 'readonly' ?> pattern="\d{10}">
                 </div>
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label for="primary_color" class="form-label">Primary Color</label>
-                            <input type="color" class="form-control" id="primary_color" name="primary_color" value="{{primary_color}}">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="secondary_color" class="form-label">Secondary Color</label>
-                            <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="{{secondary_color}}">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="link_color" class="form-label">Link Color</label>
-                            <input type="color" class="form-control" id="link_color" name="link_color" value="{{link_color}}">
-                        </div>
-                    </div>
-                </div>
-                <?php if ($rol_slug == 'ADMIN'): ?>
+
+                <?php if ($rol_slug === 'ADMIN') : ?>
                     <div class="mt-5">
                         <button type="submit" class="btn btn-primary">
                             <i class="fa fa-save"></i> Actualizar
@@ -112,23 +119,25 @@
             <div class="card-body">
                 <div class="row g-4">
                     <!-- Sección de Logo -->
-                    <div class="col-md-6">
-                        <div class="card border-light mb-3">
-                            <div class="card-header text-center bg-light">
-                                <h5 class="mb-0">Logo</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <a href="{{logo}}" data-lightbox="cliente-{{id}}-logo" data-title="Logo de {{nombre_empresa}}">
-                                    <img src="{{logo}}" alt="logo" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                </a>
-                                <?php if ($rol_slug == 'ADMIN'): ?>
-                                    <label for="logo" class="form-label d-block">Subir Nuevo Logo</label>
-                                    <div id="dropzoneLogo-{{id}}" class="dropzone mb-3"></div>
-                                    <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
-                                <?php endif; ?>
+                    <?php if ($rol_slug === 'ADMIN' || $rol_slug === 'AGENTE') : ?>
+                        <div class="col-md-6">
+                            <div class="card border-light mb-3">
+                                <div class="card-header text-center bg-light">
+                                    <h5 class="mb-0">Logo</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <a href="{{logo}}" data-lightbox="cliente-{{id}}-logo" data-title="Logo de {{nombre_empresa}}">
+                                        <img src="{{logo}}" alt="logo" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                                    </a>
+                                    <?php if ($rol_slug === 'ADMIN'): ?>
+                                        <label for="logo" class="form-label d-block">Subir Nuevo Logo</label>
+                                        <div id="dropzoneLogo-{{id}}" class="dropzone mb-3"></div>
+                                        <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
                     <!-- Sección de Banner -->
                     <div class="col-md-6">
                         <div class="card border-light mb-3">
@@ -139,7 +148,7 @@
                                 <a href="{{banner}}" data-lightbox="cliente-{{id}}-banner" data-title="Banner de {{nombre_empresa}}">
                                     <img src="{{banner}}" alt="banner" class="img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                                 </a>
-                                <?php if ($rol_slug == 'ADMIN'): ?>
+                                <?php if ($rol_slug === 'ADMIN'): ?>
                                     <label for="banner" class="form-label d-block">Subir Nuevo Banner</label>
                                     <div id="dropzoneBanner-{{id}}" class="dropzone mb-3"></div>
                                     <small class="text-muted d-block">Solo si adjuntas una nueva imagen, esta reemplazará la actual.</small>
@@ -148,17 +157,11 @@
                         </div>
                     </div>
                 </div>
-                <?php if ($rol_slug == 'ADMIN'): ?>
-                    <div class="mt-4 text-center">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa fa-save"></i> Actualizar Imágenes
-                        </button>
-                    </div>
-                <?php endif; ?>
             </div>
         </form>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 

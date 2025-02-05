@@ -114,16 +114,20 @@ function confirm(title, text) {
  */
 function showToast(title, icon, duration = 3000, showCloseButton = false) {
     Swal.fire({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: duration,
-        timerProgressBar: true,
-        title: title,
-        icon: icon,
-        showCloseButton: showCloseButton,
+        position: 'top-end', // Posición del Toast
+        icon: icon, // Icono (success, error, warning, info, question)
+        title: title, // Título del Toast
+        showConfirmButton: false, // Sin botón de confirmación
+        timer: duration, // Duración en milisegundos
+        timerProgressBar: true, // Barra de progreso en el Toast
+        showCloseButton: showCloseButton, // Mostrar botón de cerrar
+        customClass: {
+            popup: 'swal-toast' // Clase personalizada
+        },
         didOpen: toast => {
+            // Pausar el temporizador al pasar el mouse
             toast.addEventListener('mouseenter', Swal.stopTimer);
+            // Reanudar el temporizador al salir el mouse
             toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
     });

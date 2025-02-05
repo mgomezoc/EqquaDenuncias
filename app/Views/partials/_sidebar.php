@@ -120,6 +120,13 @@
                             <span class="side-menu__label">Mis Denuncias</span>
                         </a>
                     </li>
+                    <li class="slide">
+                        <a class="side-menu__item" href="<?= base_url('/clientes') ?>">
+                            <i class="side-menu__icon fa fa-users"></i>
+                            <span class="side-menu__label">Clientes</span>
+                        </a>
+                    </li>
+
                 <?php endif; ?>
 
                 <?php if ($rol == 'SUPERVISOR_CALIDAD'): ?>
