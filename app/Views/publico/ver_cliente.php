@@ -40,7 +40,7 @@
         </div>
         <div class="canales">
             <!-- Columna de canales -->
-            <div class="canales-column">
+            <div class="canales-column margin">
                 <h3>Reporta tu denuncia a través de los siguientes canales:</h3>
                 <ul class="canales-list">
                     <?php if (!empty($cliente['telefono_contacto'])): ?>
@@ -72,7 +72,7 @@
                 </ul>
             </div>
             <!-- Columna de seguimiento -->
-            <div class="canales-column margin">
+            <div class="canales-column">
                 <h3>Da seguimiento a tu denuncia aquí:</h3>
                 <a href="<?= base_url("c/" . esc($cliente['slug']) . "/seguimiento-denuncia") ?>" class="canales-link">
                     <i class="fas fa-search"></i> Seguimiento denuncia

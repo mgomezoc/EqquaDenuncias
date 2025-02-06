@@ -32,5 +32,5 @@ class App extends BaseConfig
 
     public bool $CSPEnabled = false;
 
-    public string $assetVersion = '0.0.1';
+    public string $assetVersion = '0.0.5';
 }
