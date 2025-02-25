@@ -19,7 +19,8 @@ class UsuarioModel extends Model
         'id_cliente',
         'activo',
         'recibe_notificaciones',
-        'correo_notificaciones'
+        'correo_notificaciones',
+        'solo_lectura' // Nueva columna agregada
     ];
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
@@ -42,11 +43,11 @@ class UsuarioModel extends Model
      * Obtiene un usuario junto con su rol, solo si está activo.
      *
      * @param string $email El correo electrónico del usuario.
-     * @return array|null Los datos del usuario junto con el rol, o null si no se encuentra.
+     * @return array|null Los datos del usuario junto con el rol y el estado de solo lectura, o null si no se encuentra.
      */
     public function getUserWithRole($email)
     {
-        return $this->select('usuarios.*, roles.nombre as rol_nombre, roles.slug as rol_slug, clientes.id as id_cliente, clientes.nombre_empresa as nombre_cliente')
+        return $this->select('usuarios.*, roles.nombre as rol_nombre, roles.slug as rol_slug, clientes.id as id_cliente, clientes.nombre_empresa as nombre_cliente, usuarios.solo_lectura')
             ->join('roles', 'roles.id = usuarios.rol_id')
             ->join('clientes', 'clientes.id = usuarios.id_cliente', 'left')
             ->where('usuarios.correo_electronico', $email)
@@ -81,14 +82,26 @@ class UsuarioModel extends Model
      * Obtiene todos los usuarios de un cliente específico que estén activos.
      *
      * @param int $clienteId El ID del cliente.
-     * @return array Lista de usuarios activos del cliente.
+     * @return array Lista de usuarios activos del cliente con su estado de solo lectura.
      */
     public function getUsuariosActivosPorCliente($clienteId)
     {
-        return $this->select('usuarios.id, usuarios.nombre_usuario, usuarios.correo_electronico, usuarios.ultima_conexion, roles.nombre AS rol_nombre')
+        return $this->select('usuarios.id, usuarios.nombre_usuario, usuarios.correo_electronico, usuarios.ultima_conexion, roles.nombre AS rol_nombre, usuarios.solo_lectura')
             ->join('roles', 'roles.id = usuarios.rol_id')
             ->where('usuarios.id_cliente', $clienteId)
             ->where('usuarios.activo', 1) // Solo usuarios activos
             ->findAll();
+    }
+
+    /**
+     * Asigna o revoca el estado de solo lectura a un usuario.
+     *
+     * @param int $id El ID del usuario.
+     * @param bool $soloLectura El estado a establecer (true para activar solo lectura, false para permitir edición).
+     * @return bool Si la actualización fue exitosa o no.
+     */
+    public function setSoloLectura($id, bool $soloLectura)
+    {
+        return $this->update($id, ['solo_lectura' => $soloLectura ? 1 : 0]);
     }
 }

@@ -66,6 +66,7 @@ class UsuariosController extends Controller
             'activo' => 1,
             'recibe_notificaciones' => $this->request->getVar('recibe_notificaciones') ? 1 : 0,
             'correo_notificaciones' => $this->request->getVar('correo_notificaciones') ?: $this->request->getVar('correo_electronico'),
+            'solo_lectura' => $this->request->getVar('solo_lectura') ? 1 : 0
         ];
 
 

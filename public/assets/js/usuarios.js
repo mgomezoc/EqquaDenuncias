@@ -40,7 +40,7 @@ $(function () {
     });
 
     $('#rol_id').on('change', function () {
-        handleRoleChange($(this).val(), '#clienteContainer', '#id_cliente');
+        handleRoleChange($(this).val(), '#clienteContainer', '#id_cliente', '#soloLecturaContainer');
     });
 
     $tablaUsuarios = $('#tablaUsuarios').bootstrapTable({
@@ -93,6 +93,7 @@ $(function () {
             row.roles = optionsRoles;
             row.clientes = optionsClientes;
             row.recibe_notificaciones_checked = row.recibe_notificaciones == 1 ? 'checked' : '';
+            row.solo_lectura_checked = row.solo_lectura == 1 ? 'checked' : '';
 
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
@@ -101,9 +102,18 @@ $(function () {
             $detail.find('select').select2();
             const rolSelect = $detail.find('[name="rol_id"]');
             rolSelect.on('change', function () {
-                handleRoleChange($(this).val(), '#clienteContainer-' + row.id, '[name="id_cliente"]');
+                handleRoleChange($(this).val(), '#clienteContainer-' + row.id, '[name="id_cliente"]', '#soloLecturaContainer-' + row.id);
             });
-            rolSelect.trigger('change'); // Ejecutar en la carga para mostrar correctamente el select de cliente
+
+            rolSelect.trigger('change');
+
+            if (row.rol_id == 4) {
+                // Si es Cliente
+                $('#soloLecturaContainer-' + row.id).show();
+            } else {
+                $('#soloLecturaContainer-' + row.id).hide();
+                $('#solo_lectura-' + row.id).prop('checked', false);
+            }
 
             $detail.find('.formEditarUsuario').validate({
                 rules: {
@@ -381,13 +391,16 @@ async function eliminarUsuario(id) {
  * @param {string} clienteContainerSelector - Selector del contenedor del campo de cliente
  * @param {string} clienteFieldSelector - Selector del campo de cliente
  */
-function handleRoleChange(rolId, clienteContainerSelector, clienteFieldSelector) {
+function handleRoleChange(rolId, clienteContainerSelector, clienteFieldSelector, soloLecturaContainerSelector) {
     if (rolId == 4) {
-        // 2 = Agente, 3 = Supervisor de Calidad, 4 = Cliente
+        // Cliente
         $(clienteContainerSelector).show();
         $(clienteFieldSelector).prop('required', true);
+        $(soloLecturaContainerSelector).show(); // Muestra solo lectura
     } else {
         $(clienteContainerSelector).hide();
         $(clienteFieldSelector).prop('required', false);
+        $(soloLecturaContainerSelector).hide(); // Oculta solo lectura
+        $(soloLecturaContainerSelector).find('input').prop('checked', false);
     }
 }

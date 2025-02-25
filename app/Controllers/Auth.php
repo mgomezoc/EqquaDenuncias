@@ -89,6 +89,7 @@ class Auth extends BaseController
                     $ses_data['id_cliente'] = $data['id_cliente'];
                     $ses_data['nombre_empresa'] = $cliente['nombre_empresa'];
                     $ses_data['slug'] = $cliente['slug'];
+                    $ses_data['solo_lectura'] = $data['solo_lectura'] ?? 0;
                 }
 
                 $session->set($ses_data);

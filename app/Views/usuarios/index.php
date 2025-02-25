@@ -64,6 +64,17 @@
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
+                <div class="col-md-12" id="soloLecturaContainer-{{id}}" style="display: none;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                            id="solo_lectura-{{id}}"
+                            name="solo_lectura"
+                            value="1" {{solo_lectura_checked}}>
+                        <label class="form-check-label" for="solo_lectura-{{id}}">Usuario de Solo Lectura</label>
+                    </div>
+                </div>
+
+
                 <div class="col-md-12">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox"
@@ -128,6 +139,13 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="mb-3" id="soloLecturaContainer" style="display: none;">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="solo_lectura" name="solo_lectura" value="1">
+                            <label class="form-check-label" for="solo_lectura">Usuario de Solo Lectura</label>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="recibe_notificaciones" name="recibe_notificaciones" value="1">

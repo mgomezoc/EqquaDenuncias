@@ -105,12 +105,14 @@ class DenunciasController extends Controller
 
     public function misDenunciasCliente()
     {
-        $clienteId = session()->get('id_cliente'); // Asegurándote que 'id_cliente' esté en la sesión
+        $clienteId = session()->get('id_cliente');
 
         // Verifica que haya un cliente autenticado
         if (!$clienteId) {
             return redirect()->to('/login')->with('error', 'Debe iniciar sesión para ver sus denuncias');
         }
+
+        $solo_lectura = session()->get('solo_lectura');
 
         // Instancias de los modelos
         $clienteModel = new ClienteModel();
@@ -133,7 +135,8 @@ class DenunciasController extends Controller
             'estados' => $estadoModel->findAll(),
             'categorias' => $categoriaModel->findAll(),
             'subcategorias' => $subcategoriaModel->findAll(),
-            'denuncias' => $denuncias,  // Pasar las denuncias del cliente a la vista
+            'denuncias' => $denuncias,
+            'solo_lectura' => $solo_lectura
         ];
 
         return view('denuncias/mis_denuncias_cliente', $data);

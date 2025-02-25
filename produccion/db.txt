@@ -1,0 +1,1 @@
+ALTER TABLE usuarios ADD COLUMN solo_lectura TINYINT(1) DEFAULT 0;
