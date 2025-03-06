@@ -72,18 +72,18 @@
     <div class="card custom-card overflow-hidden">
         <div class="row">
             <!-- Denuncias Nuevas -->
-            <div class="col-lg-4 border-end">
+            <div class="col-lg-3 border-end denuncias-nuevas">
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <p class="mb-0 text-muted titulo-dashboard">Denuncias Nuevas</p>
+                            <p class="mb-0 text-muted titulo-dashboard">Nuevas</p>
                             <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasNuevas"><?= $totalDenunciasNuevas ?></h3>
                         </div>
                         <div class="col mt-3 col-auto">
                             <span class="avatar text-primary p-4 bg-primary-transparent fs-24 rounded-circle text-center"
                                 data-bs-toggle="tooltip"
                                 title="Contabiliza denuncias en estatus de: Recepción">
-                                <i class="fa fa-folder-plus"></i>
+                                <i class="fa-solid fa-folder-plus"></i>
                             </span>
                         </div>
                     </div>
@@ -91,37 +91,56 @@
             </div>
 
             <!-- Denuncias en Proceso -->
-            <div class="col-lg-4 border-end">
+            <div class="col-lg-3 border-end denuncias-en-proceso">
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <p class="mb-0 text-muted titulo-dashboard">Denuncias en Proceso</p>
+                            <p class="mb-0 text-muted titulo-dashboard">En Proceso</p>
                             <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasProceso"><?= $totalDenunciasProceso ?></h3>
                         </div>
                         <div class="col mt-3 col-auto">
-                            <span class="avatar text-secondary p-4 bg-secondary-transparent fs-24 rounded-circle text-center"
+                            <span class="avatar text-warning p-4 bg-warning-transparent fs-24 rounded-circle text-center"
                                 data-bs-toggle="tooltip"
                                 title="Contabiliza denuncias en estatus de: Clasificada, Revisada por Calidad, Liberada al Cliente, En Revisión por Cliente">
-                                <i class="fa fa-sync"></i>
+                                <i class="fa-solid fa-spinner"></i>
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Denuncias Recibidas -->
-            <div class="col-lg-4">
+            <!-- Denuncias Cerradas -->
+            <div class="col-lg-3 border-end denuncias-cerradas">
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <p class="mb-0 text-muted titulo-dashboard">Denuncias Recibidas</p>
-                            <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasRecibidas"><?= $totalDenunciasRecibidas ?></h3>
+                            <p class="mb-0 text-muted titulo-dashboard">Cerradas</p>
+                            <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasCerradas"><?= $totalDenunciasCerradas ?></h3>
                         </div>
                         <div class="col mt-3 col-auto">
-                            <span class="avatar text-danger p-4 bg-danger-transparent fs-24 rounded-circle text-center"
+                            <span class="avatar text-success p-4 bg-success-transparent fs-24 rounded-circle text-center"
                                 data-bs-toggle="tooltip"
-                                title="Contabiliza todas las denuncias en estatus: Recepción, Clasificada, Revisada por Calidad, Liberada al Cliente, En Revisión por Cliente, Cerrada">
-                                <i class="fa fa-inbox"></i>
+                                title="Contabiliza denuncias en estatus: Cerrada">
+                                <i class="fa-solid fa-check-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Denuncias Totales -->
+            <div class="col-lg-3 denuncias-totales">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <p class="mb-0 text-muted titulo-dashboard">Totales</p>
+                            <h3 class="mt-2 mb-1 fw-semibold" id="totalDenunciasTotales"><?= $totalDenunciasTotales ?></h3>
+                        </div>
+                        <div class="col mt-3 col-auto">
+                            <span class="avatar text-info p-4 bg-info-transparent fs-24 rounded-circle text-center"
+                                data-bs-toggle="tooltip"
+                                title="Contabiliza todas las denuncias registradas">
+                                <i class="fa-solid fa-list"></i>
                             </span>
                         </div>
                     </div>
@@ -129,6 +148,7 @@
             </div>
         </div>
     </div>
+
 
 
     <!-- Gráficos -->
@@ -150,7 +170,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card custom-card">
+            <div class="card custom-card min-height">
                 <div class="card-header border-bottom d-block d-sm-flex">
                     <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Estatus de Denuncias</div>
                 </div>
@@ -161,7 +181,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card custom-card">
+            <div class="card custom-card min-height">
                 <div class="card-header border-bottom d-block d-sm-flex">
                     <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Denuncias Anónimas</div>
                 </div>
@@ -171,7 +191,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card custom-card">
+            <div class="card custom-card min-height">
                 <div class="card-header border-bottom d-block d-sm-flex">
                     <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Canal de Denuncia</div>
                 </div>
@@ -181,9 +201,9 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card custom-card">
+            <div class="card custom-card min-height">
                 <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Conocimiento del Incidente</div>
+                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">¿Cómo se enteró del incidente?</div>
                 </div>
                 <div class="card-body">
                     <canvas id="chartConocimiento"></canvas>

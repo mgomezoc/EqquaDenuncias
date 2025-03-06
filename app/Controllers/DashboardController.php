@@ -36,7 +36,9 @@ class DashboardController extends BaseController
         // Contadores de denuncias según los criterios
         $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate);
         $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate);
-        $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate);
+        $totalDenunciasCerradas = $model->countDenunciasCerradas($startDate, $endDate);
+        $totalDenunciasTotales = $model->countDenunciasTotales($startDate, $endDate);
+
 
         // Calcular totales
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
@@ -61,7 +63,8 @@ class DashboardController extends BaseController
             'totalConocimiento' => $totalConocimiento,
             'totalDenunciasNuevas' => $totalDenunciasNuevas,
             'totalDenunciasProceso' => $totalDenunciasProceso,
-            'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
+            'totalDenunciasCerradas' => $totalDenunciasCerradas,
+            'totalDenunciasTotales' => $totalDenunciasTotales,
             'startDate' => $startDateFormatted,
             'endDate' => $endDateFormatted,
             'sucursales' => $sucursales,           // Nuevos datos para el filtro de sucursales
@@ -100,9 +103,12 @@ class DashboardController extends BaseController
         $denunciasPorMedio = $model->getDenunciasPorMedioRecepcion($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
         // Contadores de denuncias según los criterios y filtros aplicados
+
         $totalDenunciasNuevas = $model->countDenunciasNuevas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
         $totalDenunciasProceso = $model->countDenunciasEnProceso($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
-        $totalDenunciasRecibidas = $model->countDenunciasRecibidas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $totalDenunciasCerradas = $model->countDenunciasCerradas($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+        $totalDenunciasTotales = $model->countDenunciasTotales($startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+
 
         // Calcular totales
         $totalEstatus = array_sum(array_column($estatusDenuncias, 'total'));
@@ -126,7 +132,8 @@ class DashboardController extends BaseController
             'totalConocimiento' => $totalConocimiento,
             'totalDenunciasNuevas' => $totalDenunciasNuevas,
             'totalDenunciasProceso' => $totalDenunciasProceso,
-            'totalDenunciasRecibidas' => $totalDenunciasRecibidas,
+            'totalDenunciasCerradas' => $totalDenunciasCerradas,
+            'totalDenunciasTotales' => $totalDenunciasTotales
         ]);
     }
 }

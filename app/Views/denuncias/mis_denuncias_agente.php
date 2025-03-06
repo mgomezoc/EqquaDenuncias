@@ -309,7 +309,6 @@
                             <select name="medio_recepcion" id="medio_recepcion" class="form-select select2" required>
                                 <option value="" selected disabled></option>
                                 <option value="Llamada">Llamada</option>
-                                <option value="Formulario">Formulario</option>
                                 <option value="WhatsApp">WhatsApp</option>
                                 <option value="Email">Email</option>
                             </select>

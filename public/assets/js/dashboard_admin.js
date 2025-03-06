@@ -582,10 +582,11 @@ function loadDashboardData(startDate = null, endDate = null, sucursal = '', depa
 
 // Función para actualizar los datos de los gráficos
 function updateCharts(data) {
-    //Total denuncias
+    // Actualizar contadores
     $('#totalDenunciasNuevas').html(data.totalDenunciasNuevas);
     $('#totalDenunciasProceso').html(data.totalDenunciasProceso);
-    $('#totalDenunciasRecibidas').html(data.totalDenunciasRecibidas);
+    $('#totalDenunciasCerradas').html(data.totalDenunciasCerradas);
+    $('#totalDenunciasTotales').html(data.totalDenunciasTotales);
 
     if (data.denunciasPorMedio && denuncianteChart) {
         denuncianteChart.data.labels = data.denunciasPorMedio.map(item => item.medio_recepcion);
@@ -660,7 +661,7 @@ function updateDepartmentTable(data) {
     // Generar encabezado de la tabla
     tableHTML += '<thead><tr><th>Departamento</th>';
     sucursales.forEach(sucursal => {
-        tableHTML += `<th>${sucursal}</th>`;
+        tableHTML += `<th class="text-center">${sucursal}</th>`;
     });
     tableHTML += '<th>Total</th></tr></thead><tbody>';
 

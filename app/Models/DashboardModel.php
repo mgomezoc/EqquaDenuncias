@@ -135,7 +135,7 @@ class DashboardModel extends Model
     }
 
     /**
-     * Cuenta denuncias con el estado "Nuevo" (id_estado = 1).
+     * Cuenta denuncias con estado "Recepción" (id_estado = 1).
      */
     public function countDenunciasNuevas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
@@ -148,12 +148,37 @@ class DashboardModel extends Model
     }
 
     /**
-     * Cuenta denuncias con estados "En Proceso" (id_estado = 2, 3, 4, o 5).
+     * Cuenta denuncias en proceso (id_estado = 2, 3, 4, 5).
      */
     public function countDenunciasEnProceso($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
     {
         $builder = $this->db->table('denuncias')
             ->whereIn('estado_actual', [2, 3, 4, 5]);
+
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+
+        return $builder->countAllResults();
+    }
+
+    /**
+     * Cuenta denuncias cerradas (id_estado = 6).
+     */
+    public function countDenunciasCerradas($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
+    {
+        $builder = $this->db->table('denuncias')
+            ->where('estado_actual', 6);
+
+        $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
+
+        return $builder->countAllResults();
+    }
+
+    /**
+     * Cuenta todas las denuncias sin importar el estado.
+     */
+    public function countDenunciasTotales($startDate = null, $endDate = null, $sucursal = null, $departamento = null, $anonimo = null, $cliente = null)
+    {
+        $builder = $this->db->table('denuncias');
 
         $this->applyFilters($builder, $startDate, $endDate, $sucursal, $departamento, $anonimo, $cliente);
 
