@@ -25,7 +25,7 @@
                         <th>Categoría</th>
                         <th>Subcategoría</th>
                         <th>Departamento</th>
-                        <th>Estado</th>
+                        <th>Estatus</th>
                         <th>medio_recepcion</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
@@ -54,7 +54,7 @@
             </li>
             <li>
                 <a class="dropdown-item change-status" href="#">
-                    <i class="fas fa-exchange-alt me-2"></i> Cambiar Estado
+                    <i class="fas fa-exchange-alt me-2"></i> Cambiar Estatus
                 </a>
             </li>
             <li>
@@ -104,7 +104,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="estado_actual-{{id}}" class="form-label">Estado</label>
+                    <label for="estado_actual-{{id}}" class="form-label">Estatus</label>
                     <select id="estado_actual-{{id}}" name="estado_actual" class="form-select select2">
                         {{{selectOptions estados estado_actual}}}
                     </select>
@@ -278,17 +278,15 @@
     </div>
 </div>
 
-<!-- Modal Cambiar Estado -->
+<!-- Modal Cambiar Estatus -->
 <div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estado de Denuncia</h5>
+                <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estatus de Denuncia</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <!-- Aquí se inyectará el formulario para cambiar el estado -->
-            </div>
+            <div class="modal-body"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary">Guardar</button>

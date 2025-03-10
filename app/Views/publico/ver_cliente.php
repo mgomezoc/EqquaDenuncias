@@ -98,7 +98,7 @@
                 <div class="service-box" data-aos="fade-up" data-aos-delay="100">
                     <i class="fas fa-file-alt"></i>
                     <h4>Proceso Transparente</h4>
-                    <p>Sigue el estado de tu denuncia de manera clara y sencilla. Estarás informado en cada paso.</p>
+                    <p>Sigue el estatus de tu denuncia de manera clara y sencilla. Estarás informado en cada paso.</p>
                 </div>
             </div>
             <div class="col-md-4">

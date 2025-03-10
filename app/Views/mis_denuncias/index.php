@@ -24,7 +24,7 @@
                         <th>Categoría</th>
                         <th>Subcategoría</th>
                         <th>Departamento</th>
-                        <th>Estado</th>
+                        <th>Estatus</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>

@@ -24,7 +24,7 @@ $(document).ready(function () {
             { field: 'categoria_nombre', title: 'Categoría' },
             { field: 'subcategoria_nombre', title: 'Subcategoría' },
             { field: 'departamento_nombre', title: 'Departamento' },
-            { field: 'estado_nombre', title: 'Estado' },
+            { field: 'estado_nombre', title: 'Estatus' },
             { field: 'fecha_hora_reporte', title: 'Fecha' },
             {
                 field: 'operate',

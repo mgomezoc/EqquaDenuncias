@@ -58,7 +58,7 @@ $(function () {
                 </div>
                 <div class="col-md-6">
                     <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
-                    <p><strong>Estado:</strong> ${data.estado_nombre}</p>
+                    <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
                     <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
                     <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
                     <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
@@ -124,7 +124,7 @@ $(function () {
                 $('#modalCambiarEstado .modal-body').html(`
             <form id="formCambiarEstado">
                 <div class="mb-3">
-                    <label for="estado_nuevo" class="form-label">Nuevo Estado</label>
+                    <label for="estado_nuevo" class="form-label">Nuevo Estatus</label>
                     <select id="estado_nuevo" name="estado_nuevo" class="form-select">
                         ${opciones}
                     </select>
@@ -149,12 +149,12 @@ $(function () {
                                 comentario: comentario // Enviar el comentario al servidor
                             },
                             function () {
-                                showToast('Estado actualizado correctamente.', 'success');
+                                showToast('Estatus actualizado correctamente.', 'success');
                                 $tablaDenuncias.bootstrapTable('refresh');
                                 modal.hide();
                             }
                         ).fail(function () {
-                            showToast('Error al actualizar el estado.', 'error');
+                            showToast('Error al actualizar el estatus.', 'error');
                         });
                     });
                 modal.show();
@@ -388,7 +388,7 @@ $(function () {
                         id_sucursal: 'Por favor seleccione una sucursal',
                         categoria: 'Por favor seleccione una categoría',
                         subcategoria: 'Por favor seleccione una subcategoría',
-                        estado_actual: 'Por favor seleccione un estado',
+                        estado_actual: 'Por favor seleccione un estatus',
                         descripcion: 'Por favor ingrese la descripción'
                     },
                     submitHandler: function (form) {

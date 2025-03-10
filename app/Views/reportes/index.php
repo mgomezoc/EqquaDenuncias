@@ -56,7 +56,7 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label for="estado_actual">Estado Actual</label>
+                    <label for="estado_actual">Estatus Actual</label>
                     <select class="form-control select2" id="estado_actual" name="estado_actual">
                         <option value="">Todos</option>
                         <?php foreach ($estados as $estado): ?>

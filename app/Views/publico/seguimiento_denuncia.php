@@ -5,7 +5,7 @@
 
     <div class="text-center mb-5">
         <h1 class="titulo animate__animated animate__fadeIn">Seguimiento a mi Denuncia</h1>
-        <p class="text-muted">Ingrese su número de denuncia para verificar el estado actual y recibir detalles actualizados.</p>
+        <p class="text-muted">Ingrese su número de denuncia para verificar el estatus actual y recibir detalles actualizados.</p>
     </div>
 
 
