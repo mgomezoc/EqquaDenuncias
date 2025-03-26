@@ -59,6 +59,8 @@ $routes->post('/reset-password-submit', 'Auth::resetPasswordSubmit'); // Procesa
  */
 $routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']); // Dashboard principal
 $routes->post('/dashboard/filtrar', 'DashboardController::filtrar');
+$routes->post('/dashboard/getDenunciasPorAnio', 'DashboardController::getDenunciasPorAnio');
+
 /**
  * Grupo de rutas accesibles solo por ADMIN y otros roles específicos
  * Usuarios autenticados con roles ADMIN, CLIENTE, AGENTE, SUPERVISOR_CALIDAD

@@ -150,25 +150,38 @@
     </div>
 
 
+    <!-- Filtro de año para la gráfica de Mes de Recepción de Denuncia -->
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label for="yearFilter" class="form-label">Seleccionar Año:</label>
+            <select id="yearFilter" class="form-select">
+                <?php for ($i = date('Y'); $i >= 2023; $i--): ?>
+                    <option value="<?= $i ?>" <?= ($i == $currentYear) ? 'selected' : '' ?>><?= $i ?></option>
+                <?php endfor; ?>
+            </select>
+        </div>
+    </div>
+
+    <!-- Gráfico de Mes de Recepción de Denuncia -->
+    <div class="col-md-12">
+        <div class="card custom-card">
+            <div class="card-header border-bottom d-block d-sm-flex">
+                <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Mes de Recepción de Denuncia</div>
+                <div class="ms-auto">
+                    <a href="javascript:void(0);" class="btn btn-sm border-0 text-dark fs-13 fw-semibold">
+                        Total: <span id="totalMesDenuncias"></span>
+                    </a>
+                </div>
+
+            </div>
+            <div class="card-body">
+                <canvas id="chartMesDenuncias"></canvas>
+            </div>
+        </div>
+    </div>
 
     <!-- Gráficos -->
     <div class="row g-3">
-        <!-- Gráfico de Mes de recepción de denuncia -->
-        <div class="col-md-12">
-            <div class="card custom-card">
-                <div class="card-header border-bottom d-block d-sm-flex">
-                    <div class="card-title mb-3 mb-sm-0 titulo-dashboard">Mes de Recepción de Denuncia</div>
-                    <div class="ms-auto">
-                        <a href="javascript:void(0);" class="btn btn-sm border-0 text-dark fs-13 fw-semibold">
-                            Total: <span id="totalMesDenuncias"></span>
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartMesDenuncias"></canvas>
-                </div>
-            </div>
-        </div>
         <div class="col-md-6">
             <div class="card custom-card min-height">
                 <div class="card-header border-bottom d-block d-sm-flex">

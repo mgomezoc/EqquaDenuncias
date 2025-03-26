@@ -283,4 +283,34 @@ class DashboardModel extends Model
             $builder->where('denuncias.id_cliente', $cliente);
         }
     }
+
+    /**
+     * Obtiene la cantidad de denuncias agrupadas por mes para un año específico.
+     */
+    public function getDenunciasPorMesAnio($year)
+    {
+        $builder = $this->db->table('denuncias')
+            ->select("MONTH(created_at) as mes, COUNT(id) as total")
+            ->where("YEAR(created_at)", $year)
+            ->groupBy("MONTH(created_at)")
+            ->orderBy("mes", "ASC");
+
+        $result = $builder->get()->getResultArray();
+
+        // Crear un array con 12 posiciones (1 a 12) inicializado en 0
+        $data = array_fill(1, 12, 0);
+
+        // Llenar los valores obtenidos de la consulta
+        foreach ($result as $row) {
+            $data[(int)$row['mes']] = (int)$row['total'];
+        }
+
+        // Transformar el array en el formato adecuado para la gráfica
+        $formattedData = [];
+        foreach ($data as $mes => $total) {
+            $formattedData[] = ['mes' => $mes, 'total' => $total];
+        }
+
+        return $formattedData;
+    }
 }

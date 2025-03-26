@@ -46,6 +46,11 @@ class DashboardController extends BaseController
         $totalSucursales = array_sum(array_column($denunciasPorSucursal, 'total'));
         $totalConocimiento = array_sum(array_column($denunciasPorConocimiento, 'total'));
 
+        // Año actual para la gráfica de mes de recepción
+        $currentYear = date('Y');
+        $denunciasPorMes = $model->getDenunciasPorMesAnio($currentYear);
+
+
         $data = [
             'title' => 'Dashboard',
             'clientes' => $clientes,
@@ -67,11 +72,33 @@ class DashboardController extends BaseController
             'totalDenunciasTotales' => $totalDenunciasTotales,
             'startDate' => $startDateFormatted,
             'endDate' => $endDateFormatted,
+            'denunciasPorMes' => $denunciasPorMes, // Datos iniciales de la gráfica
+            'currentYear' => $currentYear, // Enviar año actual a la vista
             'sucursales' => $sucursales,           // Nuevos datos para el filtro de sucursales
             'departamentos' => $departamentos       // Nuevos datos para el filtro de departamentos
         ];
 
         return view('dashboard/index', $data);
+    }
+
+    /**
+     * Obtiene las denuncias agrupadas por mes para un año específico.
+     */
+    public function getDenunciasPorAnio()
+    {
+        $model = new DashboardModel();
+
+        // Obtener año de la petición POST
+        $year = $this->request->getPost('year');
+
+        if (!$year || !is_numeric($year)) {
+            return $this->response->setJSON(['error' => 'Año inválido']);
+        }
+
+        // Obtener datos del modelo
+        $denunciasPorMes = $model->getDenunciasPorMesAnio($year);
+
+        return $this->response->setJSON(['denunciasPorMes' => $denunciasPorMes]);
     }
 
 

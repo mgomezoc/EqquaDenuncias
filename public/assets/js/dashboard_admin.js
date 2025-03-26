@@ -608,7 +608,7 @@ function updateCharts(data) {
         const totalAnonimas = data.denunciasAnonimas.reduce((sum, item) => sum + parseInt(item.total, 10), 0);
         $('#totalDenunciasAnonimas').text(`Total ${totalAnonimas}`);
     }
-
+    /*
     if (data.denunciasPorMes && mesDenunciasChart) {
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -623,7 +623,7 @@ function updateCharts(data) {
 
         const totalDenuncias = data.denunciasPorMes.reduce((sum, item) => sum + item.total, 0);
         $('#totalMesDenuncias').html(totalDenuncias);
-    }
+    }*/
 
     if (data.estatusDenuncias && estatusChart) {
         estatusChart.data.labels = data.estatusDenuncias.map(item => item.estatus);
@@ -725,6 +725,8 @@ $(document).ready(function () {
 
     // Inicializar los gráficos
     initCharts();
+    let initialYear = $('#yearFilter').val();
+    updateMesDenunciasChart(initialYear);
 
     // Cargar datos iniciales del dashboard
     const startDate = $('#startDate').val();
@@ -760,4 +762,41 @@ $(document).ready(function () {
         // Recargar los datos con filtros vacíos (para mostrar toda la información)
         loadDashboardData(null, null, null, null, '', null);
     });
+
+    // Evento para cambiar el año en la gráfica de Mes de Recepción de Denuncia
+    $('#yearFilter').change(function () {
+        let selectedYear = $(this).val();
+        updateMesDenunciasChart(selectedYear);
+    });
 });
+
+// Función para actualizar la gráfica de Mes de Recepción de Denuncia
+function updateMesDenunciasChart(year) {
+    $.ajax({
+        url: `${Server}dashboard/getDenunciasPorAnio`,
+        method: 'POST',
+        data: { year: year },
+        dataType: 'json',
+        success: function (response) {
+            if (response.denunciasPorMes) {
+                let meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+                // Asigna los nombres de los meses como etiquetas
+                mesDenunciasChart.data.labels = meses;
+
+                // Asigna los valores de total para cada mes
+                mesDenunciasChart.data.datasets[0].data = response.denunciasPorMes.map(item => item.total);
+
+                // Actualiza la gráfica
+                mesDenunciasChart.update();
+
+                // Actualiza el total en la vista
+                let totalDenuncias = response.denunciasPorMes.reduce((sum, item) => sum + item.total, 0);
+                $('#totalMesDenuncias').html(totalDenuncias);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error al cargar datos del gráfico por año:', error);
+        }
+    });
+}
