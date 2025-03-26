@@ -86,6 +86,7 @@ $(function () {
                                 <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
                                 <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
                                 <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                                <p><strong>Sexo:</strong> ${data.sexo_nombre || 'No especificado'}</p>
                                 <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
                                 <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
                             </div>
@@ -245,6 +246,10 @@ $(function () {
                 field: 'fecha_hora_reporte',
                 title: 'Fecha',
                 formatter: operateFormatterFecha
+            },
+            {
+                field: 'sexo_nombre',
+                title: 'Sexo'
             },
             {
                 field: 'operate',

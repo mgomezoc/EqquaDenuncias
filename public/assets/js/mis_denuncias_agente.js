@@ -204,6 +204,7 @@ $(function () {
                     <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
                     <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
                     <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                    <p><strong>Sexo:</strong> ${data.sexo_nombre || 'No especificado'}</p>
                     <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
                     <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
                 </div>
@@ -389,6 +390,11 @@ $(function () {
                 formatter: operateFormatterFecha
             },
             {
+                field: 'sexo_nombre',
+                title: 'Sexo',
+                visible: false
+            },
+            {
                 field: 'operate',
                 title: 'Acciones',
                 align: 'center',
@@ -398,6 +404,7 @@ $(function () {
                 events: operateEvents
             }
         ],
+        showColumns: true,
         detailView: true,
         onExpandRow: function (index, row, $detail) {
             $detail.html('Cargando...');
@@ -414,6 +421,12 @@ $(function () {
                 { id: 'WhatsApp', name: 'WhatsApp' },
                 { id: 'Email', name: 'Email' },
                 { id: 'Plataforma Pública', name: 'Plataforma Pública' }
+            ];
+
+            const comboSexo = [
+                { id: '1', name: 'Masculino' },
+                { id: '2', name: 'Femenino' },
+                { id: '3', name: 'Otro' }
             ];
 
             const requests = [
@@ -475,6 +488,8 @@ $(function () {
                     denunciar_a_alguien: denunciaDetalles[0].denunciar_a_alguien,
                     comboComoSeEntero: comboComoSeEntero,
                     comboMedioRecepcion: comboMedioRecepcion,
+                    comboSexo: comboSexo,
+                    id_sexo: row.id_sexo,
                     medio_recepcion: row.medio_recepcion
                 };
 

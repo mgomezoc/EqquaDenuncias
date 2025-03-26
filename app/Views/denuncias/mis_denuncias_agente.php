@@ -13,7 +13,7 @@
         </button>
     </div>
     <div class="card-body">
-        <div class="p-3 border">
+        <div class="table-responsive">
             <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua">
                 <thead>
                     <tr>
@@ -78,6 +78,12 @@
                     <label for="id_sucursal-{{id}}" class="form-label">Sucursal</label>
                     <select class="form-select select2" id="id_sucursal-{{id}}" name="id_sucursal">
                         {{{selectOptions sucursales id_sucursal}}}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="id_sexo-{{id}}" class="form-label">Sexo del Denunciante</label>
+                    <select class="form-select select2" id="id_sexo-{{id}}" name="id_sexo">
+                        {{{selectOptions comboSexo id_sexo}}}
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -369,6 +375,15 @@
                                 <option value="Proveedor">Proveedor</option>
                                 <option value="Cliente">Cliente</option>
                                 <option value="No se">No se</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_sexo" class="form-label">Sexo del Denunciante</label>
+                            <select class="form-select select2" id="id_sexo" name="id_sexo">
+                                <option value="" selected disabled>Seleccione una opción</option>
+                                <option value="1">Masculino</option>
+                                <option value="2">Femenino</option>
+                                <option value="3">Otro</option>
                             </select>
                         </div>
                         <div class="col-md-6">

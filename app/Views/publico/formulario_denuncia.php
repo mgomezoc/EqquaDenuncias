@@ -44,6 +44,16 @@
                     <label for="telefono" class="form-label">Teléfono (opcional)</label>
                     <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su teléfono (opcional)">
                 </div>
+                <div class="col-md-6">
+                    <label for="id_sexo" class="form-label">Sexo</label>
+                    <select class="form-select select2" id="id_sexo" name="id_sexo">
+                        <option value="">Seleccione su sexo</option>
+                        <option value="1">Masculino</option>
+                        <option value="2">Femenino</option>
+                        <option value="3">Otro</option>
+                    </select>
+                </div>
+
             </div>
 
             <hr>

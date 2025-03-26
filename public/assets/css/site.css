@@ -255,3 +255,6 @@ label.error {
 .denuncias-totales {
   background: #d8f4fa;
 }
+.badge {
+  white-space: break-spaces;
+}

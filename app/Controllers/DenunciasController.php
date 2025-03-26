@@ -225,15 +225,17 @@ class DenunciasController extends Controller
             'denunciar_a_alguien' => $this->request->getVar('denunciar_a_alguien'),
             'area_incidente' => $this->request->getVar('area_incidente'),
             'descripcion' => $this->request->getVar('descripcion'),
-            'estado_actual' => $this->request->getVar('estado_actual'),  // Capturar estado_actual
-            'medio_recepcion' => $this->request->getVar('medio_recepcion'), // Capturar medio_recepcion
+            'estado_actual' => $this->request->getVar('estado_actual'),
+            'medio_recepcion' => $this->request->getVar('medio_recepcion'),
             'nombre_completo' => $this->request->getVar('nombre_completo'),
             'correo_electronico' => $this->request->getVar('correo_electronico'),
             'telefono' => $this->request->getVar('telefono'),
-            'id_creador' => $idCreador, // Obtiene el ID del creador desde la sesión
+            'id_creador' => $idCreador,
+            'id_sexo' => $this->request->getVar('id_sexo'),
         ], function ($value) {
-            return $value !== null; // Filtrar solo valores no nulos
+            return $value !== null;
         });
+
 
 
         $db = \Config\Database::connect();

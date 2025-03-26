@@ -14,24 +14,27 @@
     </div>
     <div class="card-body">
         <div class="p-3 border">
-            <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Folio</th>
-                        <th>Cliente</th>
-                        <th>Sucursal</th>
-                        <th>Tipo Denunciante</th>
-                        <th>Categoría</th>
-                        <th>Subcategoría</th>
-                        <th>Departamento</th>
-                        <th>Estatus</th>
-                        <th>medio_recepcion</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="table-responsive">
+                <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Folio</th>
+                            <th>Cliente</th>
+                            <th>Sucursal</th>
+                            <th>Tipo Denunciante</th>
+                            <th>Categoría</th>
+                            <th>Subcategoría</th>
+                            <th>Departamento</th>
+                            <th>Estatus</th>
+                            <th>medio_recepcion</th>
+                            <th>Fecha</th>
+                            <th>Sexo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -85,6 +88,13 @@
                         {{{selectOptions sucursales id_sucursal}}}
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="id_sexo-{{id}}" class="form-label">Sexo del Denunciante</label>
+                    <select class="form-select select2" id="id_sexo-{{id}}" name="id_sexo">
+                        {{{selectOptions comboSexo id_sexo}}}
+                    </select>
+                </div>
+
                 <div class="col-md-4">
                     <label for="categoria-{{id}}" class="form-label">Categoría</label>
                     <select class="form-select select2" id="categoria-{{id}}" name="categoria">
@@ -374,6 +384,16 @@
                                 <option value="No se">No se</option>
                             </select>
                         </div>
+                        <div class="col-md-6">
+                            <label for="id_sexo" class="form-label">Sexo del Denunciante</label>
+                            <select class="form-select select2" id="id_sexo" name="id_sexo">
+                                <option value="" selected disabled>Seleccione una opción</option>
+                                <option value="1">Masculino</option>
+                                <option value="2">Femenino</option>
+                                <option value="3">Otro</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-6">
                             <label for="categoria" class="form-label">Categoría</label>
                             <select class="form-select select2" id="categoria" name="categoria" required>

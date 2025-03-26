@@ -71,6 +71,7 @@ class Publico extends BaseController
         $nombre_completo = $anonimo == 0 ? $this->request->getPost('nombre_completo') : null;
         $correo_electronico = $anonimo == 0 ? $this->request->getPost('correo_electronico') : null;
         $telefono = $anonimo == 0 ? $this->request->getPost('telefono') : null;
+        $id_sexo = $anonimo == 0 ? $this->request->getPost('id_sexo') : null;
 
         // Datos para guardar la denuncia
         $data = [
@@ -82,6 +83,7 @@ class Publico extends BaseController
             'nombre_completo' => $nombre_completo,
             'correo_electronico' => $correo_electronico,
             'telefono' => $telefono,
+            'id_sexo' => $id_sexo,
             'fecha_incidente' => $this->request->getPost('fecha_incidente'),
             'como_se_entero' => $this->request->getPost('como_se_entero'),
             'denunciar_a_alguien' => $this->request->getPost('denunciar_a_alguien'),
