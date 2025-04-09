@@ -60,6 +60,11 @@ $routes->post('/reset-password-submit', 'Auth::resetPasswordSubmit'); // Procesa
 $routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']); // Dashboard principal
 $routes->post('/dashboard/filtrar', 'DashboardController::filtrar');
 $routes->post('/dashboard/getDenunciasPorAnio', 'DashboardController::getDenunciasPorAnio');
+$routes->post('dashboard/getSubcategoriasPorCategoria', 'DashboardController::getSubcategoriasPorCategoria');
+$routes->post('dashboard/getCategoriasResumen', 'DashboardController::getCategoriasResumen');
+$routes->post('dashboard/getResumenCategoriasConFiltros', 'DashboardController::getResumenCategoriasConFiltros');
+
+
 
 /**
  * Grupo de rutas accesibles solo por ADMIN y otros roles específicos

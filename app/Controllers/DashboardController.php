@@ -163,4 +163,60 @@ class DashboardController extends BaseController
             'totalDenunciasTotales' => $totalDenunciasTotales
         ]);
     }
+
+    public function getSubcategoriasPorCategoria()
+    {
+        $categoriaId = $this->request->getPost('categoria_id');
+
+        // Convertir fechas del formato DD/MM/YYYY a YYYY-MM-DD
+        $startDate = $this->convertirFecha($this->request->getPost('start_date'));
+        $endDate = $this->convertirFecha($this->request->getPost('end_date'));
+
+        $filters = [
+            'start_date'   => $startDate,
+            'end_date'     => $endDate,
+            'cliente'      => $this->request->getPost('cliente'),
+            'sucursal'     => $this->request->getPost('sucursal'),
+            'departamento' => $this->request->getPost('departamento'),
+            'anonimo'      => $this->request->getPost('anonimo'),
+        ];
+
+        $model = new \App\Models\DenunciaModel();
+        $subcategorias = $model->getSubcategoriasPorCategoria($categoriaId, $filters);
+
+        return $this->response->setJSON(['data' => $subcategorias]);
+    }
+
+    // 👇 Función auxiliar para convertir formato de fecha
+    private function convertirFecha($fecha)
+    {
+        if (!$fecha) return null;
+        $partes = explode('/', $fecha);
+        if (count($partes) === 3) {
+            return "{$partes[2]}-{$partes[1]}-{$partes[0]}";
+        }
+        return $fecha;
+    }
+
+
+    public function getResumenCategoriasConFiltros()
+    {
+        $model = new \App\Models\DenunciaModel();
+
+        $startDate = $this->convertirFecha($this->request->getPost('start_date'));
+        $endDate   = $this->convertirFecha($this->request->getPost('end_date'));
+
+        $filters = [
+            'start_date'   => $startDate,
+            'end_date'     => $endDate,
+            'cliente'      => $this->request->getPost('cliente'),
+            'sucursal'     => $this->request->getPost('sucursal'),
+            'departamento' => $this->request->getPost('departamento'),
+            'anonimo'      => $this->request->getPost('anonimo')
+        ];
+
+        $resumen = $model->getResumenCategoriasConFiltros($filters);
+
+        return $this->response->setJSON($resumen);
+    }
 }
