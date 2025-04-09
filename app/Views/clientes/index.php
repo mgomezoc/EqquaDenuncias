@@ -157,6 +157,13 @@
                         </div>
                     </div>
                 </div>
+                <?php if ($rol_slug == 'ADMIN'): ?>
+                    <div class="mt-4 text-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Actualizar Imágenes
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         </form>
     </div>
