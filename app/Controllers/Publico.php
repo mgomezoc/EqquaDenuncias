@@ -77,14 +77,14 @@ class Publico extends BaseController
         $data = [
             'id_cliente' => $this->request->getPost('id_cliente'),
             'id_sucursal' => $this->request->getPost('id_sucursal'),
-            'tipo_denunciante' => $anonimo ? 'Anonimo' : 'No Anonimo',
+            'tipo_denunciante' => $anonimo ? 'Anónimo' : 'No anónimo',
             'id_departamento' => $this->request->getPost('id_departamento'),
             'anonimo' => $anonimo,
             'nombre_completo' => $nombre_completo,
             'correo_electronico' => $correo_electronico,
             'telefono' => $telefono,
             'id_sexo' => $id_sexo,
-            'fecha_incidente' => $this->request->getPost('fecha_incidente'),
+            'fecha_incidente' => $this->convertirFecha($this->request->getPost('fecha_incidente')),
             'como_se_entero' => $this->request->getPost('como_se_entero'),
             'denunciar_a_alguien' => $this->request->getPost('denunciar_a_alguien'),
             'area_incidente' => $this->request->getPost('area_incidente'),
@@ -310,5 +310,17 @@ class Publico extends BaseController
             'comentarios' => $comentariosVisibles,
             'archivos' => $archivos
         ]);
+    }
+
+    private function convertirFecha($fecha)
+    {
+        if (!$fecha) return null;
+
+        $partes = explode('/', $fecha);
+        if (count($partes) === 3) {
+            return $partes[2] . '-' . $partes[1] . '-' . $partes[0]; // yyyy-mm-dd
+        }
+
+        return null;
     }
 }
