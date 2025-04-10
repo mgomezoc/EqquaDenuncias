@@ -83,8 +83,8 @@ function initCharts() {
         options: {
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'bottom',
+                    position: 'left',
+                    align: 'center',
                     labels: {
                         // Modificamos el texto de la leyenda para mostrar nombre y cantidad
                         generateLabels: function (chart) {
@@ -102,14 +102,14 @@ function initCharts() {
                         },
                         font: {
                             family: 'Nunito',
-                            size: 12,
+                            size: 13,
                             style: 'italic',
                             weight: 'bold'
                         },
-                        boxWidth: 10,
+                        boxWidth: 40,
                         boxHeight: 30,
                         color: '#231f20',
-                        padding: 40,
+                        padding: 25,
                         usePointStyle: true,
                         pointStyle: 'circle',
                         textAlign: 'left'
@@ -117,7 +117,6 @@ function initCharts() {
                 },
                 tooltip: {
                     callbacks: {
-                        position: 'nearest',
                         label: function (tooltipItem) {
                             const label = tooltipItem.label || '';
                             const value = tooltipItem.raw;
@@ -126,8 +125,6 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    clip: true,
-                    display: context => context.dataset.data[context.dataIndex] > 0,
                     color: '#fff',
                     formatter: (value, ctx) => {
                         const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
@@ -135,7 +132,7 @@ function initCharts() {
                         return `${percentage}%`;
                     },
                     offset: 10,
-                    font: { weight: 'bold', size: 13 }
+                    font: { weight: 'bold', size: 14 }
                 }
             }
         },
@@ -189,7 +186,7 @@ function initCharts() {
         options: {
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'right',
                     align: 'center',
                     labels: {
                         // Generar etiquetas personalizadas para mostrar "Nombre: Cantidad"
@@ -208,14 +205,14 @@ function initCharts() {
                         },
                         font: {
                             family: 'Nunito',
-                            size: 12,
+                            size: 16,
                             style: 'italic',
                             weight: 'bold'
                         },
-                        boxWidth: 10,
+                        boxWidth: 40,
                         boxHeight: 30,
                         color: '#231f20',
-                        padding: 40,
+                        padding: 50,
                         usePointStyle: true,
                         pointStyle: 'circle',
                         textAlign: 'left'
@@ -238,7 +235,7 @@ function initCharts() {
                         return `${percentage}%`;
                     },
                     offset: 10,
-                    font: { weight: 'bold', size: 13 }
+                    font: { weight: 'bold', size: 14 }
                 }
             }
         },
@@ -255,7 +252,7 @@ function initCharts() {
                     const centerX = (chartArea.left + chartArea.right) / 2;
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
 
-                    ctx.font = 'bold 23px Nunito';
+                    ctx.font = 'bold 24px Nunito';
                     ctx.fillStyle = '#231f20';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -286,7 +283,7 @@ function initCharts() {
         options: {
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'left',
                     align: 'center',
                     labels: {
                         generateLabels: function (chart) {
@@ -304,16 +301,17 @@ function initCharts() {
                         },
                         font: {
                             family: 'Nunito',
-                            size: 13,
+                            size: 16,
                             style: 'italic',
                             weight: 'bold'
                         },
-                        boxWidth: 10,
+                        boxWidth: 40,
                         boxHeight: 30,
                         color: '#231f20',
+                        padding: 50,
                         usePointStyle: true,
                         pointStyle: 'circle',
-                        padding: 40
+                        textAlign: 'left'
                     }
                 },
                 tooltip: {
@@ -350,7 +348,7 @@ function initCharts() {
                     const centerX = (chartArea.left + chartArea.right) / 2;
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
 
-                    ctx.font = 'bold 23px Nunito';
+                    ctx.font = 'bold 24px Nunito';
                     ctx.fillStyle = '#231f20';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -381,7 +379,7 @@ function initCharts() {
         options: {
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'right',
                     align: 'center',
                     labels: {
                         generateLabels: function (chart) {
@@ -399,16 +397,17 @@ function initCharts() {
                         },
                         font: {
                             family: 'Nunito',
-                            size: 13,
+                            size: 14,
                             style: 'italic',
                             weight: 'bold'
                         },
-                        boxWidth: 10,
+                        boxWidth: 40,
                         boxHeight: 30,
                         color: '#231f20',
                         padding: 40,
                         usePointStyle: true,
-                        pointStyle: 'circle'
+                        pointStyle: 'circle',
+                        textAlign: 'left'
                     }
                 },
                 tooltip: {
@@ -445,7 +444,7 @@ function initCharts() {
                     const centerX = (chartArea.left + chartArea.right) / 2;
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
 
-                    ctx.font = 'bold 23px Nunito';
+                    ctx.font = 'bold 24px Nunito';
                     ctx.fillStyle = '#231f20';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';

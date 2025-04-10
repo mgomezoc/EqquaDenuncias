@@ -7,7 +7,7 @@ class Home extends BaseController
     public function index()
     {
         $data = [
-            'title' => 'Bienvenido ' . session()->get('nombre_usuario'),
+            'title' => 'Hola ' . session()->get('nombre_usuario') . '.',
             'controlador' => 'Inicio',
             'vista' => 'Home'
         ];

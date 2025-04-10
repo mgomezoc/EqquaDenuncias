@@ -33,7 +33,6 @@ label.error {
   font-weight: 700;
   padding-left: 250px;
   text-align: center;
-  text-transform: uppercase;
   color: #999;
 }
 .app-sidebar .slide-menu.child1 .side-menu__item:before,

@@ -84,7 +84,7 @@ class Publico extends BaseController
             'correo_electronico' => $correo_electronico,
             'telefono' => $telefono,
             'id_sexo' => $id_sexo,
-            'fecha_incidente' => $this->convertirFecha($this->request->getPost('fecha_incidente')),
+            'fecha_incidente' => convertir_fecha($this->request->getPost('fecha_incidente')),
             'como_se_entero' => $this->request->getPost('como_se_entero'),
             'denunciar_a_alguien' => $this->request->getPost('denunciar_a_alguien'),
             'area_incidente' => $this->request->getPost('area_incidente'),
