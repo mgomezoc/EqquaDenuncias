@@ -89,10 +89,14 @@ function initCharts() {
                         // Modificamos el texto de la leyenda para mostrar nombre y cantidad
                         generateLabels: function (chart) {
                             const dataset = chart.data.datasets[0];
+                            const total = dataset.data.reduce((a, b) => a + b, 0);
+
                             return chart.data.labels.map((label, index) => {
                                 const value = dataset.data[index];
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+
                                 return {
-                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
+                                    text: `${label}: ${value} (${percentage}%)`,
                                     fillStyle: dataset.backgroundColor[index],
                                     strokeStyle: dataset.backgroundColor[index],
                                     hidden: false,
@@ -126,16 +130,7 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    clip: true,
-                    display: context => context.dataset.data[context.dataIndex] > 0,
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 13 }
+                    display: false
                 }
             }
         },
@@ -195,10 +190,14 @@ function initCharts() {
                         // Generar etiquetas personalizadas para mostrar "Nombre: Cantidad"
                         generateLabels: function (chart) {
                             const dataset = chart.data.datasets[0];
+                            const total = dataset.data.reduce((a, b) => a + b, 0);
+
                             return chart.data.labels.map((label, index) => {
                                 const value = dataset.data[index];
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+
                                 return {
-                                    text: `${label}: ${value}`, // Mostrar "Sí: Cantidad" o "No: Cantidad"
+                                    text: `${label}: ${value} (${percentage}%)`,
                                     fillStyle: dataset.backgroundColor[index],
                                     strokeStyle: dataset.backgroundColor[index],
                                     hidden: false,
@@ -231,14 +230,7 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 13 }
+                    display: false
                 }
             }
         },
@@ -291,10 +283,14 @@ function initCharts() {
                     labels: {
                         generateLabels: function (chart) {
                             const dataset = chart.data.datasets[0];
+                            const total = dataset.data.reduce((a, b) => a + b, 0);
+
                             return chart.data.labels.map((label, index) => {
                                 const value = dataset.data[index];
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+
                                 return {
-                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
+                                    text: `${label}: ${value} (${percentage}%)`,
                                     fillStyle: dataset.backgroundColor[index],
                                     strokeStyle: dataset.backgroundColor[index],
                                     hidden: false,
@@ -326,14 +322,7 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 14 }
+                    display: false
                 }
             }
         },
@@ -386,10 +375,14 @@ function initCharts() {
                     labels: {
                         generateLabels: function (chart) {
                             const dataset = chart.data.datasets[0];
+                            const total = dataset.data.reduce((a, b) => a + b, 0);
+
                             return chart.data.labels.map((label, index) => {
                                 const value = dataset.data[index];
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+
                                 return {
-                                    text: `${label}: ${value}`, // Mostrar "Nombre: Cantidad"
+                                    text: `${label}: ${value} (${percentage}%)`,
                                     fillStyle: dataset.backgroundColor[index],
                                     strokeStyle: dataset.backgroundColor[index],
                                     hidden: false,
@@ -421,14 +414,7 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(2);
-                        return `${percentage}%`;
-                    },
-                    offset: 10,
-                    font: { weight: 'bold', size: 14 }
+                    display: false
                 }
             }
         },
