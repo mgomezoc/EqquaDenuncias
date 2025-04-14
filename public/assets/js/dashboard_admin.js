@@ -130,7 +130,15 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    display: false
+                    clip: true,
+                    display: context => context.dataset.data[context.dataIndex] > 0,
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(2);
+                        return `${value}`;
+                    },
+                    font: { weight: 'bold', size: 13 }
                 }
             }
         },
@@ -230,7 +238,13 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    display: false
+                    clip: true,
+                    display: context => context.dataset.data[context.dataIndex] > 0,
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        return `${value}`;
+                    },
+                    font: { weight: 'bold', size: 13 }
                 }
             }
         },
@@ -262,7 +276,7 @@ function initCharts() {
         ]
     });
 
-    // Tipo de Denunciante
+    // Canal de Denuncia
     const ctxDenunciante = document.getElementById('chartDenunciante').getContext('2d');
     denuncianteChart = new Chart(ctxDenunciante, {
         type: 'doughnut',
@@ -322,7 +336,13 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    display: false
+                    clip: true,
+                    display: context => context.dataset.data[context.dataIndex] > 0,
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        return `${value}`;
+                    },
+                    font: { weight: 'bold', size: 13 }
                 }
             }
         },
@@ -414,7 +434,13 @@ function initCharts() {
                     }
                 },
                 datalabels: {
-                    display: false
+                    clip: true,
+                    display: context => context.dataset.data[context.dataIndex] > 0,
+                    color: '#fff',
+                    formatter: (value, ctx) => {
+                        return `${value}`;
+                    },
+                    font: { weight: 'bold', size: 13 }
                 }
             }
         },
