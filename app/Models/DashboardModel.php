@@ -287,25 +287,40 @@ class DashboardModel extends Model
     /**
      * Obtiene la cantidad de denuncias agrupadas por mes para un año específico.
      */
-    public function getDenunciasPorMesAnio($year)
+    public function getDenunciasPorMesAnio($year, $filters = [])
     {
         $builder = $this->db->table('denuncias')
             ->select("MONTH(created_at) as mes, COUNT(id) as total")
-            ->where("YEAR(created_at)", $year)
-            ->groupBy("MONTH(created_at)")
+            ->where("YEAR(created_at)", $year);
+
+        if (!empty($filters['cliente'])) {
+            $builder->where('id_cliente', $filters['cliente']);
+        }
+
+        if (!empty($filters['sucursal'])) {
+            $builder->where('id_sucursal', $filters['sucursal']);
+        }
+
+        if (!empty($filters['departamento'])) {
+            $builder->where('id_departamento', $filters['departamento']);
+        }
+
+        if (isset($filters['anonimo']) && $filters['anonimo'] !== '') {
+            $builder->where('anonimo', $filters['anonimo']);
+        }
+
+        $builder->groupBy("MONTH(created_at)")
             ->orderBy("mes", "ASC");
 
         $result = $builder->get()->getResultArray();
 
-        // Crear un array con 12 posiciones (1 a 12) inicializado en 0
+        // Inicializar los 12 meses en 0
         $data = array_fill(1, 12, 0);
-
-        // Llenar los valores obtenidos de la consulta
         foreach ($result as $row) {
             $data[(int)$row['mes']] = (int)$row['total'];
         }
 
-        // Transformar el array en el formato adecuado para la gráfica
+        // Reestructurar para la gráfica
         $formattedData = [];
         foreach ($data as $mes => $total) {
             $formattedData[] = ['mes' => $mes, 'total' => $total];

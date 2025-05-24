@@ -357,3 +357,7 @@ scrollToTop.onclick = () => {
 function operateFormatterFecha(value, row, index) {
     return moment(value).format('DD/MM/YYYY');
 }
+
+function formatoFechaHora(value, row, index) {
+    return moment(value).format('DD/MM/YYYY HH:mm');
+}

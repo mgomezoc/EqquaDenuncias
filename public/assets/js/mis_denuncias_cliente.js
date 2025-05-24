@@ -281,8 +281,9 @@ $(function () {
             $textarea.val(''); // Limpiar el campo de texto
             $frm[0].reset();
         })
-            .fail(function () {
-                showToast('Error al agregar el comentario.', 'error');
+            .fail(function (err) {
+                const message = err.responseJSON.message;
+                showToast(message, 'error');
             })
             .always(function () {
                 // Rehabilitar el textarea y el botón, y restaurar el texto del botón original

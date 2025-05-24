@@ -88,18 +88,24 @@ class DashboardController extends BaseController
     {
         $model = new DashboardModel();
 
-        // Obtener año de la petición POST
         $year = $this->request->getPost('year');
 
         if (!$year || !is_numeric($year)) {
             return $this->response->setJSON(['error' => 'Año inválido']);
         }
 
-        // Obtener datos del modelo
-        $denunciasPorMes = $model->getDenunciasPorMesAnio($year);
+        $filters = [
+            'cliente'      => $this->request->getPost('cliente'),
+            'sucursal'     => $this->request->getPost('sucursal'),
+            'departamento' => $this->request->getPost('departamento'),
+            'anonimo'      => $this->request->getPost('anonimo')
+        ];
+
+        $denunciasPorMes = $model->getDenunciasPorMesAnio($year, $filters);
 
         return $this->response->setJSON(['denunciasPorMes' => $denunciasPorMes]);
     }
+
 
 
     public function filtrar()

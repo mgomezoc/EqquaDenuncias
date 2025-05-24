@@ -15,21 +15,21 @@
     <div class="card-body">
         <div class="p-3 border">
             <div class="table-responsive">
-                <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua">
+                <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua" data-reorderable-columns="true">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Folio</th>
-                            <th>Cliente</th>
-                            <th>Sucursal</th>
-                            <th>Tipo Denunciante</th>
-                            <th>Categoría</th>
-                            <th>Subcategoría</th>
-                            <th>Departamento</th>
-                            <th>Estatus</th>
-                            <th>medio_recepcion</th>
-                            <th>Fecha</th>
-                            <th>Sexo</th>
+                            <th data-sortable="true">ID</th>
+                            <th data-sortable="true">Folio</th>
+                            <th data-sortable="true">Cliente</th>
+                            <th data-sortable="true">Sucursal</th>
+                            <th data-sortable="true">Tipo Denunciante</th>
+                            <th data-sortable="true">Categoría</th>
+                            <th data-sortable="true">Subcategoría</th>
+                            <th data-sortable="true">Departamento</th>
+                            <th data-sortable="true">Estatus</th>
+                            <th data-sortable="true">medio_recepcion</th>
+                            <th data-sortable="true">Fecha</th>
+                            <th data-sortable="true">Sexo</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -466,12 +466,16 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4/dist/fancybox.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/akottr/dragtable@master/dragtable.css">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/jqueryui@1.11.1/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/akottr/dragtable@master/jquery.dragtable.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.22.1/locale/bootstrap-table-es-MX.min.js"></script>
 <script src="<?= base_url('assets/js/bootstrap-table-config.js') ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/reorder-columns/bootstrap-table-reorder-columns.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>

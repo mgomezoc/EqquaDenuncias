@@ -192,6 +192,7 @@ $(function () {
         'click .view-detail': function (e, value, row, index) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
+                const fechaIncidente = operateFormatterFecha(data.fecha_incidente);
                 const contenido = `
         <div class="container-fluid">
             <div class="row">
@@ -207,7 +208,7 @@ $(function () {
                 <div class="col-md-6">
                     <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
                     <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
-                    <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
+                    <p><strong>Fecha del Incidente:</strong> ${fechaIncidente}</p>
                     <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
                     <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
                     <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
@@ -233,7 +234,7 @@ $(function () {
                                 .map(
                                     seg => `
                                     <tr>
-                                        <td>${seg.fecha}</td>
+                                        <td>${formatoFechaHora(seg.fecha)}</td>
                                         <td>${seg.estado_anterior_nombre}</td>
                                         <td>${seg.estado_nuevo_nombre}</td>
                                         <td>${seg.comentario || 'N/A'}</td>
@@ -374,8 +375,20 @@ $(function () {
             },
             {
                 field: 'fecha_hora_reporte',
-                title: 'Fecha',
-                formatter: operateFormatterFecha
+                title: 'Fecha Incidente',
+                formatter: formatoFechaHora,
+                visible: false
+            },
+            {
+                field: 'created_at',
+                title: 'Fecha de Registro',
+                formatter: formatoFechaHora
+            },
+            {
+                field: 'updated_at',
+                title: 'Última Actualización',
+                formatter: formatoFechaHora,
+                visible: false
             },
             {
                 field: 'sexo_nombre',
@@ -666,8 +679,9 @@ $(function () {
             $('#contenido').val(''); // Limpiar el campo de texto
             showToast('Comentario agregado exitosamente.', 'success');
             $frm[0].reset();
-        }).fail(function () {
-            showToast('Error al agregar el comentario.', 'error');
+        }).fail(function (err) {
+            const message = err.responseJSON.message;
+            showToast(message, 'error');
         });
     });
 });

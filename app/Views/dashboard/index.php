@@ -151,7 +151,7 @@
 
 
     <!-- Filtro de año para la gráfica de Mes de Recepción de Denuncia -->
-    <div class="row g-3">
+    <div class="row g-3 align-items-end my-4">
         <div class="col-md-3">
             <label for="yearFilter" class="form-label">Seleccionar Año:</label>
             <select id="yearFilter" class="form-select">
@@ -160,7 +160,13 @@
                 <?php endfor; ?>
             </select>
         </div>
+        <div class="col-md-2">
+            <button type="button" id="btnActualizarGraficaMes" class="btn btn-primary w-100">
+                <i class="fa fa-sync-alt"></i> Actualizar Gráfica
+            </button>
+        </div>
     </div>
+
 
     <!-- Gráfico de Mes de Recepción de Denuncia -->
     <div class="col-md-12">

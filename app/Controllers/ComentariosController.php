@@ -19,7 +19,7 @@ class ComentariosController extends BaseController
         $id_denuncia = $this->request->getVar('id_denuncia');
         $contenido = $this->request->getVar('contenido');
 
-        // Obtener el estado actual de la denuncia
+        // Obtener la denuncia
         $denuncia = $denunciaModel->find($id_denuncia);
         if (!$denuncia) {
             return $this->response->setStatusCode(404)->setJSON(['message' => 'Denuncia no encontrada']);
@@ -28,19 +28,28 @@ class ComentariosController extends BaseController
         $estado_denuncia = $denuncia['estado_actual'];
         $id_usuario = session()->get('id') ?? 18;
 
-        // Guardar el comentario con el estado de la denuncia
+        // Si está cerrada, verificar fecha de cierre
+        if ($estado_denuncia == 6 && isset($denuncia['fecha_cierre'])) {
+            $fechaCierre = new \DateTime($denuncia['fecha_cierre']);
+            $ahora = new \DateTime();
+
+            if ($ahora->diff($fechaCierre)->days > 15) {
+                return $this->response->setStatusCode(403)
+                    ->setJSON(['message' => 'Ya no se pueden agregar comentarios. Han pasado más de 15 días desde el cierre de la denuncia.']);
+            }
+        }
+
+        // Guardar el comentario
         $data = [
             'id_denuncia' => $id_denuncia,
-            'id_usuario' => $id_usuario, // ID del usuario que hace el comentario
+            'id_usuario' => $id_usuario,
             'contenido' => $contenido,
             'estado_denuncia' => $estado_denuncia,
         ];
 
         if ($comentarioModel->save($data)) {
-            // Obtener usuarios involucrados
+            // Notificar usuarios
             $usuariosInvolucrados = $this->obtenerUsuariosInvolucrados($id_denuncia);
-
-            // Enviar correos de notificación
             foreach ($usuariosInvolucrados as $usuario) {
                 $this->enviarCorreoNotificacion($usuario['correo_electronico'], $usuario['nombre_usuario'], $denuncia, $contenido);
             }
@@ -56,6 +65,7 @@ class ComentariosController extends BaseController
             ]);
         }
     }
+
 
     public function listar($id_denuncia)
     {

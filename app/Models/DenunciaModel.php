@@ -33,7 +33,8 @@ class DenunciaModel extends Model
         'visible_para_calidad',
         'visible_para_cliente',
         'tiempo_atencion_cliente',
-        'id_sexo'
+        'id_sexo',
+        'fecha_cierre'
     ];
 
     protected $useTimestamps    = true;
@@ -78,13 +79,13 @@ class DenunciaModel extends Model
     public function getDenuncias(): array
     {
         return $this->select('denuncias.*, 
-                          clientes.nombre_empresa AS cliente_nombre, 
-                          sucursales.nombre AS sucursal_nombre, 
-                          categorias_denuncias.nombre AS categoria_nombre, 
-                          subcategorias_denuncias.nombre AS subcategoria_nombre, 
-                          departamentos.nombre AS departamento_nombre, 
-                          estados_denuncias.nombre AS estado_nombre,
-                          sexos_denunciante.nombre AS sexo_nombre')
+        clientes.nombre_empresa AS cliente_nombre, 
+        sucursales.nombre AS sucursal_nombre, 
+        categorias_denuncias.nombre AS categoria_nombre, 
+        subcategorias_denuncias.nombre AS subcategoria_nombre, 
+        departamentos.nombre AS departamento_nombre, 
+        estados_denuncias.nombre AS estado_nombre,
+        sexos_denunciante.nombre AS sexo_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
             ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
@@ -92,21 +93,23 @@ class DenunciaModel extends Model
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
             ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left')
+            ->where('denuncias.estado_actual !=', 7) // Excluir "Desechada"
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
 
 
+
     public function getDenunciaById(int $id): ?array
     {
         return $this->select('denuncias.*, 
-                          clientes.nombre_empresa AS cliente_nombre, 
-                          departamentos.nombre AS departamento_nombre, 
-                          estados_denuncias.nombre AS estado_nombre,
-                          sucursales.nombre AS sucursal_nombre,
-                          categorias_denuncias.nombre AS categoria_nombre,
-                          subcategorias_denuncias.nombre AS subcategoria_nombre,
-                          sexos_denunciante.nombre AS sexo_nombre')
+            clientes.nombre_empresa AS cliente_nombre, 
+            departamentos.nombre AS departamento_nombre, 
+            estados_denuncias.nombre AS estado_nombre,
+            sucursales.nombre AS sucursal_nombre,
+            categorias_denuncias.nombre AS categoria_nombre,
+            subcategorias_denuncias.nombre AS subcategoria_nombre,
+            sexos_denunciante.nombre AS sexo_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
@@ -121,8 +124,15 @@ class DenunciaModel extends Model
 
     public function cambiarEstado(int $id, int $estadoNuevo): bool
     {
-        return $this->update($id, ['estado_actual' => $estadoNuevo]);
+        $data = ['estado_actual' => $estadoNuevo];
+
+        if ($estadoNuevo === 6) {
+            $data['fecha_cierre'] = date('Y-m-d H:i:s'); // Guardar fecha de cierre
+        }
+
+        return $this->update($id, $data);
     }
+
 
     public function getDenunciasByCliente($clienteId)
     {
