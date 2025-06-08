@@ -212,10 +212,15 @@ class DashboardController extends BaseController
         $startDate = $this->convertirFecha($this->request->getPost('start_date'));
         $endDate   = $this->convertirFecha($this->request->getPost('end_date'));
 
+        // Verificar si es un cliente autenticado
+        $session = session();
+        $rolNombre = $session->get('rol_nombre');
+        $idCliente = $rolNombre === 'Cliente' ? $session->get('id_cliente') : $this->request->getPost('cliente');
+
         $filters = [
             'start_date'   => $startDate,
             'end_date'     => $endDate,
-            'cliente'      => $this->request->getPost('cliente'),
+            'cliente'      => $idCliente,
             'sucursal'     => $this->request->getPost('sucursal'),
             'departamento' => $this->request->getPost('departamento'),
             'anonimo'      => $this->request->getPost('anonimo')

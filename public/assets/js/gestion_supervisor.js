@@ -693,7 +693,6 @@ function cargarComentarios(denunciaId) {
 
                 comentariosHtml += `
                     <div class="comentario-item d-flex mb-3">
-                        <div class="avatar me-3">${iniciales}</div>
                         <div class="contenido flex-grow-1">
                             <div class="d-flex justify-content-between">
                                 <h6 class="mb-1">${comentario.nombre_usuario}</h6>

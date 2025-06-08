@@ -57,7 +57,7 @@
 
                 <?php if ($rol_slug === 'ADMIN') : ?>
                     <div class="col-md-4">
-                        <label for="numero_identificacion" class="form-label">Número Identificación</label>
+                        <label for="numero_identificacion" class="form-label">Número de colaboradores</label>
                         <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="{{numero_identificacion}}" required>
                     </div>
                 <?php endif; ?>
@@ -189,7 +189,7 @@
                             <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="numero_identificacion" class="form-label">Número Identificación</label>
+                            <label for="numero_identificacion" class="form-label">Número de colaboradores</label>
                             <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" required>
                         </div>
                         <div class="col-md-6">

@@ -159,6 +159,26 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-md-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title titulo-dashboard">Denuncias por Categoría y Subcategoría</div>
+                </div>
+                <div class="card-body">
+                    <table id="tableCategoriasDenuncias" class="table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Subcategoría</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="col-md-6">
             <div class="card custom-card">
                 <div class="card-header border-bottom d-block d-sm-flex">

@@ -257,7 +257,9 @@ $routes->group('comentarios', function ($routes) {
     $routes->get('listar/(:num)', 'ComentariosController::listar/$1');
     $routes->get('listar-cliente/(:num)', 'ComentariosController::listarCliente/$1');
     $routes->post('guardar', 'ComentariosController::guardar');
+    $routes->post('eliminar/(:num)', 'ComentariosController::eliminar/$1'); // ← Nueva ruta para eliminar comentario
 });
+
 
 /**
  * Cargar rutas adicionales basadas en el entorno

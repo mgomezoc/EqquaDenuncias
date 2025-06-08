@@ -17,7 +17,7 @@
                     <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="<?= $cliente['nombre_empresa'] ?>" disabled>
                 </div>
                 <div class="col-md-6">
-                    <label for="numero_identificacion" class="form-label">Número Identificación</label>
+                    <label for="numero_identificacion" class="form-label">Número de colaboradores</label>
                     <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="<?= $cliente['numero_identificacion'] ?>" disabled>
                 </div>
                 <div class="col-md-6">

@@ -307,6 +307,8 @@ class DenunciasController extends Controller
     {
         $denunciaModel = new DenunciaModel();
         $seguimientoModel = new SeguimientoDenunciaModel();
+        $comentarioModel = new \App\Models\ComentarioDenunciaModel(); // <-- Importar el modelo si no está arriba
+
         $id = $this->request->getVar('id');
         $estado_nuevo = $this->request->getVar('estado_nuevo');
 
@@ -316,7 +318,6 @@ class DenunciasController extends Controller
 
         // Si el nuevo estado es 5 y el anterior era 4, calcular tiempo de atención
         if ($estado_anterior == 4 && $estado_nuevo == 5) {
-            // Obtener el registro de seguimiento con estado 4 más reciente
             $seguimiento = $seguimientoModel
                 ->where('id_denuncia', $id)
                 ->where('estado_nuevo', 4)
@@ -325,10 +326,7 @@ class DenunciasController extends Controller
 
             if ($seguimiento) {
                 $fechaLiberacion = strtotime($seguimiento['fecha']);
-                $fechaActual = time(); // Fecha actual en segundos
-                $tiempoAtencion = $fechaActual - $fechaLiberacion; // Tiempo en segundos
-
-                // Actualizar el campo 'tiempo_atencion_cliente' en la denuncia
+                $tiempoAtencion = time() - $fechaLiberacion;
                 $denunciaModel->update($id, ['tiempo_atencion_cliente' => $tiempoAtencion]);
             }
         }
@@ -343,31 +341,27 @@ class DenunciasController extends Controller
             'estado_nuevo' => $estado_nuevo,
             'comentario' => $this->request->getVar('comentario'),
             'id_usuario' => session()->get('id'),
-            'fecha' => date('Y-m-d H:i:s') // Asegúrate de guardar la fecha
+            'fecha' => date('Y-m-d H:i:s')
         ]);
 
         registrarAccion(session()->get('id'), 'Cambio de estado de denuncia', 'ID: ' . $id);
 
         // Verificar si el estado es "Liberada al Cliente" (estado 4)
         if ($estado_nuevo == 4) {
-            $usuarioModel = new UsuarioModel();
-            // Obtener los usuarios relacionados al cliente que tengan notificaciones activas
-            $usuarios = $usuarioModel
-                ->where('id_cliente', $denuncia['id_cliente'])
-                ->where('recibe_notificaciones', 1) // Filtrar por usuarios con notificaciones activas
-                ->findAll();
 
-            // Enviar correo a cada usuario que cumple con la condición
-            foreach ($usuarios as $usuario) {
-                $correoDestino = !empty($usuario['correo_notificaciones']) ? $usuario['correo_notificaciones'] : $usuario['correo_electronico'];
-
-                $this->enviarCorreoLiberacionCliente($correoDestino, $usuario['nombre_usuario'], $denuncia);
-            }
+            // 🔹 Insertar comentario automático
+            $comentarioModel->insert([
+                'id_denuncia'     => $id,
+                'id_usuario'      => session()->get('id'), // o un ID fijo si quieres marcarlo como "sistema"
+                'contenido'       => 'Su denuncia está siendo atendida. Favor de revisar en 48 horas.',
+                'estado_denuncia' => $estado_nuevo,
+                'fecha_comentario' => date('Y-m-d H:i:s')
+            ]);
         }
-
 
         return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
     }
+
 
 
     public function subirAnexo()

@@ -731,6 +731,45 @@ $(document).ready(function () {
     const endDate = $('#endDate').val();
     loadDashboardData(startDate, endDate, null, null, '', null);
 
+    $('#tableCategoriasDenuncias').bootstrapTable({
+        url: Server + 'dashboard/getResumenCategoriasConFiltros',
+        method: 'post',
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        queryParams: function (params) {
+            return {
+                start_date: $('#startDate').val(),
+                end_date: $('#endDate').val(),
+                cliente: $('#clienteFilter').val(),
+                sucursal: $('#sucursalFilter').val(),
+                departamento: $('#departamentoFilter').val(),
+                anonimo: $('#anonimoFilter').val()
+            };
+        },
+        columns: [
+            {
+                field: 'categoria',
+                title: 'Categoría',
+                sortable: true
+            },
+            {
+                field: 'total_denuncias',
+                title: 'Denuncias',
+                sortable: true,
+                align: 'center'
+            },
+            {
+                field: 'total_subcategorias',
+                title: 'Subcategorías',
+                sortable: true,
+                align: 'center'
+            }
+        ],
+        detailView: true,
+        onExpandRow: function (index, row, $detail) {
+            cargarDetalleSubcategorias(row.id, $detail);
+        }
+    });
+
     // Aplicar filtros al enviar el formulario
     $('#dateFilterForm').submit(function (e) {
         e.preventDefault();
@@ -743,6 +782,8 @@ $(document).ready(function () {
         const cliente = $('#clienteFilter').val();
 
         loadDashboardData(startDate, endDate, sucursal, departamento, anonimo, cliente);
+
+        refreshCategoriasTable();
     });
 
     // Función para resetear los filtros
@@ -760,3 +801,43 @@ $(document).ready(function () {
         loadDashboardData(null, null, null, null, '', null);
     });
 });
+
+function refreshCategoriasTable() {
+    $('#tableCategoriasDenuncias').bootstrapTable('refresh', {
+        url: Server + 'dashboard/getResumenCategoriasConFiltros',
+        query: {
+            start_date: $('#startDate').val(),
+            end_date: $('#endDate').val(),
+            cliente: $('#clienteFilter').val(),
+            sucursal: $('#sucursalFilter').val(),
+            departamento: $('#departamentoFilter').val(),
+            anonimo: $('#anonimoFilter').val()
+        }
+    });
+}
+
+function cargarDetalleSubcategorias(categoriaId, $elemento) {
+    $.post(
+        Server + 'dashboard/getSubcategoriasPorCategoria',
+        {
+            categoria_id: categoriaId,
+            start_date: $('#startDate').val(),
+            end_date: $('#endDate').val(),
+            cliente: $('#clienteFilter').val(),
+            sucursal: $('#sucursalFilter').val(),
+            departamento: $('#departamentoFilter').val(),
+            anonimo: $('#anonimoFilter').val()
+        },
+        function (response) {
+            // Renderizar la tabla dentro de $elemento
+            let html = '<div id="subcategoriasTable-' + categoriaId + '" class="table-responsive"><table class="table table-bordered"><thead class="table-secondary"><tr><th class="p-1">Subcategoría</th><th class="p-1">Total Denuncias</th></tr></thead><tbody>';
+
+            response.data.forEach(item => {
+                html += `<tr><td>${item.nombre}</td><td>${item.total}</td></tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            $elemento.html(html);
+        }
+    );
+}

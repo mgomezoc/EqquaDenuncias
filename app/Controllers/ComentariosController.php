@@ -218,4 +218,22 @@ class ComentariosController extends BaseController
         // Enviar el correo
         $emailService->sendEmail($email, 'Nuevo Comentario en Denuncia ' . esc($denuncia['folio']), $mensaje);
     }
+
+    public function eliminar($id)
+    {
+        $comentarioModel = new ComentarioDenunciaModel();
+
+        // Buscar el comentario por ID
+        $comentario = $comentarioModel->find($id);
+        if (!$comentario) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Comentario no encontrado']);
+        }
+
+        // Intentar eliminar
+        if ($comentarioModel->delete($id)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Comentario eliminado correctamente']);
+        } else {
+            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'Error al eliminar el comentario']);
+        }
+    }
 }

@@ -18,6 +18,7 @@
                 <table id="tablaDenuncias" class="table table-sm table-striped table-eqqua" data-reorderable-columns="true">
                     <thead>
                         <tr>
+                            <th>Acciones</th>
                             <th data-sortable="true">ID</th>
                             <th data-sortable="true">Folio</th>
                             <th data-sortable="true">Cliente</th>
@@ -30,7 +31,6 @@
                             <th data-sortable="true">medio_recepcion</th>
                             <th data-sortable="true">Fecha</th>
                             <th data-sortable="true">Sexo</th>
-                            <th>Acciones</th>
                         </tr>
                     </thead>
                 </table>

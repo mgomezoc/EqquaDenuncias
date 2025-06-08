@@ -417,13 +417,11 @@ function cargarComentarios(denunciaId) {
 
                 comentariosHtml += `
                     <div class="comentario-item d-flex mb-3">
-                        <div class="avatar me-3">${iniciales}</div>
                         <div class="contenido flex-grow-1">
                             <div class="d-flex justify-content-between">
                                 <h6 class="mb-1">${comentario.nombre_usuario}</h6>
                                 <small class="text-muted">${comentario.fecha_comentario}</small>
-                            </div>
-                            <span class="badge ${badgeClass} mb-2">${comentario.estado_nombre}</span>
+                            </div>                            
                             <p class="mb-0">${comentario.contenido}</p>
                         </div>
                     </div>

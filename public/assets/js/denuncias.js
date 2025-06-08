@@ -332,6 +332,15 @@ $(function () {
         url: `${Server}denuncias/listar`,
         columns: [
             {
+                field: 'operate',
+                title: 'Acciones',
+                align: 'center',
+                valign: 'middle',
+                clickToSelect: false,
+                formatter: operateFormatter,
+                events: operateEvents
+            },
+            {
                 field: 'id',
                 title: 'ID'
             },
@@ -394,15 +403,6 @@ $(function () {
                 field: 'sexo_nombre',
                 title: 'Sexo',
                 visible: false
-            },
-            {
-                field: 'operate',
-                title: 'Acciones',
-                align: 'center',
-                valign: 'middle',
-                clickToSelect: false,
-                formatter: operateFormatter,
-                events: operateEvents
             }
         ],
         showColumns: true,
@@ -868,37 +868,41 @@ function cargarComentarios(denunciaId) {
                 // Asignar el color correspondiente según el estado
                 switch (comentario.estado_nombre) {
                     case 'Recepción':
-                        badgeClass = 'bg-yellow'; // Amarillo
+                        badgeClass = 'bg-yellow';
                         break;
                     case 'Clasificada':
-                        badgeClass = 'bg-purple'; // Púrpura
+                        badgeClass = 'bg-purple';
                         break;
                     case 'Revisada por Calidad':
-                        badgeClass = 'bg-teal'; // Verde Azulado
+                        badgeClass = 'bg-teal';
                         break;
                     case 'Liberada al Cliente':
-                        badgeClass = 'bg-red'; // Rojo
+                        badgeClass = 'bg-red';
                         break;
                     case 'En Revisión por Cliente':
-                        badgeClass = 'bg-light-purple'; // Púrpura Claro
+                        badgeClass = 'bg-light-purple';
                         break;
                     case 'Cerrada':
-                        badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+                        badgeClass = 'bg-dark-teal';
                         break;
                     default:
-                        badgeClass = 'bg-light text-dark'; // Estado no reconocido
+                        badgeClass = 'bg-light text-dark';
                 }
 
                 comentariosHtml += `
                     <div class="comentario-item d-flex mb-3">
-                        <div class="avatar me-3">${iniciales}</div>
                         <div class="contenido flex-grow-1">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="mb-1">${comentario.nombre_usuario}</h6>
-                                <small class="text-muted">${comentario.fecha_comentario}</small>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${comentario.nombre_usuario}</h6>
+                                    <small class="text-muted">${comentario.fecha_comentario}</small><br>
+                                    <span class="badge ${badgeClass} mb-2">${comentario.estado_nombre}</span>
+                                    <p class="mb-0">${comentario.contenido}</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger ms-3 btn-eliminar-comentario" data-id="${comentario.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </div>
-                            <span class="badge ${badgeClass} mb-2">${comentario.estado_nombre}</span>
-                            <p class="mb-0">${comentario.contenido}</p>
                         </div>
                     </div>
                     <hr>
@@ -907,6 +911,29 @@ function cargarComentarios(denunciaId) {
         } else {
             comentariosHtml = '<p class="text-muted">No hay comentarios aún.</p>';
         }
+
         $('#comentariosContainer').html(comentariosHtml);
     });
 }
+
+// Evento para eliminar comentario
+$(document).on('click', '.btn-eliminar-comentario', function () {
+    const comentarioId = $(this).data('id');
+    const denunciaId = $('#id_denuncia').val();
+
+    confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `${Server}comentarios/eliminar/${comentarioId}`,
+                method: 'POST',
+                success: function () {
+                    showToast('Comentario eliminado correctamente.', 'success');
+                    cargarComentarios(denunciaId); // Recargar comentarios
+                },
+                error: function () {
+                    showToast('Error al eliminar el comentario.', 'error');
+                }
+            });
+        }
+    });
+});
