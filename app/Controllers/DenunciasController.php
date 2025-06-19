@@ -352,7 +352,7 @@ class DenunciasController extends Controller
             // 🔹 Insertar comentario automático
             $comentarioModel->insert([
                 'id_denuncia'     => $id,
-                'id_usuario'      => session()->get('id'), // o un ID fijo si quieres marcarlo como "sistema"
+                'id_usuario'      => 1,
                 'contenido'       => 'Su denuncia está siendo atendida. Favor de revisar en 48 horas.',
                 'estado_denuncia' => $estado_nuevo,
                 'fecha_comentario' => date('Y-m-d H:i:s')
