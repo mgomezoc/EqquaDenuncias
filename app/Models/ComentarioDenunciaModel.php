@@ -22,15 +22,25 @@ class ComentarioDenunciaModel extends Model
 
     public function getComentariosVisiblesParaCliente($id_denuncia)
     {
-        // Definimos los estados que el cliente puede ver
-        $estadosVisibles = [4, 5, 6];
+        $builder = $this->db->table('comentarios_denuncias cd');
+        $builder->select('cd.*, u.nombre_usuario, ed.nombre AS estado_nombre');
+        $builder->join('usuarios u', 'cd.id_usuario = u.id', 'left');
+        $builder->join('estados_denuncias ed', 'cd.estado_denuncia = ed.id', 'left');
+        $builder->where('cd.id_denuncia', $id_denuncia);
+        $builder->whereIn('cd.estado_denuncia', [4, 5, 6]);
+        $builder->orderBy('cd.fecha_comentario', 'ASC');
 
-        return $this->select('comentarios_denuncias.*, usuarios.nombre_usuario, estados_denuncias.nombre AS estado_nombre')
-            ->join('usuarios', 'usuarios.id = comentarios_denuncias.id_usuario')
-            ->join('estados_denuncias', 'estados_denuncias.id = comentarios_denuncias.estado_denuncia') // Corregido aquí
-            ->where('comentarios_denuncias.id_denuncia', $id_denuncia)
-            ->whereIn('comentarios_denuncias.estado_denuncia', $estadosVisibles) // Filtrar por estados 4, 5 y 6
-            ->orderBy('comentarios_denuncias.fecha_comentario', 'DESC')
-            ->findAll();
+        $comentarios = $builder->get()->getResultArray();
+
+        // Cargar anexos para cada comentario
+        $anexoModel = new \App\Models\AnexoComentarioModel();
+        foreach ($comentarios as &$comentario) {
+            $comentario['archivos'] = $anexoModel
+                ->where('id_comentario', $comentario['id'])
+                ->where('visible_para_cliente', 1)
+                ->findAll();
+        }
+
+        return $comentarios;
     }
 }

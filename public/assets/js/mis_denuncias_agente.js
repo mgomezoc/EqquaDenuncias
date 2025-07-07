@@ -317,6 +317,7 @@ $(function () {
 
             // Establecer la ID de la denuncia en el formulario
             $('#id_denuncia').val(row.id);
+            $('#folioDenuncia').html(row.folio);
 
             // Mostrar el modal
             $('#modalVerComentarios').modal('show');

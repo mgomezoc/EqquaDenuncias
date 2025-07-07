@@ -194,11 +194,13 @@ $(function () {
         },
 
         'click .view-comments': function (e, value, row, index) {
+            console.log(row);
             // Cargar comentarios de la denuncia
             cargarComentarios(row.id);
 
             // Establecer la ID de la denuncia en el formulario
             $('#id_denuncia').val(row.id);
+            $('#folioDenuncia').html(row.folio);
 
             // Mostrar el modal
             $('#modalVerComentarios').modal('show');
@@ -267,30 +269,36 @@ $(function () {
         e.preventDefault();
         const $frm = $(this);
         const $textarea = $('#contenidoComentario');
+        const $archivo = $('#archivoComentario')[0].files[0];
         const $submitButton = $frm.find('button[type="submit"]');
-        const formData = $frm.serialize();
+        const formData = new FormData($frm[0]);
 
-        // Deshabilitar el textarea y el botón, y cambiar el texto del botón
+        // Deshabilitar elementos y mostrar spinner
         $textarea.prop('disabled', true);
         $submitButton.prop('disabled', true);
         $submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
 
-        $.post(`${Server}comentarios/guardar`, formData, function (response) {
-            cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
-            showToast('Comentario agregado exitosamente.', 'success');
-            $textarea.val(''); // Limpiar el campo de texto
-            $frm[0].reset();
-        })
-            .fail(function (err) {
-                const message = err.responseJSON.message;
+        $.ajax({
+            url: `${Server}comentarios/guardar`,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function () {
+                cargarComentarios($('#id_denuncia').val()); // Recargar comentarios
+                showToast('Comentario agregado exitosamente.', 'success');
+                $frm[0].reset();
+            },
+            error: function (err) {
+                const message = err.responseJSON?.message || 'Error al enviar el comentario';
                 showToast(message, 'error');
-            })
-            .always(function () {
-                // Rehabilitar el textarea y el botón, y restaurar el texto del botón original
+            },
+            complete: function () {
                 $textarea.prop('disabled', false);
                 $submitButton.prop('disabled', false);
                 $submitButton.html('<i class="fas fa-paper-plane"></i> Enviar');
-            });
+            }
+        });
     });
 });
 
@@ -386,6 +394,7 @@ function operateFormatterEstado(value, row, index) {
 function cargarComentarios(denunciaId) {
     $.get(`${Server}comentarios/listar-cliente/${denunciaId}`, function (data) {
         let comentariosHtml = '';
+
         if (data.length > 0) {
             data.forEach(comentario => {
                 let iniciales = comentario.nombre_usuario.charAt(0).toUpperCase();
@@ -394,25 +403,51 @@ function cargarComentarios(denunciaId) {
                 // Asignar el color correspondiente según el estado
                 switch (comentario.estado_nombre) {
                     case 'Recepción':
-                        badgeClass = 'bg-yellow'; // Amarillo
+                        badgeClass = 'bg-yellow';
                         break;
                     case 'Clasificada':
-                        badgeClass = 'bg-purple'; // Púrpura
+                        badgeClass = 'bg-purple';
                         break;
                     case 'Revisada por Calidad':
-                        badgeClass = 'bg-teal'; // Verde Azulado
+                        badgeClass = 'bg-teal';
                         break;
                     case 'Liberada al Cliente':
-                        badgeClass = 'bg-red'; // Rojo
+                        badgeClass = 'bg-red';
                         break;
                     case 'En Revisión por Cliente':
-                        badgeClass = 'bg-light-purple'; // Púrpura Claro
+                        badgeClass = 'bg-light-purple';
                         break;
                     case 'Cerrada':
-                        badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+                        badgeClass = 'bg-dark-teal';
                         break;
                     default:
-                        badgeClass = 'bg-light text-dark'; // Estado no reconocido
+                        badgeClass = 'bg-light text-dark';
+                        break;
+                }
+
+                // Renderizar archivos adjuntos (si existen)
+                let archivosHtml = '';
+                if (comentario.archivos && comentario.archivos.length > 0) {
+                    archivosHtml += '<div class="mt-2"><strong>Archivos:</strong><ul class="list-unstyled d-flex flex-wrap gap-3">';
+                    comentario.archivos.forEach(archivo => {
+                        const ruta = `${Server}${archivo.ruta_archivo}`;
+                        if (archivo.tipo_mime.startsWith('image/')) {
+                            archivosHtml += `
+                                <li>
+                                    <a href="${ruta}" data-fancybox="comentario-${comentario.id}" data-caption="${archivo.nombre_archivo}">
+                                        <img src="${ruta}" class="img-thumbnail" style="max-width: 100px;">
+                                    </a>
+                                </li>
+                            `;
+                        } else {
+                            archivosHtml += `
+                                <li>
+                                    <a href="${ruta}" target="_blank">${archivo.nombre_archivo}</a>
+                                </li>
+                            `;
+                        }
+                    });
+                    archivosHtml += '</ul></div>';
                 }
 
                 comentariosHtml += `
@@ -423,6 +458,7 @@ function cargarComentarios(denunciaId) {
                                 <small class="text-muted">${comentario.fecha_comentario}</small>
                             </div>                            
                             <p class="mb-0">${comentario.contenido}</p>
+                            ${archivosHtml}
                         </div>
                     </div>
                     <hr>
@@ -431,6 +467,7 @@ function cargarComentarios(denunciaId) {
         } else {
             comentariosHtml = '<p class="text-muted">No hay comentarios aún.</p>';
         }
+
         $('#comentariosContainer').html(comentariosHtml);
     });
 }

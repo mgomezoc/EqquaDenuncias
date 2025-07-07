@@ -454,3 +454,128 @@ label.is-invalid {
         }
     }
 }
+
+/* --- Timeline Styles --- */
+.timeline-container {
+    max-height: 80vh; // Altura máxima antes de mostrar scroll
+    overflow-y: auto;
+    padding-right: 15px; // Espacio para la barra de scroll
+}
+
+.timeline {
+    list-style-type: none;
+    padding-left: 20px;
+    position: relative;
+
+    &::before {
+        content: ' ';
+        background: #d4d9df;
+        display: inline-block;
+        position: absolute;
+        left: 20px;
+        width: 2px;
+        height: 100%;
+        z-index: 400;
+    }
+
+    li {
+        margin: 20px 0;
+        padding-left: 30px;
+    }
+}
+
+.timeline-item {
+    position: relative;
+
+    .timeline-icon {
+        background: @primary-color;
+        color: @light-color;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform: translateX(-50%);
+        z-index: 500;
+    }
+
+    .timeline-card {
+        background: @light-color;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        position: relative;
+
+        &::before {
+            // Flecha del globo de diálogo
+            content: ' ';
+            height: 0;
+            position: absolute;
+            top: 15px;
+            width: 0;
+            z-index: 1;
+            left: -10px;
+            border-style: solid;
+            border-width: 5px 10px 5px 0;
+            border-color: transparent #e9ecef transparent transparent;
+        }
+    }
+
+    .timeline-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    p {
+        margin-bottom: 0;
+        color: #495057;
+    }
+
+    // Estilo para Archivos
+    .timeline-file {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 6px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        text-decoration: none;
+        color: @dark-color;
+        transition: background-color @transition-ease;
+
+        &:hover {
+            background-color: #e9ecef;
+            text-decoration: none;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: @primary-color;
+        }
+
+        .file-info {
+            font-weight: 500;
+        }
+    }
+
+    // Estilo para Imágenes
+    .timeline-image-attachment {
+        display: block;
+        max-width: 150px;
+        border-radius: 8px;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s ease;
+        &:hover {
+            transform: scale(1.05);
+        }
+    }
+}

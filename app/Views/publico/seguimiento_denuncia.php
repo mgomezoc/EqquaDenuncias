@@ -8,63 +8,82 @@
         <p class="text-muted">Ingrese su número de denuncia para verificar el estatus actual y recibir detalles actualizados.</p>
     </div>
 
-
-    <!-- Formulario para buscar denuncia -->
     <form id="formBuscarDenuncia" class="mb-5">
         <input type="hidden" id="id_cliente" name="id_cliente" value="<?= $cliente['id'] ?>">
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <label for="folio" class="form-label">Número de Folio</label>
-                <input type="text" class="form-control" id="folio" name="folio" value="<?= $folio ?>" placeholder="Ingrese su número de folio" required autofocus>
+                <input type="text" class="form-control form-control-lg" id="folio" name="folio" value="<?= $folio ?>" placeholder="Ej: 20250706-0001" required autofocus>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Consultar</button>
+                <button type="submit" class="btn btn-secondary btn-lg w-100"><i class="fas fa-search"></i> Consultar</button>
             </div>
         </div>
     </form>
 
-    <!-- Sección de resultados -->
     <div id="resultadoDenuncia" class="animate__animated animate__fadeIn" style="display: none;">
-        <h2 class="mb-4">Detalle de la Denuncia</h2>
-        <div class="card mb-4">
-            <h5 class="card-header">
-                Estatus: <span id="estado_nombre"></span>
-            </h5>
-            <div class="card-body">
-                <ul class="list-group">
-                    <li class="list-group-item"><strong>ID de Denuncia:</strong> <span id="denunciaId">N/A</span></li>
-                    <li class="list-group-item"><strong>Fecha y Hora de Reporte:</strong> <span id="fechaHoraReporte">N/A</span></li>
-                    <li class="list-group-item"><strong>Sucursal:</strong> <span id="sucursalNombre">N/A</span></li>
-                    <li class="list-group-item"><strong>Categoría:</strong> <span id="categoriaNombre">N/A</span></li>
-                    <li class="list-group-item"><strong>Subcategoría:</strong> <span id="subcategoriaNombre">N/A</span></li>
-                    <li class="list-group-item"><strong>Descripción:</strong> <span id="descripcionDenuncia">N/A</span></li>
-                </ul>
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Detalles de la Denuncia</h4>
+                        <span id="estado_nombre" class="badge fs-6"></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-hashtag me-2 text-muted"></i>ID de Denuncia:</strong>
+                                <p class="text-secondary mb-0" id="denunciaId">N/A</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="far fa-calendar-alt me-2 text-muted"></i>Fecha de Reporte:</strong>
+                                <p class="text-secondary mb-0" id="fechaHoraReporte">N/A</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-map-marker-alt me-2 text-muted"></i>Sucursal:</strong>
+                                <p class="text-secondary mb-0" id="sucursalNombre">N/A</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-tag me-2 text-muted"></i>Categoría:</strong>
+                                <p class="text-secondary mb-0" id="categoriaNombre">N/A</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <strong><i class="far fa-file-alt me-2 text-muted"></i>Descripción del Incidente:</strong>
+                        <p class="text-secondary" id="descripcionDenuncia">N/A</p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Añadir Comentario o Evidencia</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formAgregarComentario" enctype="multipart/form-data" style="display: none;">
+                            <input type="hidden" id="id_denuncia" name="id_denuncia">
+                            <div class="mb-3">
+                                <label for="nuevo_comentario" class="form-label">Tu Mensaje</label>
+                                <textarea class="form-control" id="nuevo_comentario" name="contenido" rows="4" placeholder="Escribe aquí para aportar más información o responder a una solicitud..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="archivo_comentario" class="form-label">Adjuntar Archivo (Opcional)</label>
+                                <input class="form-control" type="file" id="archivo_comentario" name="archivo_comentario" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.zip,.rar">
+                                <div class="form-text">Puedes adjuntar imágenes, PDF, Word o archivos comprimidos.</div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100"><i class="fas fa-paper-plane"></i> Enviar Información</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <h4 class="mb-3">Historial de Eventos</h4>
+                <div class="timeline-container">
+                    <ul id="timeline-historial" class="timeline">
+                    </ul>
+                </div>
             </div>
         </div>
-
-        <!-- Comentarios estilo chat -->
-        <h3>Comentarios</h3>
-        <div id="contenedorComentarios" class="mb-4" style="max-height: 400px; overflow-y: auto;"></div>
-
-        <!-- Archivos Adjuntos -->
-        <div id="archivosAdjuntos" style="display: none;">
-            <h3>Archivos Adjuntos</h3>
-            <ul id="listaArchivos" class="list-unstyled row"></ul>
-        </div>
-
-        <!-- Formulario para agregar comentarios -->
-        <form id="formAgregarComentario" enctype="multipart/form-data" style="display: none;">
-            <input type="hidden" id="id_denuncia" name="id_denuncia">
-            <div class="mb-3">
-                <textarea class="form-control" id="nuevo_comentario" name="contenido" rows="3" placeholder="Escribe tu comentario..." required></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="archivo_comentario" class="form-label">Adjuntar archivo (opcional)</label>
-                <input class="form-control" type="file" id="archivo_comentario" name="archivo_comentario" accept="*/*">
-            </div>
-
-            <button type="submit" class="btn btn-success"><i class="fas fa-comment-dots"></i> Enviar Comentario</button>
-        </form>
     </div>
 </section>
 <?= $this->endSection() ?>
@@ -75,5 +94,12 @@
 
 <?= $this->section('scripts') ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+<script>
+    // Configuración global de Lightbox
+    lightbox.option({
+        'resizeDuration': 200,
+        'wrapAround': true
+    })
+</script>
 <script src="<?= base_url('assets/js/seguimiento_denuncia.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

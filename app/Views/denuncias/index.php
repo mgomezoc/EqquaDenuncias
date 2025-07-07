@@ -259,11 +259,11 @@
 
 <!-- Modal para comentarios -->
 <div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="comentariosModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="comentariosModalLabel">
-                    <i class="fas fa-comments"></i> Comentarios de la Denuncia
+                    <i class="fas fa-comments"></i> Comentarios de la Denuncia <span id="folioDenuncia" class="badge bg-secondary">000000-0000</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -271,18 +271,23 @@
                 <div id="comentariosContainer" class="overflow-auto" style="max-height: 300px;">
                     <!-- Aquí se insertan los comentarios -->
                 </div>
-                <form id="formAgregarComentario" class="mt-4">
+                <form id="formAgregarComentario" class="mt-4" enctype="multipart/form-data">
                     <input type="hidden" name="id_denuncia" id="id_denuncia">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label for="contenidoComentario" class="form-label">Agregar Comentario</label>
                         <textarea name="contenido" id="contenidoComentario" class="form-control" rows="3" placeholder="Escribe tu comentario aquí..." required></textarea>
                     </div>
-                    <div class="d-flex justify-content-end mt-3">
+                    <div class="form-group mb-3">
+                        <label for="archivoComentario" class="form-label">Adjuntar archivo (opcional)</label>
+                        <input type="file" name="archivo_comentario" id="archivoComentario" class="form-control" accept="image/*,.pdf">
+                    </div>
+                    <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-paper-plane"></i> Enviar
                         </button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>

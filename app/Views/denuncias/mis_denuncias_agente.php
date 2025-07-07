@@ -249,11 +249,12 @@
 
 <!-- Modal para comentarios -->
 <div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="comentariosModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="comentariosModalLabel">
                     <i class="fas fa-comments"></i> Comentarios de la Denuncia
+                    <span id="folioDenuncia" class="badge bg-secondary">000000-0000</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

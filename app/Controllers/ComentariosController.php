@@ -104,9 +104,22 @@ class ComentariosController extends BaseController
     public function listar($id_denuncia)
     {
         $comentarioModel = new ComentarioDenunciaModel();
+        $anexoComentarioModel = new AnexoComentarioModel();
+
         $comentarios = $comentarioModel->getComentariosByDenuncia($id_denuncia);
+
+        foreach ($comentarios as &$comentario) {
+            $archivos = $anexoComentarioModel
+                ->where('id_comentario', $comentario['id'])
+                ->findAll();
+
+            $comentario['archivos'] = $archivos;
+        }
+
         return $this->response->setJSON($comentarios);
     }
+
+
 
     public function listarCliente($id_denuncia)
     {

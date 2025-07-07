@@ -311,6 +311,7 @@ $(function () {
 
             // Establecer la ID de la denuncia en el formulario
             $('#id_denuncia').val(row.id);
+            $('#folioDenuncia').html(row.folio);
 
             // Mostrar el modal
             $('#modalVerComentarios').modal('show');
@@ -862,32 +863,7 @@ function cargarComentarios(denunciaId) {
         let comentariosHtml = '';
         if (data.length > 0) {
             data.forEach(comentario => {
-                let iniciales = comentario.nombre_usuario.charAt(0).toUpperCase();
-                let badgeClass = '';
-
-                // Asignar el color correspondiente según el estado
-                switch (comentario.estado_nombre) {
-                    case 'Recepción':
-                        badgeClass = 'bg-yellow';
-                        break;
-                    case 'Clasificada':
-                        badgeClass = 'bg-purple';
-                        break;
-                    case 'Revisada por Calidad':
-                        badgeClass = 'bg-teal';
-                        break;
-                    case 'Liberada al Cliente':
-                        badgeClass = 'bg-red';
-                        break;
-                    case 'En Revisión por Cliente':
-                        badgeClass = 'bg-light-purple';
-                        break;
-                    case 'Cerrada':
-                        badgeClass = 'bg-dark-teal';
-                        break;
-                    default:
-                        badgeClass = 'bg-light text-dark';
-                }
+                let badgeClass = obtenerBadgeClase(comentario.estado_nombre);
 
                 comentariosHtml += `
                     <div class="comentario-item d-flex mb-3">
@@ -897,7 +873,25 @@ function cargarComentarios(denunciaId) {
                                     <h6 class="mb-1">${comentario.nombre_usuario}</h6>
                                     <small class="text-muted">${comentario.fecha_comentario}</small><br>
                                     <span class="badge ${badgeClass} mb-2">${comentario.estado_nombre}</span>
-                                    <p class="mb-0">${comentario.contenido}</p>
+                                    <p class="mb-0">${comentario.contenido}</p>`;
+
+                // Archivos del comentario
+                if (comentario.archivos && comentario.archivos.length > 0) {
+                    comentariosHtml += '<div class="mt-2">';
+                    comentario.archivos.forEach(archivo => {
+                        const url = `${Server}${archivo.ruta_archivo}`;
+                        const ext = archivo.nombre_archivo.split('.').pop().toLowerCase();
+
+                        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                            comentariosHtml += `<div><a href="${url}" data-fancybox="comentario-${comentario.id}" data-caption="${archivo.nombre_archivo}"><img src="${url}" alt="imagen" style="max-width: 120px;" class="img-thumbnail me-2 mb-2"></a></div>`;
+                        } else {
+                            comentariosHtml += `<div><a href="${url}" target="_blank">${archivo.nombre_archivo}</a></div>`;
+                        }
+                    });
+                    comentariosHtml += '</div>';
+                }
+
+                comentariosHtml += `
                                 </div>
                                 <button type="button" class="btn btn-sm btn-danger ms-3 btn-eliminar-comentario" data-id="${comentario.id}">
                                     <i class="fas fa-trash-alt"></i>
@@ -914,6 +908,25 @@ function cargarComentarios(denunciaId) {
 
         $('#comentariosContainer').html(comentariosHtml);
     });
+}
+
+function obtenerBadgeClase(estado) {
+    switch (estado) {
+        case 'Recepción':
+            return 'bg-yellow';
+        case 'Clasificada':
+            return 'bg-purple';
+        case 'Revisada por Calidad':
+            return 'bg-teal';
+        case 'Liberada al Cliente':
+            return 'bg-red';
+        case 'En Revisión por Cliente':
+            return 'bg-light-purple';
+        case 'Cerrada':
+            return 'bg-dark-teal';
+        default:
+            return 'bg-light text-dark';
+    }
 }
 
 // Evento para eliminar comentario

@@ -1,87 +1,26 @@
-let $formBuscarDenuncia;
-let $resultadoDenuncia;
-let $denunciaId;
-let $estado_nombre;
-let $fechaHoraReporte;
-let $sucursalNombre;
-let $categoriaNombre;
-let $subcategoriaNombre;
-let $descripcionDenuncia;
-let $contenedorComentarios;
-let $formAgregarComentario;
-let $nuevoComentario;
-let $idDenunciaInput;
-let $listaArchivos;
-let $archivosAdjuntos;
-
 $(document).ready(function () {
-    $formBuscarDenuncia = $('#formBuscarDenuncia');
-    $resultadoDenuncia = $('#resultadoDenuncia');
-    $denunciaId = $('#denunciaId');
-    $estado_nombre = $('#estado_nombre');
-    $fechaHoraReporte = $('#fechaHoraReporte');
-    $sucursalNombre = $('#sucursalNombre');
-    $categoriaNombre = $('#categoriaNombre');
-    $subcategoriaNombre = $('#subcategoriaNombre');
-    $descripcionDenuncia = $('#descripcionDenuncia');
-    $contenedorComentarios = $('#contenedorComentarios');
-    $formAgregarComentario = $('#formAgregarComentario');
-    $nuevoComentario = $('#nuevo_comentario');
-    $idDenunciaInput = $('#id_denuncia');
-    $listaArchivos = $('#listaArchivos');
-    $archivosAdjuntos = $('#archivosAdjuntos');
+    // --- SELECTORES DE ELEMENTOS ---
+    const $formBuscarDenuncia = $('#formBuscarDenuncia');
+    const $resultadoDenuncia = $('#resultadoDenuncia');
 
+    // Selectores para detalles de la denuncia
+    const $denunciaId = $('#denunciaId');
+    const $estado_nombre = $('#estado_nombre');
+    const $fechaHoraReporte = $('#fechaHoraReporte');
+    const $sucursalNombre = $('#sucursalNombre');
+    const $categoriaNombre = $('#categoriaNombre');
+    const $descripcionDenuncia = $('#descripcionDenuncia');
+
+    // Selectores para el historial y formulario de comentarios
+    const $timelineHistorial = $('#timeline-historial');
+    const $formAgregarComentario = $('#formAgregarComentario');
+    const $idDenunciaInput = $('#id_denuncia');
+
+    // --- URLs DE LA API ---
     const CONSULTA_URL = `${Server}/denuncias/consultar`;
     const COMENTARIO_URL = `${Server}/comentarios/guardar`;
 
-    // Evento para buscar la denuncia
-    $formBuscarDenuncia.on('submit', function (event) {
-        event.preventDefault();
-        const formData = $formBuscarDenuncia.serializeObject();
-        formData.folio = formData.folio.trim();
-
-        if (!formData.folio) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campo vacío',
-                text: 'Por favor, ingrese su número de folio.',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        consultarDenuncia(formData);
-    });
-
-    // Función para consultar denuncia
-    function consultarDenuncia(data) {
-        $.get(`${CONSULTA_URL}`, { folio: data.folio, id_cliente: data.id_cliente })
-            .done(function (response) {
-                if (response.denuncia) {
-                    mostrarDetallesDenuncia(response);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Denuncia no encontrada',
-                        text: 'No se encontró ninguna denuncia con ese folio.',
-                        confirmButtonText: 'Intentar de nuevo'
-                    });
-                    $resultadoDenuncia.hide();
-                }
-            })
-            .fail(function (error) {
-                console.error('Error al buscar la denuncia:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un error al buscar la denuncia. Por favor, intenta nuevamente.',
-                    confirmButtonText: 'OK'
-                });
-                $resultadoDenuncia.hide();
-            });
-    }
-
-    // Función para mostrar los detalles de la denuncia
+    // --- MAPEO DE ESTADOS Y ESTILOS ---
     const estadoMap = {
         Recepción: 'Denuncia Recibida',
         Clasificada: 'En Proceso de Revisión',
@@ -91,131 +30,198 @@ $(document).ready(function () {
         Cerrada: 'Denuncia Cerrada'
     };
 
+    const estadoClassMap = {
+        Recepción: 'bg-secondary',
+        Clasificada: 'bg-info',
+        'Revisada por Calidad': 'bg-primary',
+        'Liberada al Cliente': 'bg-warning text-dark',
+        'En Revisión por Cliente': 'bg-warning text-dark',
+        Cerrada: 'bg-success'
+    };
+
+    //======================================================================
+    // EVENTO PRINCIPAL: BUSCAR DENUNCIA
+    //======================================================================
+    $formBuscarDenuncia.on('submit', function (event) {
+        event.preventDefault();
+        const formData = {
+            folio: $('#folio').val().trim(),
+            id_cliente: $('#id_cliente').val()
+        };
+
+        if (!formData.folio) {
+            Swal.fire('Campo vacío', 'Por favor, ingrese su número de folio.', 'warning');
+            return;
+        }
+        consultarDenuncia(formData);
+    });
+
+    //======================================================================
+    // FUNCIÓN PARA CONSULTAR DENUNCIA (AJAX GET)
+    //======================================================================
+    function consultarDenuncia(data) {
+        $.get(CONSULTA_URL, data)
+            .done(function (response) {
+                if (response.denuncia) {
+                    mostrarDetallesDenuncia(response);
+                } else {
+                    Swal.fire('Denuncia no encontrada', 'No se encontró ninguna denuncia con ese folio.', 'error');
+                    $resultadoDenuncia.hide();
+                }
+            })
+            .fail(function (error) {
+                console.error('Error al buscar la denuncia:', error);
+                Swal.fire('Error', 'Ocurrió un error al buscar la denuncia. Por favor, intenta nuevamente.', 'error');
+                $resultadoDenuncia.hide();
+            });
+    }
+
+    //======================================================================
+    // FUNCIÓN PARA MOSTRAR TODOS LOS DETALLES EN LA VISTA
+    //======================================================================
     function mostrarDetallesDenuncia(data) {
         $resultadoDenuncia.show();
+        const { denuncia, comentarios, archivos } = data;
 
-        // Obtener el nombre del estado desde el mapeo o usar el original si no se encuentra en el mapeo
-        const estadoAmigable = estadoMap[data.denuncia.estado_nombre] || data.denuncia.estado_nombre;
+        // --- 1. Poblar detalles principales ---
+        const estadoAmigable = estadoMap[denuncia.estado_nombre] || denuncia.estado_nombre;
+        const estadoClass = estadoClassMap[denuncia.estado_nombre] || 'bg-dark';
 
-        // Mostrar los detalles de la denuncia con el nombre del estado traducido
-        $estado_nombre.text(estadoAmigable);
-        $denunciaId.text(data.denuncia.id || 'N/A');
-        $fechaHoraReporte.text(data.denuncia.fecha_hora_reporte || 'N/A');
-        $sucursalNombre.text(data.denuncia.sucursal_nombre || 'N/A');
-        $categoriaNombre.text(data.denuncia.categoria_nombre || 'N/A');
-        $subcategoriaNombre.text(data.denuncia.subcategoria_nombre || 'N/A');
-        $descripcionDenuncia.text(data.denuncia.descripcion || 'N/A');
+        $estado_nombre.text(estadoAmigable).removeClass().addClass(`badge fs-6 ${estadoClass}`);
+        $denunciaId.text(denuncia.id || 'N/A');
+        $fechaHoraReporte.text(denuncia.fecha_hora_reporte || 'N/A');
+        $sucursalNombre.text(denuncia.sucursal_nombre || 'N/A');
+        $categoriaNombre.text(denuncia.categoria_nombre || 'N/A');
+        $descripcionDenuncia.text(denuncia.descripcion || 'N/A');
 
-        mostrarComentarios(data.comentarios);
-        mostrarArchivos(data.archivos);
+        // --- 2. Preparar y mostrar el historial combinado ---
+        const historialEventos = [];
 
-        // Mostrar formulario para agregar comentarios si la denuncia está en estados 4 o 5
-        if ([4, 5].includes(parseInt(data.denuncia.estado_actual))) {
+        // Agregar archivos de la denuncia inicial a la lista de eventos
+        if (archivos && archivos.length > 0) {
+            archivos.forEach(archivo => {
+                historialEventos.push({
+                    fecha: denuncia.fecha_hora_reporte,
+                    tipo: esImagen(archivo.nombre_archivo) ? 'imagen_inicial' : 'archivo_inicial',
+                    data: archivo
+                });
+            });
+        }
+
+        // Agregar comentarios y sus archivos adjuntos a la lista de eventos
+        if (comentarios && Object.keys(comentarios).length > 0) {
+            $.each(comentarios, (key, comentario) => {
+                // Agregar el comentario en sí
+                historialEventos.push({
+                    fecha: comentario.fecha_comentario,
+                    tipo: 'comentario',
+                    data: comentario
+                });
+
+                // Agregar los archivos de ese comentario
+                if (comentario.archivos && comentario.archivos.length > 0) {
+                    comentario.archivos.forEach(archivo => {
+                        historialEventos.push({
+                            fecha: comentario.fecha_comentario, // Usar la misma fecha del comentario
+                            tipo: esImagen(archivo.nombre_archivo) ? 'imagen_comentario' : 'archivo_comentario',
+                            data: archivo,
+                            comentarioId: comentario.id
+                        });
+                    });
+                }
+            });
+        }
+
+        // Ordenar todos los eventos por fecha
+        historialEventos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+        // Renderizar en la línea de tiempo
+        mostrarHistorialEnTimeline(historialEventos);
+
+        // --- 3. Controlar visibilidad del formulario de comentarios ---
+        if ([4, 5].includes(parseInt(denuncia.estado_actual))) {
             $formAgregarComentario.show();
-            $idDenunciaInput.val(data.denuncia.id);
+            $idDenunciaInput.val(denuncia.id);
         } else {
             $formAgregarComentario.hide();
         }
     }
 
-    // Función para mostrar los comentarios
-    function mostrarComentarios(comentarios) {
-        $contenedorComentarios.empty(); // Limpiar comentarios anteriores
+    //======================================================================
+    // FUNCIÓN PARA RENDERIZAR EL HISTORIAL EN LA LÍNEA DE TIEMPO
+    //======================================================================
+    function mostrarHistorialEnTimeline(eventos) {
+        $timelineHistorial.empty();
 
-        const comentariosKeys = Object.keys(comentarios);
+        if (eventos.length === 0) {
+            $timelineHistorial.html('<p class="text-center text-muted">No hay eventos en el historial.</p>');
+            return;
+        }
 
-        if (comentariosKeys.length > 0) {
-            $.each(comentariosKeys, function (index, key) {
-                const comentario = comentarios[key];
-                const archivos = comentario.archivos || [];
+        eventos.forEach(evento => {
+            let timelineItemHTML = '';
+            const rutaArchivo = `${Server}/${evento.data.ruta_archivo}`;
 
-                let archivosHTML = '';
-                if (archivos.length > 0) {
-                    archivosHTML += `<div class="mt-2">`;
-                    archivos.forEach(archivo => {
-                        const extension = archivo.nombre_archivo.split('.').pop().toLowerCase();
-                        const ruta = `${Server}/${archivo.ruta_archivo}`;
+            switch (evento.tipo) {
+                case 'comentario':
+                    timelineItemHTML = `
+                        <li class="timeline-item">
+                            <div class="timeline-icon"><i class="far fa-comment-dots"></i></div>
+                            <div class="timeline-card">
+                                <time class="timeline-time">${evento.fecha}</time>
+                                <p>${evento.data.contenido}</p>
+                            </div>
+                        </li>`;
+                    break;
 
-                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
-                            archivosHTML += `
-                                <a href="${ruta}" data-lightbox="comentario-${comentario.id}" data-title="${archivo.nombre_archivo}">
-                                    <img src="${ruta}" alt="${archivo.nombre_archivo}" class="img-thumbnail me-2 mb-2" style="max-width: 150px;">
+                case 'archivo_inicial':
+                case 'archivo_comentario':
+                    const iconoArchivo = obtenerIconoArchivo(evento.data.nombre_archivo);
+                    const textoAdjunto = evento.tipo === 'archivo_inicial' ? 'Archivo adjuntado en la denuncia inicial:' : 'Archivo adjunto en comentario:';
+                    timelineItemHTML = `
+                        <li class="timeline-item">
+                            <div class="timeline-icon" style="background-color: #6c757d;"><i class="fas fa-paperclip"></i></div>
+                            <div class="timeline-card">
+                                <time class="timeline-time">${evento.fecha}</time>
+                                <p class="mb-2">${textoAdjunto}</p>
+                                <a href="${rutaArchivo}" class="timeline-file" download>
+                                    <i class="far ${iconoArchivo} file-icon"></i>
+                                    <span class="file-info">${evento.data.nombre_archivo}</span>
                                 </a>
-                            `;
-                        } else {
-                            archivosHTML += `
-                                <div>
-                                    <a href="${ruta}" target="_blank" rel="noopener">${archivo.nombre_archivo}</a>
-                                </div>
-                            `;
-                        }
-                    });
-                    archivosHTML += `</div>`;
-                }
+                            </div>
+                        </li>`;
+                    break;
 
-                const comentarioHTML = `
-                    <div class="alert alert-light" role="alert">
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">${comentario.fecha_comentario}</span>
-                        </div>
-                        <p>${comentario.contenido}</p>
-                        ${archivosHTML}
-                    </div>
-                `;
-                $contenedorComentarios.append(comentarioHTML);
-            });
-        } else {
-            $contenedorComentarios.html('<p class="text-center">No hay comentarios disponibles.</p>');
-        }
+                case 'imagen_inicial':
+                case 'imagen_comentario':
+                    const textoImagen = evento.tipo === 'imagen_inicial' ? 'Imagen adjuntada en la denuncia inicial:' : 'Imagen adjunta en comentario:';
+                    const lightboxGroup = evento.comentarioId ? `comentario-${evento.comentarioId}` : 'denuncia-inicial';
+                    timelineItemHTML = `
+                        <li class="timeline-item">
+                            <div class="timeline-icon" style="background-color: #198754;"><i class="far fa-image"></i></div>
+                            <div class="timeline-card">
+                                <time class="timeline-time">${evento.fecha}</time>
+                                <p class="mb-2">${textoImagen}</p>
+                                <a href="${rutaArchivo}" data-lightbox="${lightboxGroup}" data-title="${evento.data.nombre_archivo}">
+                                    <img src="${rutaArchivo}" class="img-fluid timeline-image-attachment" alt="Evidencia: ${evento.data.nombre_archivo}">
+                                </a>
+                            </div>
+                        </li>`;
+                    break;
+            }
+            $timelineHistorial.append(timelineItemHTML);
+        });
     }
 
-    // Función para mostrar los archivos adjuntos
-    function mostrarArchivos(archivos) {
-        $listaArchivos.empty(); // Limpiar lista de archivos
-
-        if (archivos && archivos.length > 0) {
-            $archivosAdjuntos.show(); // Mostrar sección de archivos
-
-            $.each(archivos, function (index, archivo) {
-                const extension = archivo.nombre_archivo.split('.').pop().toLowerCase();
-                if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-                    // Si es una imagen, mostrar con Lightbox
-                    const archivoHTML = `
-                        <li class="col-md-3">
-                            <a href="${Server}/${archivo.ruta_archivo}" data-lightbox="galeria-denuncia" data-title="${archivo.nombre_archivo}">
-                                <img src="${Server}/${archivo.ruta_archivo}" class="img-fluid" alt="${archivo.nombre_archivo}">
-                            </a>
-                        </li>
-                    `;
-                    $listaArchivos.append(archivoHTML);
-                } else {
-                    // Otros archivos como enlaces normales
-                    const archivoHTML = `
-                        <li class="col-md-12">
-                            <a href="${Server}/${archivo.ruta_archivo}" target="_blank">${archivo.nombre_archivo}</a>
-                        </li>
-                    `;
-                    $listaArchivos.append(archivoHTML);
-                }
-            });
-        } else {
-            $archivosAdjuntos.hide(); // Ocultar si no hay archivos
-        }
-    }
-
-    // Enviar un nuevo comentario
+    //======================================================================
+    // EVENTO PARA ENVIAR NUEVO COMENTARIO
+    //======================================================================
     $formAgregarComentario.on('submit', function (event) {
         event.preventDefault();
         const formData = new FormData(this);
-
-        // Seleccionamos el textarea y el botón de envío
-        const $textarea = $('#nuevo_comentario');
         const $submitButton = $(this).find('button[type="submit"]');
 
-        // Deshabilitar el textarea y el botón, y cambiar el texto del botón
-        $textarea.prop('disabled', true);
-        $submitButton.prop('disabled', true);
-        $submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
+        $submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Enviando...');
 
         $.ajax({
             url: COMENTARIO_URL,
@@ -225,38 +231,48 @@ $(document).ready(function () {
             contentType: false,
             success: function (data) {
                 if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Comentario enviado',
-                        text: 'Tu comentario se ha enviado con éxito.',
-                        confirmButtonText: 'OK'
-                    });
-                    $textarea.val(''); // Limpiar campo de comentario
-                    consultarDenuncia({ folio: $('#folio').val().trim(), id_cliente: $('#id_cliente').val() }); // Volver a cargar los comentarios
+                    Swal.fire('Comentario enviado', 'Tu comentario se ha enviado con éxito.', 'success');
+                    $('#nuevo_comentario').val('');
+                    $('#archivo_comentario').val('');
+                    consultarDenuncia({ folio: $('#folio').val().trim(), id_cliente: $('#id_cliente').val() });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'No se pudo enviar el comentario. Intenta de nuevo.',
-                        confirmButtonText: 'OK'
-                    });
+                    Swal.fire('Error', data.message || 'No se pudo enviar el comentario.', 'error');
                 }
             },
             error: function (error) {
                 console.error('Error al enviar el comentario:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un error al enviar el comentario. Por favor, intenta nuevamente.',
-                    confirmButtonText: 'OK'
-                });
+                Swal.fire('Error', 'Ocurrió un error de comunicación. Intenta nuevamente.', 'error');
             },
             complete: function () {
-                // Rehabilitar el textarea y el botón, y restaurar el texto del botón original
-                $textarea.prop('disabled', false);
-                $submitButton.prop('disabled', false);
-                $submitButton.html('<i class="fas fa-comment-dots"></i> Enviar Comentario');
+                $submitButton.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Enviar Información');
             }
         });
     });
+
+    //======================================================================
+    // FUNCIONES AUXILIARES
+    //======================================================================
+    function esImagen(nombreArchivo) {
+        const extension = nombreArchivo.split('.').pop().toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
+    }
+
+    function obtenerIconoArchivo(nombreArchivo) {
+        const extension = nombreArchivo.split('.').pop().toLowerCase();
+        switch (extension) {
+            case 'pdf':
+                return 'fa-file-pdf';
+            case 'doc':
+            case 'docx':
+                return 'fa-file-word';
+            case 'xls':
+            case 'xlsx':
+                return 'fa-file-excel';
+            case 'zip':
+            case 'rar':
+                return 'fa-file-archive';
+            default:
+                return 'fa-file-alt';
+        }
+    }
 });
