@@ -122,20 +122,46 @@ $(document).ready(function () {
     function mostrarComentarios(comentarios) {
         $contenedorComentarios.empty(); // Limpiar comentarios anteriores
 
-        // Convertir el objeto de comentarios a un array si es necesario
-        const comentariosKeys = Object.keys(comentarios); // Obtener las claves del objeto
+        const comentariosKeys = Object.keys(comentarios);
 
         if (comentariosKeys.length > 0) {
             $.each(comentariosKeys, function (index, key) {
-                const comentario = comentarios[key]; // Acceder al comentario usando la clave actual
+                const comentario = comentarios[key];
+                const archivos = comentario.archivos || [];
+
+                let archivosHTML = '';
+                if (archivos.length > 0) {
+                    archivosHTML += `<div class="mt-2">`;
+                    archivos.forEach(archivo => {
+                        const extension = archivo.nombre_archivo.split('.').pop().toLowerCase();
+                        const ruta = `${Server}/${archivo.ruta_archivo}`;
+
+                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+                            archivosHTML += `
+                                <a href="${ruta}" data-lightbox="comentario-${comentario.id}" data-title="${archivo.nombre_archivo}">
+                                    <img src="${ruta}" alt="${archivo.nombre_archivo}" class="img-thumbnail me-2 mb-2" style="max-width: 150px;">
+                                </a>
+                            `;
+                        } else {
+                            archivosHTML += `
+                                <div>
+                                    <a href="${ruta}" target="_blank" rel="noopener">${archivo.nombre_archivo}</a>
+                                </div>
+                            `;
+                        }
+                    });
+                    archivosHTML += `</div>`;
+                }
+
                 const comentarioHTML = `
-            <div class="alert alert-light" role="alert">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">${comentario.fecha_comentario}</span>
-                </div>
-                <p>${comentario.contenido}</p>
-            </div>
-        `;
+                    <div class="alert alert-light" role="alert">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">${comentario.fecha_comentario}</span>
+                        </div>
+                        <p>${comentario.contenido}</p>
+                        ${archivosHTML}
+                    </div>
+                `;
                 $contenedorComentarios.append(comentarioHTML);
             });
         } else {

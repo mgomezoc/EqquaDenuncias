@@ -53,11 +53,16 @@
         </div>
 
         <!-- Formulario para agregar comentarios -->
-        <form id="formAgregarComentario" style="display: none;">
+        <form id="formAgregarComentario" enctype="multipart/form-data" style="display: none;">
+            <input type="hidden" id="id_denuncia" name="id_denuncia">
             <div class="mb-3">
                 <textarea class="form-control" id="nuevo_comentario" name="contenido" rows="3" placeholder="Escribe tu comentario..." required></textarea>
             </div>
-            <input type="hidden" id="id_denuncia" name="id_denuncia">
+            <div class="mb-3">
+                <label for="archivo_comentario" class="form-label">Adjuntar archivo (opcional)</label>
+                <input class="form-control" type="file" id="archivo_comentario" name="archivo_comentario" accept="*/*">
+            </div>
+
             <button type="submit" class="btn btn-success"><i class="fas fa-comment-dots"></i> Enviar Comentario</button>
         </form>
     </div>

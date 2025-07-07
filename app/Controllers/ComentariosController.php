@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\AnexoComentarioModel;
 use App\Models\ComentarioDenunciaModel;
 use App\Models\DenunciaModel;
 use App\Models\UsuarioModel;
@@ -48,6 +49,40 @@ class ComentariosController extends BaseController
         ];
 
         if ($comentarioModel->save($data)) {
+            $id_comentario = $comentarioModel->getInsertID();
+
+            // Procesar archivo si viene uno
+            $archivo = $this->request->getFile('archivo_comentario');
+            if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
+                $mime = $archivo->getMimeType();
+                $extension = strtolower($archivo->getExtension());
+
+                $esPeligroso = in_array($extension, ['php', 'exe', 'js', 'sh', 'bat']);
+                $esMuyPesado = $archivo->getSize() > 10 * 1024 * 1024;
+
+                if (!$esMuyPesado && !$esPeligroso) {
+                    $folio = $denuncia['folio'];
+                    $nombre = $archivo->getRandomName();
+                    $rutaRelativa = "uploads/denuncias/{$folio}/comentarios/{$id_comentario}/";
+                    $rutaCompleta = WRITEPATH . "../public/{$rutaRelativa}";
+
+                    if (!is_dir($rutaCompleta)) {
+                        mkdir($rutaCompleta, 0755, true);
+                    }
+
+                    if ($archivo->move($rutaCompleta, $nombre)) {
+                        $anexoComentarioModel = new AnexoComentarioModel();
+                        $anexoComentarioModel->save([
+                            'id_comentario' => $id_comentario,
+                            'nombre_archivo' => $nombre,
+                            'ruta_archivo' => $rutaRelativa . $nombre,
+                            'tipo_mime' => $mime,
+                            'visible_para_cliente' => 1,
+                        ]);
+                    }
+                }
+            }
+
             // Notificar usuarios
             $usuariosInvolucrados = $this->obtenerUsuariosInvolucrados($id_denuncia);
             foreach ($usuariosInvolucrados as $usuario) {
@@ -66,24 +101,17 @@ class ComentariosController extends BaseController
         }
     }
 
-
     public function listar($id_denuncia)
     {
         $comentarioModel = new ComentarioDenunciaModel();
-
-        // Obtener los comentarios relacionados con la denuncia
         $comentarios = $comentarioModel->getComentariosByDenuncia($id_denuncia);
-
         return $this->response->setJSON($comentarios);
     }
 
     public function listarCliente($id_denuncia)
     {
         $comentarioModel = new ComentarioDenunciaModel();
-
-        // Obtener los comentarios relacionados con la denuncia
         $comentarios = $comentarioModel->getComentariosVisiblesParaCliente($id_denuncia);
-
         return $this->response->setJSON($comentarios);
     }
 
@@ -93,45 +121,44 @@ class ComentariosController extends BaseController
         $denunciaModel = new DenunciaModel();
         $usuarios = [];
 
-        // Obtener el estado actual de la denuncia
         $denuncia = $denunciaModel->find($id_denuncia);
         if (!$denuncia) {
-            return []; // Si no se encuentra la denuncia, regresar un array vacío
+            return [];
         }
 
         $estadoActual = $denuncia['estado_actual'];
 
-        // 1. Obtener el agente o creador de la denuncia
+        // Creador
         $creador = $usuarioModel->query("
-        SELECT u.id, u.nombre_usuario, u.correo_electronico
-        FROM denuncias d
-        INNER JOIN usuarios u ON d.id_creador = u.id
-        WHERE d.id = ?", [$id_denuncia])->getResultArray();
+            SELECT u.id, u.nombre_usuario, u.correo_electronico
+            FROM denuncias d
+            INNER JOIN usuarios u ON d.id_creador = u.id
+            WHERE d.id = ?", [$id_denuncia])->getResultArray();
 
         $usuarios = array_merge($usuarios, $creador);
 
-        // 2. Obtener supervisores de calidad que cambiaron el estado
+        // Supervisores
         $supervisores = $usuarioModel->query("
-        SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
-        FROM seguimiento_denuncias sd
-        INNER JOIN usuarios u ON sd.id_usuario = u.id
-        WHERE sd.id_denuncia = ? AND u.rol_id = 3", [$id_denuncia])->getResultArray();
+            SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
+            FROM seguimiento_denuncias sd
+            INNER JOIN usuarios u ON sd.id_usuario = u.id
+            WHERE sd.id_denuncia = ? AND u.rol_id = 3", [$id_denuncia])->getResultArray();
 
         $usuarios = array_merge($usuarios, $supervisores);
 
-        // 3. Solo obtener clientes si el estado es 4, 5 o 6
+        // Clientes
         if (in_array($estadoActual, [4, 5, 6])) {
             $clientes = $usuarioModel->query("
-            SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
-            FROM denuncias d
-            INNER JOIN relacion_clientes_usuarios rcu ON d.id_cliente = rcu.id_cliente
-            INNER JOIN usuarios u ON rcu.id_usuario = u.id
-            WHERE d.id = ? AND u.rol_id = 4", [$id_denuncia])->getResultArray();
+                SELECT DISTINCT u.id, u.nombre_usuario, u.correo_electronico
+                FROM denuncias d
+                INNER JOIN relacion_clientes_usuarios rcu ON d.id_cliente = rcu.id_cliente
+                INNER JOIN usuarios u ON rcu.id_usuario = u.id
+                WHERE d.id = ? AND u.rol_id = 4", [$id_denuncia])->getResultArray();
 
             $usuarios = array_merge($usuarios, $clientes);
         }
 
-        // Filtrar duplicados (por si un usuario está en más de una consulta)
+        // Quitar duplicados
         $usuariosUnicos = [];
         foreach ($usuarios as $usuario) {
             $usuariosUnicos[$usuario['id']] = $usuario;
@@ -140,12 +167,10 @@ class ComentariosController extends BaseController
         return array_values($usuariosUnicos);
     }
 
-
     private function enviarCorreoNotificacion($email, $nombreUsuario, $denuncia, $contenidoComentario)
     {
         $emailService = new EmailService();
 
-        // Crear el mensaje de notificación
         $mensaje = '
             <!DOCTYPE html>
             <html lang="es">
@@ -154,82 +179,37 @@ class ComentariosController extends BaseController
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Nuevo Comentario en Denuncia</title>
                 <style>
-                    /* Estilos generales */
-                    body {
-                        font-family: "Arial", sans-serif;
-                        background-color: #f4f4f4;
-                        color: #333333;
-                        margin: 0;
-                        padding: 0;
-                        width: 100%;
-                    }
-                    table {
-                        max-width: 600px;
-                        width: 100%;
-                        margin: 0 auto;
-                        background-color: #ffffff;
-                        border-collapse: collapse;
-                    }
-                    h1, h2, h3, p {
-                        margin: 0;
-                    }
-                    .header {
-                        background-color: #0047ba; /* Color primario del sistema */
-                        padding: 20px;
-                        text-align: center;
-                        color: #ffffff;
-                    }
-                    .body-content {
-                        padding: 20px;
-                    }
-                    .footer {
-                        background-color: #0047ba;
-                        color: #ffffff;
-                        text-align: center;
-                        padding: 10px 20px;
-                        font-size: 14px;
-                    }
-                    .footer a {
-                        color: #ffffff;
-                        text-decoration: underline;
-                    }
+                    body { font-family: "Arial", sans-serif; background-color: #f4f4f4; color: #333; }
+                    table { max-width: 600px; margin: auto; background: #fff; border-collapse: collapse; }
+                    .header { background-color: #0047ba; color: #fff; padding: 20px; text-align: center; }
+                    .body-content { padding: 20px; }
+                    .footer { background-color: #0047ba; color: #fff; text-align: center; padding: 10px; font-size: 14px; }
                 </style>
             </head>
             <body>
                 <table>
-                    <tr>
-                        <td class="header">
-                            <h1>Nuevo Comentario en la Denuncia ' . esc($denuncia['folio']) . '</h1>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="body-content">
-                            <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
-                            <p>Se ha agregado un nuevo comentario en la denuncia con folio <strong>' . esc($denuncia['folio']) . '</strong>.</p>
-                            <p><strong>Comentario:</strong> ' . esc($contenidoComentario) . '</p>
-                            <p>Para más detalles, acceda a su cuenta en <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
-                            <p>Saludos cordiales,<br><strong>Eqqua Denuncias</strong></p>
-                        </td>
-                    </tr>
+                    <tr><td class="header"><h1>Nuevo Comentario en la Denuncia ' . esc($denuncia['folio']) . '</h1></td></tr>
+                    <tr><td class="body-content">
+                        <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
+                        <p>Se ha agregado un nuevo comentario en la denuncia con folio <strong>' . esc($denuncia['folio']) . '</strong>.</p>
+                        <p><strong>Comentario:</strong> ' . esc($contenidoComentario) . '</p>
+                        <p>Para más detalles, acceda a <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
+                    </td></tr>
                 </table>
             </body>
             </html>';
 
-        // Enviar el correo
         $emailService->sendEmail($email, 'Nuevo Comentario en Denuncia ' . esc($denuncia['folio']), $mensaje);
     }
 
     public function eliminar($id)
     {
         $comentarioModel = new ComentarioDenunciaModel();
-
-        // Buscar el comentario por ID
         $comentario = $comentarioModel->find($id);
         if (!$comentario) {
             return $this->response->setStatusCode(404)->setJSON(['message' => 'Comentario no encontrado']);
         }
 
-        // Intentar eliminar
         if ($comentarioModel->delete($id)) {
             return $this->response->setJSON(['success' => true, 'message' => 'Comentario eliminado correctamente']);
         } else {
