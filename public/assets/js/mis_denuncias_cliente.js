@@ -225,7 +225,10 @@ $(function () {
             },
             {
                 field: 'tipo_denunciante',
-                title: 'Tipo Denunciante'
+                title: 'Tipo Denunciante',
+                formatter: function (value, row) {
+                    return value === 'No anónimo' ? row.nombre_completo : value;
+                }
             },
             {
                 field: 'categoria_nombre',

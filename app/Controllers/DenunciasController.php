@@ -196,6 +196,13 @@ class DenunciasController extends Controller
         // Adjunta los seguimientos al array de denuncia
         $denuncia['seguimientos'] = $seguimientos;
 
+        // Obtener archivos anexos de la denuncia (igual que en consultarDenuncia de Publico)
+        $anexoModel = new \App\Models\AnexoDenunciaModel();
+        $archivosDenuncia = $anexoModel->where('id_denuncia', $id)->findAll();
+
+        // Adjuntar los archivos al resultado
+        $denuncia['archivos'] = $archivosDenuncia;
+
         return $this->response->setJSON($denuncia);
     }
 

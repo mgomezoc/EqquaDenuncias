@@ -193,65 +193,169 @@ $(function () {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
                 const fechaIncidente = operateFormatterFecha(data.fecha_incidente);
+
+                // Función para obtener el icono según el tipo de archivo
+                const getFileIcon = filename => {
+                    const ext = filename.split('.').pop().toLowerCase();
+                    const icons = {
+                        pdf: 'fa-file-pdf text-danger',
+                        doc: 'fa-file-word text-primary',
+                        docx: 'fa-file-word text-primary',
+                        xls: 'fa-file-excel text-success',
+                        xlsx: 'fa-file-excel text-success',
+                        zip: 'fa-file-zipper text-warning',
+                        rar: 'fa-file-zipper text-warning',
+                        txt: 'fa-file-lines text-secondary',
+                        csv: 'fa-file-csv text-info'
+                    };
+                    return icons[ext] || 'fa-file text-secondary';
+                };
+
+                // Renderizar archivos anexos mejorado
+                let archivosHtml = '';
+                if (data.archivos && data.archivos.length > 0) {
+                    archivosHtml += `
+                <div class="mt-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-paperclip me-2"></i>Archivos Adjuntos 
+                        <span class="badge bg-secondary ms-2">${data.archivos.length}</span>
+                    </h5>
+                    <div class="row g-3">
+            `;
+
+                    data.archivos.forEach((archivo, idx) => {
+                        const url = `${Server}${archivo.ruta_archivo}`;
+                        const ext = archivo.nombre_archivo.split('.').pop().toLowerCase();
+                        const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+                        const nombreCorto = archivo.nombre_archivo.length > 25 ? archivo.nombre_archivo.substring(0, 22) + '...' + ext : archivo.nombre_archivo;
+
+                        if (esImagen) {
+                            archivosHtml += `
+                        <div class="col-6 col-md-4 col-lg-3 animate__animated animate__fadeIn" style="animation-delay: ${idx * 0.1}s">
+                            <div class="card shadow-sm h-100 archivo-card">
+                                <a href="${url}" 
+                                   data-fancybox="denuncia-${data.id}" 
+                                   data-caption="${archivo.nombre_archivo}"
+                                   class="archivo-imagen-link">
+                                    <div class="archivo-imagen-container">
+                                        <img src="${url}" 
+                                             alt="${archivo.nombre_archivo}" 
+                                             class="card-img-top archivo-imagen"
+                                             loading="lazy">
+                                        <div class="archivo-overlay">
+                                            <i class="fas fa-search-plus"></i>
+                                        </div>
+                                    </div>
+                                </a>
+                                <div class="card-body p-2">
+                                    <p class="card-text text-center small mb-0" title="${archivo.nombre_archivo}">
+                                        <i class="fas fa-image text-primary me-1"></i>
+                                        ${nombreCorto}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                        } else {
+                            archivosHtml += `
+                        <div class="col-6 col-md-4 col-lg-3 animate__animated animate__fadeIn" style="animation-delay: ${idx * 0.1}s">
+                            <div class="card shadow-sm h-100 archivo-card">
+                                <a href="${url}" 
+                                   target="_blank" 
+                                   class="text-decoration-none archivo-documento-link">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas ${getFileIcon(archivo.nombre_archivo)} archivo-icono mb-3"></i>
+                                        <p class="card-text small mb-0 text-dark" title="${archivo.nombre_archivo}">
+                                            ${nombreCorto}
+                                        </p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                        }
+                    });
+
+                    archivosHtml += `
+                    </div>
+                </div>
+            `;
+                }
+
                 const contenido = `
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Folio:</strong> ${data.folio}</p>
-                    <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
-                    <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
-                    <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
-                    <p><strong>Sexo:</strong> ${data.sexo_nombre || 'No especificado'}</p>
-                    <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
-                    <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
-                    <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
-                    <p><strong>Fecha del Incidente:</strong> ${fechaIncidente}</p>
-                    <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
-                    <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
-                    <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
-                </div>
-                <div class="col-12 mt-3">
-                    <p><strong>Descripción:</strong></p>
-                    <p>${data.descripcion || 'N/A'}</p>
-                </div>
-                <div class="col-12 mt-3">
-                    <h5>Historial de Seguimiento</h5>
-                    <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>De</th>
-                                <th>A</th>
-                                <th>Comentario</th>
-                                <th>Por</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.seguimientos
-                                .map(
-                                    seg => `
-                                    <tr>
-                                        <td>${formatoFechaHora(seg.fecha)}</td>
-                                        <td>${seg.estado_anterior_nombre}</td>
-                                        <td>${seg.estado_nuevo_nombre}</td>
-                                        <td>${seg.comentario || 'N/A'}</td>
-                                        <td>${seg.usuario_nombre}</td>
-                                    </tr>
-                                `
-                                )
-                                .join('')}
-                        </tbody>
-                    </table>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Folio:</strong> ${data.folio}</p>
+                        <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
+                        <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
+                        <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                        <p><strong>Sexo:</strong> ${data.sexo_nombre || 'No especificado'}</p>
+                        <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
+                        <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
+                        <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
+                        <p><strong>Fecha del Incidente:</strong> ${fechaIncidente}</p>
+                        <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
+                        <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
+                        <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <p><strong>Descripción:</strong></p>
+                        <p>${data.descripcion || 'N/A'}</p>
+                    </div>
+                    ${archivosHtml}
+                    <div class="col-12 mt-3">
+                        <h5>Historial de Seguimiento</h5>
+                        <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>De</th>
+                                    <th>A</th>
+                                    <th>Comentario</th>
+                                    <th>Por</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.seguimientos
+                                    .map(
+                                        seg => `
+                                        <tr>
+                                            <td>${formatoFechaHora(seg.fecha)}</td>
+                                            <td>${seg.estado_anterior_nombre}</td>
+                                            <td>${seg.estado_nuevo_nombre}</td>
+                                            <td>${seg.comentario || 'N/A'}</td>
+                                            <td>${seg.usuario_nombre}</td>
+                                        </tr>
+                                    `
+                                    )
+                                    .join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
 
                 $('#modalVerDetalle .modal-body').html(contenido);
                 modal.show();
+
+                // Inicializar Fancybox después de mostrar el modal
+                setTimeout(() => {
+                    $('[data-fancybox="denuncia-' + data.id + '"]').fancybox({
+                        buttons: ['zoom', 'share', 'slideShow', 'fullScreen', 'download', 'thumbs', 'close'],
+                        loop: true,
+                        protect: true,
+                        animationEffect: 'zoom-in-out',
+                        transitionEffect: 'slide',
+                        thumbs: {
+                            autoStart: true
+                        }
+                    });
+                }, 100);
             });
         },
 
@@ -359,7 +463,10 @@ $(function () {
             },
             {
                 field: 'tipo_denunciante',
-                title: 'Denunciante'
+                title: 'Denunciante',
+                formatter: function (value, row) {
+                    return value === 'No anónimo' ? row.nombre_completo : value;
+                }
             },
             {
                 field: 'categoria_nombre',

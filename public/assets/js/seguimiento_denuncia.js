@@ -151,6 +151,7 @@ $(document).ready(function () {
     // FUNCIÓN PARA RENDERIZAR EL HISTORIAL EN LA LÍNEA DE TIEMPO
     //======================================================================
     function mostrarHistorialEnTimeline(eventos) {
+        console.log('Mostrando historial de eventos:', eventos);
         $timelineHistorial.empty();
 
         if (eventos.length === 0) {
@@ -192,7 +193,6 @@ $(document).ready(function () {
                         </li>`;
                     break;
 
-                case 'imagen_inicial':
                 case 'imagen_comentario':
                     const textoImagen = evento.tipo === 'imagen_inicial' ? 'Imagen adjuntada en la denuncia inicial:' : 'Imagen adjunta en comentario:';
                     const lightboxGroup = evento.comentarioId ? `comentario-${evento.comentarioId}` : 'denuncia-inicial';
@@ -207,6 +207,9 @@ $(document).ready(function () {
                                 </a>
                             </div>
                         </li>`;
+                    break;
+
+                case 'imagen_inicial':
                     break;
             }
             $timelineHistorial.append(timelineItemHTML);

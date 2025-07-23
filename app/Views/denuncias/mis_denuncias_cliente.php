@@ -32,17 +32,17 @@
 </div>
 
 <template id="tplAccionesTabla">
-    <?php if ($solo_lectura == 0): ?>
-        <div class="dropdown">
-            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="fas fa-ellipsis-v"></i><span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                    <a class="dropdown-item view-detail" href="#">
-                        <i class="fas fa-eye me-2"></i> Ver Detalle
-                    </a>
-                </li>
+    <div class="dropdown">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="fas fa-ellipsis-v"></i><span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item view-detail" href="#">
+                    <i class="fas fa-eye me-2"></i> Ver Detalle
+                </a>
+            </li>
+            <?php if ($solo_lectura == 0): ?>
                 <li>
                     <a class="dropdown-item view-comments" href="#">
                         <i class="fas fa-comments me-2"></i> Ver Comentarios
@@ -53,10 +53,11 @@
                         <i class="fas fa-exchange-alt me-2"></i> Cambiar Estatus
                     </a>
                 </li>
-            </ul>
-        </div>
-    <?php endif; ?>
+            <?php endif; ?>
+        </ul>
+    </div>
 </template>
+
 
 <template id="tplDetalleTabla">
     <div class="">
