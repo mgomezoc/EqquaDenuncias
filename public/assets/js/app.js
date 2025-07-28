@@ -361,3 +361,12 @@ function operateFormatterFecha(value, row, index) {
 function formatoFechaHora(value, row, index) {
     return moment(value).format('DD/MM/YYYY HH:mm');
 }
+function formatoFecha(fecha) {
+    if (!fecha) return '-';
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
