@@ -354,19 +354,46 @@ class DenunciasController extends Controller
         registrarAccion(session()->get('id'), 'Cambio de estado de denuncia', 'ID: ' . $id);
 
         // Verificar si el estado es "Liberada al Cliente" (estado 4)
+        // Si se libera al cliente, crear comentario y enviar correo
         if ($estado_nuevo == 4) {
-
-            // 🔹 Insertar comentario automático
+            // Agregar comentario automático
             $comentarioModel->insert([
-                'id_denuncia'     => $id,
-                'id_usuario'      => 1,
-                'contenido'       => 'Su denuncia está siendo atendida. Favor de revisar en 48 horas.',
+                'id_denuncia' => $id,
+                'id_usuario' => 1,
+                'contenido' => 'Su denuncia está siendo atendida. Favor de revisar en 48 horas.',
                 'estado_denuncia' => $estado_nuevo,
                 'fecha_comentario' => date('Y-m-d H:i:s')
             ]);
+
+            // Obtener usuarios para notificar
+            $usuarioModel = new UsuarioModel();
+            $usuarios = $usuarioModel
+                ->where('id_cliente', $denuncia['id_cliente'])
+                ->where('recibe_notificaciones', 1)
+                ->findAll();
+
+            $emailService = new EmailService();
+            $erroresCorreo = [];
+
+            foreach ($usuarios as $usuario) {
+                $correoDestino = !empty($usuario['correo_notificaciones']) ? $usuario['correo_notificaciones'] : $usuario['correo_electronico'];
+
+                $resultado = $this->enviarCorreoLiberacionCliente($correoDestino, $usuario['nombre_usuario'], $denuncia);
+
+                if ($resultado !== true) {
+                    $erroresCorreo[] = [
+                        'usuario' => $usuario['nombre_usuario'],
+                        'correo' => $correoDestino,
+                        'error' => $resultado
+                    ];
+                }
+            }
         }
 
-        return $this->response->setJSON(['message' => 'Estado actualizado correctamente']);
+        return $this->response->setJSON([
+            'message' => 'Estado actualizado correctamente',
+            'erroresCorreo' => $erroresCorreo ?? []
+        ]);
     }
 
 
