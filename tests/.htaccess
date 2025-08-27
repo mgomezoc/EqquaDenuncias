@@ -1,6 +1,30 @@
-<IfModule authz_core_module>
-	Require all denied
-</IfModule>
-<IfModule !authz_core_module>
-	Deny from all
-</IfModule>
+# Activa el motor de reescritura de URLs
+RewriteEngine On
+
+# Establece el directorio base
+# Si tu proyecto no está en la raíz del dominio, cambia / por el nombre de la carpeta.
+# Ejemplo: RewriteBase /mi-proyecto/
+RewriteBase /
+
+# Redirige las barras inclinadas finales si no es una carpeta
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# Maneja el controlador frontal (Front Controller)
+# Si la URL solicitada no es un archivo o un directorio existente...
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# ...redirige la solicitud a index.php
+RewriteRule ^(.*)$ index.php?/$1 [L,QSA]
+
+# Deniega el acceso a archivos sensibles por seguridad
+<FilesMatch "\.(env|json|lock|md|xml|dist|yml|yaml|ini)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deniega el acceso a composer.phar
+<Files composer.phar>
+    Order allow,deny
+    Deny from all
+</Files>

@@ -129,3 +129,4 @@ produccion
 dev
 respaldos
 public/uploads
+tests/*
