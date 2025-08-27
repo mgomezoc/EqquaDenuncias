@@ -96,6 +96,11 @@
                 </div>
 
                 <div class="col-md-4">
+                    <label for="created_at-{{id}}" class="form-label">Fecha de Creación</label>
+                    <input type="text" class="form-control flatpickr-datetime" id="created_at-{{id}}" name="created_at" value="{{created_at}}">
+                </div>
+
+                <div class="col-md-4">
                     <label for="categoria-{{id}}" class="form-label">Categoría</label>
                     <select class="form-select select2" id="categoria-{{id}}" name="categoria">
                         {{{selectOptions categorias categoria}}}

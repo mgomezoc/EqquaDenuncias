@@ -239,8 +239,9 @@ class DenunciasController extends Controller
             'telefono' => $this->request->getVar('telefono'),
             'id_creador' => $idCreador,
             'id_sexo' => $this->request->getVar('id_sexo'),
+            'created_at' => $this->request->getVar('created_at'),
         ], function ($value) {
-            return $value !== null;
+            return $value !== null && $value !== '';
         });
 
 

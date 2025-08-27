@@ -570,6 +570,7 @@ $(function () {
                 const esAnonimo = row.anonimo === '0';
 
                 const data = {
+                    created_at: row.created_at,
                     id: row.id,
                     clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
                     categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
@@ -617,6 +618,7 @@ $(function () {
                 $detail.find('select').select2();
                 // Aplicar flatpickr a "Fecha del Incidente" en la edición
                 initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
+                initializeFlatpickrDateTime(`#created_at-${row.id}`);
 
                 // Validación del formulario y configuración de eventos
                 $detail.find('.formEditarDenuncia').validate({
@@ -793,6 +795,16 @@ $(function () {
         });
     });
 });
+function initializeFlatpickrDateTime(selector) {
+    $(selector).flatpickr({
+        enableTime: true,
+        time_24hr: true,
+        seconds: true,
+        dateFormat: 'Y-m-d H:i:S', // coincide con formato MySQL
+        altInput: true,
+        altFormat: 'd/m/Y H:i:s'
+    });
+}
 
 // Función para inicializar Dropzone
 function initializeDropzone(elementId, formId) {

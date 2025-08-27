@@ -34,7 +34,8 @@ class DenunciaModel extends Model
         'visible_para_cliente',
         'tiempo_atencion_cliente',
         'id_sexo',
-        'fecha_cierre'
+        'fecha_cierre',
+        'created_at'
     ];
 
     protected $useTimestamps    = true;
