@@ -93,57 +93,124 @@ class ReportesController extends Controller
     public function exportarCSV()
     {
         $filters = $this->request->getPost();
-        $result = $this->denunciaModel->filtrarDenuncias(1000, 0, $filters); // Llama a filtrarDenuncias con parámetros de paginación grandes
 
-        // Definir los títulos de las columnas de forma amigable
+        // Trae hasta 1000 (ajústalo si necesitas más)
+        $result = $this->denunciaModel->filtrarDenuncias(1000, 0, $filters);
+
+        // Models para comentarios y seguimiento
+        $comentarioModel  = new \App\Models\ComentarioDenunciaModel();
+        $seguimientoModel = new \App\Models\SeguimientoDenunciaModel();
+
+        // Encabezados amigables (se agregan 2 nuevas columnas)
         $columnMap = [
-            'folio' => 'Folio',
-            'cliente_nombre' => 'Cliente',
-            'sucursal_nombre' => 'Sucursal',
-            'departamento_nombre' => 'Departamento',
-            'estado_nombre' => 'Estado',
-            'creador_nombre' => 'Creador',
-            'fecha_hora_reporte' => 'Fecha Reporte',
-            'medio_recepcion' => 'Medio de Recepción',
-            'descripcion' => 'Descripción',
-            'tipo_denunciante' => 'Tipo de Denunciante',
-            'anonimo' => 'Denuncia Anónima',
-            'nombre_completo' => 'Nombre Completo',
-            'correo_electronico' => 'Correo Electrónico',
-            'telefono' => 'Teléfono',
-            'fecha_incidente' => 'Fecha del Incidente',
-            'como_se_entero' => '¿Cómo se enteró?',
-            'denunciar_a_alguien' => '¿Denuncia a Alguien?',
-            'area_incidente' => 'Área del Incidente',
-            'estado_actual' => 'Estado Actual',
-            'created_at' => 'Fecha de Creación',
-            'updated_at' => 'Fecha de Actualización'
+            'folio'                  => 'Folio',
+            'cliente_nombre'         => 'Cliente',
+            'sucursal_nombre'        => 'Sucursal',
+            'departamento_nombre'    => 'Departamento',
+            'estado_nombre'          => 'Estado',
+            'creador_nombre'         => 'Creador',
+            'fecha_hora_reporte'     => 'Fecha Reporte',
+            'medio_recepcion'        => 'Medio de Recepción',
+            'descripcion'            => 'Descripción',
+            'tipo_denunciante'       => 'Tipo de Denunciante',
+            'anonimo'                => 'Denuncia Anónima',
+            'nombre_completo'        => 'Nombre Completo',
+            'correo_electronico'     => 'Correo Electrónico',
+            'telefono'               => 'Teléfono',
+            'fecha_incidente'        => 'Fecha del Incidente',
+            'como_se_entero'         => '¿Cómo se enteró?',
+            'denunciar_a_alguien'    => '¿Denuncia a Alguien?',
+            'area_incidente'         => 'Área del Incidente',
+            'estado_actual'          => 'Estado Actual',
+            'created_at'             => 'Fecha de Creación',
+            'updated_at'             => 'Fecha de Actualización',
+            // nuevas columnas:
+            'comentarios_csv'        => 'Comentarios',
+            'seguimiento_csv'        => 'Seguimiento',
         ];
 
-        // Crear contenido CSV
         $filename = 'reporte_denuncias_' . date('Ymd') . '.csv';
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment;filename=' . $filename);
 
-        // Añadir el BOM UTF-8
         $output = fopen('php://output', 'w');
-        fputs($output, "\xEF\xBB\xBF"); // Esto añade el BOM
+        // BOM UTF-8
+        fputs($output, "\xEF\xBB\xBF");
 
-        // Escribir los encabezados basados en el mapeo
+        // Encabezados
         fputcsv($output, array_values($columnMap));
 
-        // Escribir los datos de las denuncias
         foreach ($result['rows'] as $denuncia) {
+            $idDenuncia = $denuncia['id'] ?? null;
+
+            // ---- Comentarios
+            $comentarios = [];
+            if ($idDenuncia) {
+                $rowsComentarios = $comentarioModel->getComentariosByDenuncia($idDenuncia);
+                foreach ($rowsComentarios as $c) {
+                    // Formato: 2025-07-28 12:27 | Estado | Usuario: Contenido
+                    $fecha   = $c['fecha_comentario'] ?? '';
+                    $estado  = $c['estado_nombre'] ?? '';
+                    $usuario = $c['nombre_usuario'] ?? '';
+                    $texto   = $c['contenido'] ?? '';
+                    $comentarios[] = $this->sanitizeCsvCell("{$fecha} | {$estado} | {$usuario}: {$texto}");
+                }
+            }
+            $comentariosCsv = implode(' || ', $comentarios); // separador entre items
+
+            // ---- Seguimiento
+            $seguimientos = [];
+            if ($idDenuncia) {
+                $rowsSeg = $seguimientoModel->getSeguimientoByDenunciaId($idDenuncia);
+                foreach ($rowsSeg as $s) {
+                    // Formato: 2025-07-28 12:27 | De: X -> A: Y | Comentario | Por: Usuario
+                    $fecha = $s['fecha'] ?? '';
+                    $de    = $s['estado_anterior_nombre'] ?? '';
+                    $a     = $s['estado_nuevo_nombre'] ?? '';
+                    $coment = $s['comentario'] ?? '';
+                    $por   = $s['usuario_nombre'] ?? '';
+                    $seguimientos[] = $this->sanitizeCsvCell("{$fecha} | De: {$de} -> A: {$a} | {$coment} | Por: {$por}");
+                }
+            }
+            $seguimientoCsv = implode(' || ', $seguimientos);
+
+            // Armar fila respetando el orden de $columnMap
             $row = [];
             foreach (array_keys($columnMap) as $key) {
-                $row[] = $denuncia[$key] ?? ''; // Usar un valor vacío si la clave no existe
+                if ($key === 'comentarios_csv') {
+                    $row[] = $comentariosCsv;
+                } elseif ($key === 'seguimiento_csv') {
+                    $row[] = $seguimientoCsv;
+                } else {
+                    $row[] = isset($denuncia[$key]) ? $this->sanitizeCsvCell($denuncia[$key]) : '';
+                }
             }
+
             fputcsv($output, $row);
         }
 
         fclose($output);
         exit;
     }
+
+    /**
+     * Normaliza el contenido para una celda CSV.
+     * - El CSV acepta comas y barras verticales si el campo va entre comillas (fputcsv lo hace).
+     * - Quitamos saltos de línea y tabs que pueden romper visualización en Excel.
+     * - Opcional: sustituimos pipes internos si prefieres que no aparezcan.
+     */
+    private function sanitizeCsvCell($value)
+    {
+        $str = (string) $value;
+        // Reemplaza saltos de línea/tabs por espacio
+        $str = str_replace(["\r\n", "\n", "\r", "\t"], ' ', $str);
+        // Compacta espacios múltiples
+        $str = preg_replace('/\s{2,}/', ' ', $str);
+        // Si quieres evitar pipes internos, descomenta la siguiente línea:
+        // $str = str_replace('|', '¦', $str);
+        return trim($str);
+    }
+
 
     public function cliente()
     {
