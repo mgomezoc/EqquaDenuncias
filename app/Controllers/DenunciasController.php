@@ -547,78 +547,80 @@ class DenunciasController extends Controller
 
         // Crear el mensaje de notificación
         $mensaje = '
-            <!DOCTYPE html>
-            <html lang="es">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Denuncia Liberada</title>
-                <style>
-                    /* Estilos generales */
-                    body {
-                        font-family: "Arial", sans-serif;
-                        background-color: #f4f4f4;
-                        color: #333333;
-                        margin: 0;
-                        padding: 0;
-                        width: 100%;
-                    }
-                    table {
-                        max-width: 600px;
-                        width: 100%;
-                        margin: 0 auto;
-                        background-color: #ffffff;
-                        border-collapse: collapse;
-                    }
-                    h1, h2, h3, p {
-                        margin: 0;
-                    }
-                    .header {
-                        background-color: #0047ba; /* Color primario del sistema */
-                        padding: 20px;
-                        text-align: center;
-                        color: #ffffff;
-                    }
-                    .body-content {
-                        padding: 20px;
-                    }
-                    .footer {
-                        background-color: #0047ba;
-                        color: #ffffff;
-                        text-align: center;
-                        padding: 10px 20px;
-                        font-size: 14px;
-                    }
-                    .footer a {
-                        color: #ffffff;
-                        text-decoration: underline;
-                    }
-                </style>
-            </head>
-            <body>
-                <table>
-                    <tr>
-                        <td class="header">
-                            <h1>Nueva Denuncia!</h1>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="body-content">
-                            <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
-                            <p>Le informamos que su denuncia con el folio <strong>' . esc($denuncia['folio']) . '</strong> ha sido liberada.</p>
-                            <p>Ahora tiene acceso a la información completa y a los resultados de la investigación. Puede revisar los detalles accediendo a su cuenta en el sistema.</p>
-                            <p>Para más detalles, ingrese a su cuenta en <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
-                            <p>Saludos cordiales,<br><strong>Eqqua Denuncias</strong></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="footer">
-                            <p>&copy; ' . date('Y') . ' Eqqua</p>
-                        </td>
-                    </tr>
-                </table>
-            </body>
-            </html>';
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Denuncia Liberada</title>
+        <style>
+            /* Estilos generales */
+            body {
+                font-family: "Arial", sans-serif;
+                background-color: #f4f4f4;
+                color: #333333;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+            table {
+                max-width: 600px;
+                width: 100%;
+                margin: 0 auto;
+                background-color: #ffffff;
+                border-collapse: collapse;
+            }
+            h1, h2, h3, p {
+                margin: 0;
+            }
+            .header {
+                background-color: #0047ba; /* Color primario del sistema */
+                padding: 20px;
+                text-align: center;
+                color: #ffffff;
+            }
+            .body-content {
+                padding: 20px;
+            }
+            .footer {
+                background-color: #0047ba;
+                color: #ffffff;
+                text-align: center;
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            .footer a {
+                color: #ffffff;
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td class="header">
+                    <h1>Denuncia Liberada</h1>
+                </td>
+            </tr>
+            <tr>
+                <td class="body-content">
+                    <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
+                    <p>Le informamos que la denuncia registrada bajo el folio <strong>' . esc($denuncia['folio']) . '</strong> ha sido liberada.</p>
+                    <p>A partir de este momento, usted tiene acceso completo a la información relacionada para establecer seguimiento. Para consultar los detalles, por favor inicie sesión en su cuenta a través del portal de denuncias.</p>
+                    <p>Puede acceder directamente ingresando al siguiente enlace: <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
+                    <p>Agradecemos su confianza.</p>
+                    <p>Atentamente,<br><strong>Equipo de Eqqua</strong></p>
+                </td>
+            </tr>
+            <tr>
+                <td class="footer">
+                    <p>&copy; ' . date('Y') . ' Eqqua</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>';
+
 
         // Enviar el correo
         $emailService->sendEmail($email, 'Nueva Denuncia: ' . esc($denuncia['folio']), $mensaje);
