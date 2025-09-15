@@ -64,106 +64,135 @@ class Publico extends BaseController
     public function guardarDenunciaPublica()
     {
         $denunciaModel = new DenunciaModel();
-        // Recoger si la denuncia es anónima o no
-        $anonimo = $this->request->getPost('anonimo');
+        $clienteModel  = new ClienteModel();
 
-        // Recoger información adicional si no es anónimo
-        $nombre_completo = $anonimo == 0 ? $this->request->getPost('nombre_completo') : null;
-        $correo_electronico = $anonimo == 0 ? $this->request->getPost('correo_electronico') : null;
-        $telefono = $anonimo == 0 ? $this->request->getPost('telefono') : null;
-        $id_sexo = $anonimo == 0 ? $this->request->getPost('id_sexo') : null;
+        // Identificar cliente y su política
+        $idCliente = (int) $this->request->getPost('id_cliente');
+        $cliente   = $clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Cliente no encontrado.']);
+        }
+        $politica = (int) ($cliente['politica_anonimato'] ?? 0); // 0=opcional, 1=forzar anónimas, 2=forzar identificadas
 
-        // Datos para guardar la denuncia
+        // Valor enviado desde el form (por si es opcional)
+        $anonimoInput = $this->request->getPost('anonimo');
+        $anonimo      = ($anonimoInput === null) ? null : (int) $anonimoInput;
+
+        // Campos de identificación (podrían venir o no)
+        $nombre  = $this->request->getPost('nombre_completo');
+        $correo  = $this->request->getPost('correo_electronico');
+        $tel     = $this->request->getPost('telefono');
+        $id_sexo = $this->request->getPost('id_sexo');
+
+        // Aplicar política
+        switch ($politica) {
+            case 1: // FORZAR ANÓNIMAS
+                $anonimo = 1;
+                $nombre = $correo = $tel = $id_sexo = null; // limpiar por seguridad
+                break;
+
+            case 2: // FORZAR IDENTIFICADAS
+                $anonimo = 0;
+                // Validar identificación: nombre y (correo o teléfono)
+                if (empty(trim((string)$nombre)) || (empty(trim((string)$correo)) && empty(trim((string)$tel)))) {
+                    return $this->response->setStatusCode(422)->setJSON([
+                        'success' => false,
+                        'message' => 'Este cliente requiere denuncias identificadas: nombre y (correo o teléfono) son obligatorios.'
+                    ]);
+                }
+                break;
+
+            default: // OPCIONAL
+                $anonimo = (int) ($anonimo ?? 1);
+                if ($anonimo === 0) {
+                    if (empty(trim((string)$nombre)) || (empty(trim((string)$correo)) && empty(trim((string)$tel)))) {
+                        return $this->response->setStatusCode(422)->setJSON([
+                            'success'   => false,
+                            'message'   => 'Para denuncias no anónimas indique su nombre y al menos correo o teléfono.'
+                        ]);
+                    }
+                } else {
+                    // Si eligió anónimo, por seguridad limpiamos
+                    $nombre = $correo = $tel = $id_sexo = null;
+                }
+                break;
+        }
+
+        // Construir payload
         $data = [
-            'id_cliente' => $this->request->getPost('id_cliente'),
-            'id_sucursal' => $this->request->getPost('id_sucursal'),
-            'tipo_denunciante' => $anonimo ? 'Anónimo' : 'No anónimo',
-            'id_departamento' => $this->request->getPost('id_departamento'),
-            'anonimo' => $anonimo,
-            'nombre_completo' => $nombre_completo,
-            'correo_electronico' => $correo_electronico,
-            'telefono' => $telefono,
-            'id_sexo' => $id_sexo,
-            'fecha_incidente' => convertir_fecha($this->request->getPost('fecha_incidente')),
-            'como_se_entero' => $this->request->getPost('como_se_entero'),
+            'id_cliente'         => $idCliente,
+            'id_sucursal'        => $this->request->getPost('id_sucursal'),
+            'tipo_denunciante'   => $anonimo ? 'Anónimo' : 'No anónimo',
+            'id_departamento'    => $this->request->getPost('id_departamento'),
+            'anonimo'            => $anonimo,
+            'nombre_completo'    => $nombre,
+            'correo_electronico' => $correo,
+            'telefono'           => $tel,
+            'id_sexo'            => $id_sexo,
+            'fecha_incidente'    => convertir_fecha($this->request->getPost('fecha_incidente')),
+            'como_se_entero'     => $this->request->getPost('como_se_entero'),
             'denunciar_a_alguien' => $this->request->getPost('denunciar_a_alguien'),
-            'area_incidente' => $this->request->getPost('area_incidente'),
-            'descripcion' => $this->request->getPost('descripcion'),
-            'medio_recepcion' => 'Plataforma Pública',
-            'estado_actual' => 1, // Estado inicial (Recepción)
-            'id_creador' => null
+            'area_incidente'     => $this->request->getPost('area_incidente'),
+            'descripcion'        => $this->request->getPost('descripcion'),
+            'medio_recepcion'    => 'Plataforma Pública',
+            'estado_actual'      => 1,
+            'id_creador'         => null
         ];
 
-        // Guardar la denuncia
         if (!$denunciaModel->save($data)) {
             return $this->response->setStatusCode(400)
                 ->setJSON(['success' => false, 'message' => 'Error al guardar la denuncia']);
         }
 
-        // Obtener el ID de la denuncia recién creada
         $denunciaId = $denunciaModel->getInsertID();
+        $folio      = $denunciaModel->find($denunciaId)['folio'];
 
-        // Obtener el folio generado para esta denuncia
-        $folio = $denunciaModel->find($denunciaId)['folio'];
-
-        // Procesar archivos adjuntos (si existen)
+        // Anexos “normales”
         $anexos = $this->request->getPost('archivos');
         if ($anexos && is_array($anexos)) {
             $anexoModel = new AnexoDenunciaModel();
             foreach ($anexos as $rutaArchivo) {
                 $anexoModel->save([
-                    'id_denuncia' => $denunciaId,
+                    'id_denuncia'    => $denunciaId,
                     'nombre_archivo' => basename($rutaArchivo),
-                    'ruta_archivo' => $rutaArchivo,
-                    'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
+                    'ruta_archivo'   => $rutaArchivo,
+                    'tipo'           => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
                 ]);
             }
         }
 
-        // Procesar archivo de audio si está presente
+        // Anexo de audio (si viene)
         $audioFile = $this->request->getFile('audio_file');
         if ($audioFile && $audioFile->isValid()) {
-            // Obtener el tipo MIME del archivo antes de moverlo
             $mimeType = $audioFile->getMimeType();
-
-            // Validar el archivo de audio
             if ($audioFile->getSize() <= 5 * 1024 * 1024 && in_array($mimeType, ['audio/wav', 'audio/mpeg', 'audio/ogg', 'video/webm'])) {
-                // Mover el archivo a la carpeta de uploads (con nombre aleatorio)
                 $newAudioName = $audioFile->getRandomName();
                 if ($audioFile->move(WRITEPATH . '../public/uploads/denuncias', $newAudioName)) {
-                    // Guardar el audio como anexo en la base de datos
                     $anexoModel = new AnexoDenunciaModel();
                     $anexoModel->save([
-                        'id_denuncia' => $denunciaId,
+                        'id_denuncia'    => $denunciaId,
                         'nombre_archivo' => $newAudioName,
-                        'ruta_archivo' => 'uploads/denuncias/' . $newAudioName,
-                        'tipo' => $mimeType, // Usar el tipo MIME ya obtenido
+                        'ruta_archivo'   => 'uploads/denuncias/' . $newAudioName,
+                        'tipo'           => $mimeType,
                     ]);
                 } else {
-                    return $this->response->setStatusCode(400)
-                        ->setJSON(['message' => 'No se pudo subir el archivo de audio']);
+                    return $this->response->setStatusCode(400)->setJSON(['message' => 'No se pudo subir el archivo de audio']);
                 }
             } else {
-                return $this->response->setStatusCode(400)
-                    ->setJSON([
-                        'success' => false,
-                        'message' => 'Archivo de audio no válido o demasiado grande',
-                        'data' => [
-                            'size' => $audioFile->getSize(),
-                            'mime' => $mimeType,
-                        ]
-                    ]);
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success' => false,
+                    'message' => 'Archivo de audio no válido o demasiado grande',
+                ]);
             }
         }
 
-
-        // Retornar el folio en la respuesta JSON
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Denuncia guardada correctamente',
-            'folio' => $folio // Retornar el folio generado
+            'folio'   => $folio
         ]);
     }
+
 
     /**
      * Subir archivo anexo para la denuncia usando Dropzone

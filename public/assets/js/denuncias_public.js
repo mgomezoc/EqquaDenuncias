@@ -1,37 +1,54 @@
 /**
  * Script para manejar la lógica del formulario de denuncias públicas.
- * Incluye validación con jquery-validate, carga dinámica de subcategorías y departamentos,
- * manejo de Dropzone para archivos adjuntos y grabación de audio usando MediaRecorder API.
+ * - Política de anonimato por cliente (POLITICA: 0=opcional, 1=forzar anónimas, 2=forzar identificadas)
+ * - Validación con jquery-validate
+ * - Carga dinámica de departamentos (y subcategorías si existen en el DOM)
+ * - Dropzone para archivos
+ * - Grabación de audio con MediaRecorder
  */
 
-// Deshabilitar la autodetección de Dropzone
-Dropzone.autoDiscover = false;
+Dropzone.autoDiscover = false; // Deshabilitar autodetección
 
 $(document).ready(function () {
     // Constantes
     const MAX_FILES = 5;
-    const MAX_FILE_SIZE_MB = 10; // Tamaño máximo para archivos normales (10 MB)
-    const MAX_AUDIO_FILE_SIZE = 5 * 1024 * 1024; // Tamaño máximo para el archivo de audio (5 MB)
-    const MAX_VIDEO_SIZE_MB = 20; // Tamaño máximo para videos cortos (20 MB)
+    const MAX_FILE_SIZE_MB = 10; // imágenes/pdf 10 MB
+    const MAX_VIDEO_SIZE_MB = 20; // videos 20 MB (validado por Dropzone vía acceptedFiles)
+    const MAX_AUDIO_SIZE_MB = 5; // audio 5 MB
 
     let mediaRecorder;
     let audioChunks = [];
     let audioBlob;
 
-    /**
-     * Inicializa las librerías externas y comportamientos en el DOM.
-     */
+    /** ---------- Helpers de política ---------- */
+    function isForcedAnon() {
+        return typeof POLITICA !== 'undefined' && POLITICA === 1;
+    }
+    function isForcedIdent() {
+        return typeof POLITICA !== 'undefined' && POLITICA === 2;
+    }
+    function isOptional() {
+        return typeof POLITICA === 'undefined' || POLITICA === 0;
+    }
+
+    // ¿Se requiere denuncia identificada?
+    function needIdentificado() {
+        if (isForcedIdent()) return true;
+        if (isForcedAnon()) return false;
+        // Opcional: depende del radio
+        return $('input[name="anonimo"]:checked').val() === '0';
+    }
+
+    /** ---------- Inicialización general ---------- */
     function initializeComponents() {
         initializeSelect2();
         initializeFlatpickr();
         initializeDropzone();
         initializeValidation();
         initializeEventListeners();
+        applyPolicyUI(); // Ajustar UI según política
     }
 
-    /**
-     * Inicializa el plugin Select2 para los selectores de categoría, subcategoría y departamento.
-     */
     function initializeSelect2() {
         $('.select2').select2({
             theme: 'bootstrap-5',
@@ -40,9 +57,6 @@ $(document).ready(function () {
         });
     }
 
-    /**
-     * Inicializa el calendario de Flatpickr con restricciones.
-     */
     function initializeFlatpickr() {
         $('.flatpickr').flatpickr({
             dateFormat: 'd/m/Y',
@@ -53,145 +67,178 @@ $(document).ready(function () {
         });
     }
 
-    /**
-     * Inicializa Dropzone para la subida de archivos adjuntos.
-     */
     function initializeDropzone() {
-        // Solución para evitar múltiples inicializaciones
+        // Evitar múltiples instancias
         if (Dropzone.instances.length > 0) {
-            Dropzone.instances.forEach(dropzone => dropzone.destroy());
+            Dropzone.instances.forEach(dz => dz.destroy());
         }
 
-        const dropzoneOptions = {
+        new Dropzone('#dropzoneArchivos', {
             url: `${Server}denuncias/subir-anexo-public`,
-            maxFiles: MAX_FILES, // Máximo 5 archivos
-            maxFilesize: MAX_FILE_SIZE_MB, // Limitar el tamaño de cada archivo a 10 MB
-            acceptedFiles: 'image/*,application/pdf,video/mp4,video/webm,video/ogg', // Tipos permitidos: imágenes, PDFs y videos cortos
+            maxFiles: MAX_FILES,
+            maxFilesize: MAX_FILE_SIZE_MB,
+            acceptedFiles: 'image/*,application/pdf,video/mp4,video/webm,video/ogg',
             addRemoveLinks: true,
             dictDefaultMessage: 'Arrastra los archivos aquí para subirlos (imágenes, PDF, videos cortos)',
             dictRemoveFile: 'Eliminar archivo',
-            dictFileTooBig: 'El archivo es muy grande ({{filesize}} MB). Tamaño máximo: {{maxFilesize}} MB.',
+            dictFileTooBig: 'El archivo es muy grande ({{filesize}} MB). Máximo: {{maxFilesize}} MB.',
             dictInvalidFileType: 'Tipo de archivo no permitido.',
             init: function () {
                 this.on('success', handleFileUploadSuccess);
                 this.on('removedfile', handleFileRemove);
                 this.on('error', function (file, message) {
-                    console.error('Error en la subida del archivo: ', message);
+                    console.error('Error en subida de archivo:', message);
                     Swal.fire('Error', message, 'error');
                 });
             }
-        };
-
-        new Dropzone('#dropzoneArchivos', dropzoneOptions);
+        });
     }
 
-    /**
-     * Inicializa la validación del formulario con jquery-validate.
-     */
+    /** ---------- Validación del formulario ---------- */
     function initializeValidation() {
+        // Reglas dinámicas (solo agregamos si el campo existe)
+        const rules = {
+            id_sucursal: { required: true },
+            // id_departamento es opcional en el formulario público (no agregamos required)
+            fecha_incidente: { required: true, date: true },
+            como_se_entero: { required: true },
+            area_incidente: { required: true, minlength: 5 },
+            descripcion: { required: true, minlength: 10 },
+            anonimo: { required: true },
+            // Condicionales de identificación
+            nombre_completo: {
+                required: {
+                    depends: function () {
+                        return needIdentificado();
+                    }
+                },
+                minlength: {
+                    depends: function () {
+                        return needIdentificado();
+                    },
+                    param: 3
+                }
+            },
+            correo_electronico: {
+                email: true // "al menos uno" (correo o teléfono) se valida en submit
+            }
+        };
+
+        if ($('#categoria').length) rules.categoria = { required: true };
+        if ($('#subcategoria').length) rules.subcategoria = { required: true };
+
+        const messages = {
+            id_sucursal: 'Seleccione una sucursal.',
+            categoria: 'Seleccione una categoría.',
+            subcategoria: 'Seleccione una subcategoría.',
+            fecha_incidente: 'Ingrese una fecha válida.',
+            como_se_entero: 'Seleccione cómo se enteró.',
+            area_incidente: 'Ingrese el área donde sucedió (mínimo 5 caracteres).',
+            descripcion: 'Describa la denuncia (mínimo 10 caracteres).',
+            anonimo: 'Indique si la denuncia es anónima.',
+            nombre_completo: {
+                required: 'Indique su nombre.',
+                minlength: 'Su nombre debe tener al menos 3 caracteres.'
+            },
+            correo_electronico: { email: 'Ingrese un correo válido.' }
+        };
+
         $('#formCrearDenuncia').validate({
             errorClass: 'is-invalid',
             validClass: 'is-valid',
-            ignore: ':hidden:not(.select2)', // Permitir validar select2
+            ignore: ':hidden:not(.select2)',
+            rules,
+            messages,
             errorPlacement: function (error, element) {
                 if (element.hasClass('select2')) {
-                    error.insertAfter(element.next('.select2-container')); // Insertar el error debajo de select2
+                    error.insertAfter(element.next('.select2-container'));
                 } else {
                     error.insertAfter(element);
                 }
-            },
-            rules: {
-                id_sucursal: {
-                    required: true
-                },
-                categoria: {
-                    required: true
-                },
-                subcategoria: {
-                    required: true
-                },
-                id_departamento: {
-                    required: true
-                },
-                fecha_incidente: {
-                    required: true,
-                    date: true
-                },
-                como_se_entero: {
-                    required: true
-                },
-                area_incidente: {
-                    required: true,
-                    minlength: 5
-                },
-                descripcion: {
-                    required: true,
-                    minlength: 10
-                },
-                anonimo: {
-                    required: true
-                }
-            },
-            messages: {
-                id_sucursal: 'Seleccione una sucursal.',
-                categoria: 'Seleccione una categoría.',
-                subcategoria: 'Seleccione una subcategoría.',
-                id_departamento: 'Seleccione un departamento.',
-                fecha_incidente: 'Ingrese una fecha válida.',
-                como_se_entero: 'Seleccione cómo se enteró.',
-                area_incidente: 'Ingrese el área donde sucedió el incidente (mínimo 5 caracteres).',
-                descripcion: 'Describa la denuncia (mínimo 10 caracteres).',
-                anonimo: 'Indique si la denuncia es anónima.'
             }
         });
 
-        // Soporte para validación de select2
+        // Validar cuando cambie select2
         $('.select2').on('change', function () {
             $(this).valid();
         });
     }
 
-    /**
-     * Asigna los manejadores de eventos a los elementos del DOM.
-     */
+    /** ---------- Listeners ---------- */
     function initializeEventListeners() {
-        $('input[name="anonimo"]').on('change', function () {
-            if ($(this).val() == '0') {
-                $('#infoAdicional').show(); // Mostrar los campos adicionales si no es anónimo
-            } else {
-                $('#infoAdicional').hide(); // Ocultar los campos adicionales si es anónimo
-            }
+        // Política opcional: mostrar/ocultar info adicional según radio
+        $(document).on('change', 'input[name="anonimo"]', function () {
+            applyPolicyUI();
         });
 
-        $('#categoria').on('change', function () {
-            const categoriaId = $(this).val();
-            loadSubcategorias(categoriaId);
-        });
+        // Cargar subcategorías si existe el selector #categoria
+        if ($('#categoria').length) {
+            $('#categoria').on('change', function () {
+                loadSubcategorias($(this).val());
+            });
+        }
 
+        // Cargar departamentos al cambiar sucursal
         $('#id_sucursal').on('change', function () {
             const sucursalId = $(this).val();
             loadDepartamentos(sucursalId);
         });
 
+        // Audio
         $('#startRecording').on('click', startAudioRecording);
         $('#stopRecording').on('click', stopAudioRecording);
 
+        // Envío del formulario
         $('#formCrearDenuncia').on('submit', handleFormSubmit);
     }
 
-    /**
-     * Función que carga dinámicamente las subcategorías al seleccionar una categoría.
-     */
+    /** ---------- UI según política ---------- */
+    function applyPolicyUI() {
+        const $info = $('#infoAdicional');
+        const $grupoAnonimo = $('#grupoAnonimo');
+        const $inputsIdent = $('#nombre_completo, #correo_electronico, #telefono, #id_sexo');
+
+        if (isForcedAnon()) {
+            // Forzar anónimas: ocultar selector, ocultar y limpiar identificación
+            $grupoAnonimo.hide();
+            $info.hide().attr('aria-hidden', 'true');
+            $inputsIdent.val('').trigger('change');
+            $inputsIdent.prop('disabled', true);
+        } else if (isForcedIdent()) {
+            // Forzar identificadas: ocultar selector, mostrar identificación
+            $grupoAnonimo.hide();
+            $info.show().attr('aria-hidden', 'false');
+            $inputsIdent.prop('disabled', false);
+        } else {
+            // Opcional
+            $grupoAnonimo.show();
+            const anon = $('input[name="anonimo"]:checked').val();
+            if (anon === '0') {
+                $info.show().attr('aria-hidden', 'false');
+                $inputsIdent.prop('disabled', false);
+            } else {
+                $info.hide().attr('aria-hidden', 'true');
+                $inputsIdent.val('').trigger('change');
+                $inputsIdent.prop('disabled', false); // se envían vacíos si están ocultos
+            }
+        }
+    }
+
+    /** ---------- Cargas dinámicas ---------- */
     function loadSubcategorias(categoriaId) {
+        if (!categoriaId) {
+            $('#subcategoria').empty().append('<option value="">Seleccione una subcategoría</option>');
+            return;
+        }
         $.ajax({
             url: `${Server}categorias/listarSubcategorias`,
             method: 'GET',
             data: { id_categoria: categoriaId },
             success: function (data) {
-                $('#subcategoria').empty().append('<option value="">Seleccione una subcategoría</option>');
-                data.forEach(subcategoria => {
-                    $('#subcategoria').append(`<option value="${subcategoria.id}">${subcategoria.nombre}</option>`);
-                });
+                const $sub = $('#subcategoria');
+                $sub.empty().append('<option value="">Seleccione una subcategoría</option>');
+                data.forEach(sc => $sub.append(`<option value="${sc.id}">${sc.nombre}</option>`));
+                $sub.trigger('change');
             },
             error: function () {
                 $('#subcategoria').html('<option value="">Error al cargar subcategorías</option>');
@@ -199,18 +246,19 @@ $(document).ready(function () {
         });
     }
 
-    /**
-     * Función que carga dinámicamente los departamentos al seleccionar una sucursal.
-     */
     function loadDepartamentos(sucursalId) {
+        if (!sucursalId) {
+            $('#id_departamento').empty().append('<option value="">Seleccione un departamento</option>');
+            return;
+        }
         $.ajax({
             url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
             method: 'GET',
             success: function (data) {
-                $('#id_departamento').empty().append('<option value="">Seleccione un departamento</option>');
-                data.forEach(departamento => {
-                    $('#id_departamento').append(`<option value="${departamento.id}">${departamento.nombre}</option>`);
-                });
+                const $dep = $('#id_departamento');
+                $dep.empty().append('<option value="">Seleccione un departamento</option>');
+                data.forEach(dep => $dep.append(`<option value="${dep.id}">${dep.nombre}</option>`));
+                $dep.trigger('change');
             },
             error: function () {
                 $('#id_departamento').html('<option value="">Error al cargar departamentos</option>');
@@ -218,9 +266,7 @@ $(document).ready(function () {
         });
     }
 
-    /**
-     * Manejador del evento de éxito al subir un archivo con Dropzone.
-     */
+    /** ---------- Dropzone handlers ---------- */
     function handleFileUploadSuccess(file, response) {
         $('<input>')
             .attr({
@@ -231,24 +277,17 @@ $(document).ready(function () {
             .appendTo('#formCrearDenuncia');
     }
 
-    /**
-     * Manejador del evento de eliminación de archivo en Dropzone.
-     */
     function handleFileRemove(file) {
+        if (!file || !file.upload || !file.upload.filename) return;
         const filename = file.upload.filename;
         $(`#formCrearDenuncia input[value="uploads/denuncias/${filename}"]`).remove();
     }
 
-    /**
-     * Verifica si el navegador soporta la API getUserMedia para grabar audio.
-     */
+    /** ---------- Audio (MediaRecorder) ---------- */
     function checkMicrophoneSupport() {
         return navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
     }
 
-    /**
-     * Inicia la grabación de audio usando la API de MediaRecorder.
-     */
     function startAudioRecording() {
         if (!checkMicrophoneSupport()) {
             Swal.fire('Error', 'El navegador no soporta la grabación de audio o no tiene permisos.', 'error');
@@ -265,21 +304,17 @@ $(document).ready(function () {
                 $('#startRecording').attr('disabled', true);
                 $('#stopRecording').attr('disabled', false);
 
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
+                mediaRecorder.ondataavailable = e => {
+                    audioChunks.push(e.data);
                 };
-
                 mediaRecorder.onstop = handleAudioRecordingStop;
             })
-            .catch(error => {
-                console.error('Error al acceder al micrófono: ', error);
+            .catch(err => {
+                console.error('Error al acceder al micrófono:', err);
                 Swal.fire('Error', 'Error al acceder al micrófono. Verifique los permisos.', 'error');
             });
     }
 
-    /**
-     * Detiene la grabación de audio.
-     */
     function stopAudioRecording() {
         if (mediaRecorder) {
             mediaRecorder.stop();
@@ -288,19 +323,14 @@ $(document).ready(function () {
         }
     }
 
-    /**
-     * Manejador de la finalización de la grabación de audio.
-     */
     function handleAudioRecordingStop() {
         audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
 
-        const audioFileSize = audioBlob.size / 1024 / 1024; // Tamaño del archivo en MB
-        const MAX_AUDIO_SIZE_MB = 5; // Límite de tamaño de archivo de audio a 5 MB
-
-        if (audioFileSize > MAX_AUDIO_SIZE_MB) {
-            Swal.fire('Error', 'El archivo de audio supera el tamaño máximo permitido de 5 MB.', 'error');
+        const audioSizeMB = audioBlob.size / 1024 / 1024;
+        if (audioSizeMB > MAX_AUDIO_SIZE_MB) {
+            Swal.fire('Error', `El archivo de audio supera el tamaño máximo permitido de ${MAX_AUDIO_SIZE_MB} MB.`, 'error');
             $('#audioPlayback').hide();
-            $('#audio_input').val(''); // Limpiar el input de audio
+            $('#audio_input').val('');
             return;
         }
 
@@ -313,17 +343,24 @@ $(document).ready(function () {
         document.getElementById('audio_input').files = dataTransfer.files;
     }
 
-    /**
-     * Manejador para enviar el formulario de creación de denuncia.
-     */
+    /** ---------- Submit ---------- */
     function handleFormSubmit(e) {
         e.preventDefault();
 
-        if (!$('#formCrearDenuncia').valid()) {
-            return;
+        const $form = $('#formCrearDenuncia');
+        if (!$form.valid()) return;
+
+        // Si es identificada (forzada u opcional), requerir al menos correo o teléfono
+        if (needIdentificado()) {
+            const correo = ($('#correo_electronico').val() || '').trim();
+            const tel = ($('#telefono').val() || '').trim();
+            if (correo === '' && tel === '') {
+                Swal.fire('Faltan datos', 'Ingrese al menos correo o teléfono para una denuncia identificada.', 'warning');
+                return;
+            }
         }
 
-        const formData = new FormData(this);
+        const formData = new FormData($form[0]);
 
         $.ajax({
             url: `${Server}denuncias/guardar-public`,
@@ -342,16 +379,20 @@ $(document).ready(function () {
                         window.location = `${Server}c/${slug}/seguimiento-denuncia?folio=${response.folio}`;
                     });
                 } else {
-                    Swal.fire('Error', 'Ocurrió un error al guardar la denuncia. Por favor, intenta de nuevo.', 'error');
+                    Swal.fire('Error', response.message || 'Ocurrió un error al guardar la denuncia. Intenta de nuevo.', 'error');
                 }
             },
-            error: function () {
-                console.error('Error al guardar la denuncia.');
-                Swal.fire('Error', 'Ocurrió un error al guardar la denuncia. Por favor, intenta de nuevo.', 'error');
+            error: function (xhr) {
+                console.error('Error al guardar la denuncia.', xhr);
+                let msg = 'Ocurrió un error al guardar la denuncia. Intenta de nuevo.';
+                try {
+                    msg = JSON.parse(xhr.responseText).message || msg;
+                } catch (e) {}
+                Swal.fire('Error', msg, 'error');
             }
         });
     }
 
-    // Inicializar todo
+    // GO!
     initializeComponents();
 });

@@ -23,6 +23,7 @@
                         <th>Nombre Empresa</th>
                         <th>Correo Contacto</th>
                         <th>Teléfono Contacto</th>
+                        <th>Política de Anonimato</th>
                         <?php if ($rol_slug == 'ADMIN'): ?>
                             <th>Acciones</th>
                         <?php endif; ?>
@@ -49,7 +50,7 @@
         <form id="formEditarCliente-{{id}}" action="<?= base_url('clientes/guardar') ?>" method="post" class="formEditarCliente card custom-card card-body mb-4">
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
-                <!-- Mostrar solo para roles ADMIN o AGENTE -->
+                <!-- Datos generales -->
                 <div class="col-md-4">
                     <label for="nombre_empresa" class="form-label">Nombre Empresa</label>
                     <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="{{nombre_empresa}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
@@ -104,21 +105,34 @@
                     <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{whatsapp}}" <?= $rol_slug === 'ADMIN' ? '' : 'readonly' ?> pattern="\d{10}">
                 </div>
 
-                <?php if ($rol_slug === 'ADMIN') : ?>
-                    <div class="mt-5">
+                <!-- NUEVO: Política de anonimato -->
+                <div class="col-md-4">
+                    <label for="politica_anonimato" class="form-label">Política de anonimato</label>
+                    <select class="form-select" name="politica_anonimato" id="politica_anonimato" <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?> data-value="{{politica_anonimato}}">
+                        <option value="0">Opcional (reportante decide)</option>
+                        <option value="1">Forzar anónimas</option>
+                        <option value="2">Forzar identificadas</option>
+                    </select>
+                    <small class="text-muted">
+                        Esta política se aplicará a <strong>todas</strong> las altas de denuncias (internas y formulario público).
+                    </small>
+                </div>
+
+                <?php if ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') : ?>
+                    <div class="mt-4">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fa fa-save"></i> Actualizar
+                            <i class="fa fa-save"></i> Guardar configuración
                         </button>
                     </div>
                 <?php endif; ?>
             </div>
         </form>
 
+        <!-- Imágenes -->
         <form id="formActualizarImagenes-{{id}}" class="formActualizarImagenes card custom-card">
             <input type="hidden" name="id" value="{{id}}">
             <div class="card-body">
                 <div class="row g-4">
-                    <!-- Sección de Logo -->
                     <?php if ($rol_slug === 'ADMIN' || $rol_slug === 'AGENTE') : ?>
                         <div class="col-md-6">
                             <div class="card border-light mb-3">
@@ -138,7 +152,6 @@
                             </div>
                         </div>
                     <?php endif; ?>
-                    <!-- Sección de Banner -->
                     <div class="col-md-6">
                         <div class="card border-light mb-3">
                             <div class="card-header text-center bg-light">
@@ -175,7 +188,7 @@
 <?= $this->section('modals') ?>
 <!-- Modal Crear Cliente -->
 <div class="modal fade" id="modalCrearCliente" tabindex="-1" aria-labelledby="modalCrearClienteLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg"> <!-- Cambiado a modal-lg -->
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="formCrearCliente" action="<?= base_url('clientes/guardar') ?>" method="post">
                 <div class="modal-header">
@@ -208,6 +221,17 @@
                             <label for="slug" class="form-label">Slug</label>
                             <input type="text" class="form-control" id="slug" name="slug" required>
                         </div>
+
+                        <!-- NUEVO: Política al crear -->
+                        <div class="col-md-6">
+                            <label for="politica_anonimato" class="form-label">Política de anonimato</label>
+                            <select class="form-select" name="politica_anonimato" id="politica_anonimato">
+                                <option value="0">Opcional (reportante decide)</option>
+                                <option value="1">Forzar anónimas</option>
+                                <option value="2">Forzar identificadas</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-6">
                             <label for="saludo" class="form-label">Saludo</label>
                             <textarea class="form-control" id="saludo" name="saludo" rows="4"></textarea>

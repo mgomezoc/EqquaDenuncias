@@ -1,35 +1,62 @@
 <?= $this->extend('layouts/public_layout') ?>
 
 <?= $this->section('content') ?>
+<?php
+// 0 = Opcional, 1 = Forzar anónimas, 2 = Forzar identificadas
+$pol = (int)($cliente['politica_anonimato'] ?? 0);
+?>
 <section class="container my-5">
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
         <h1 class="titulo animate__animated animate__fadeIn">Registrar una Denuncia</h1>
         <p class="text-muted">Complete el formulario para reportar una denuncia. Todos los campos son obligatorios.</p>
     </div>
 
+    <?php if ($pol === 1): ?>
+        <div class="alert alert-info mb-4">
+            <i class="fa fa-user-secret me-1"></i>
+            Este cliente exige que las denuncias sean <strong>anónimas</strong>. No se solicitarán datos personales.
+        </div>
+    <?php elseif ($pol === 2): ?>
+        <div class="alert alert-warning mb-4">
+            <i class="fa fa-id-card me-1"></i>
+            Este cliente exige que las denuncias sean <strong>identificadas</strong>. Se requerirá su nombre y al menos <strong>correo o teléfono</strong>.
+        </div>
+    <?php endif; ?>
+
     <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
-        <!-- Dato oculto: Cliente -->
+        <!-- Datos ocultos -->
         <input type="hidden" name="id_cliente" value="<?= esc($cliente['id']) ?>">
         <input type="hidden" name="tipo_denunciante" value="Cliente">
 
-        <!-- Agrupación de campos en secciones lógicas -->
+        <!-- Si la política es forzada, mandamos el valor por hidden -->
+        <?php if ($pol === 1): ?>
+            <input type="hidden" name="anonimo" value="1">
+        <?php elseif ($pol === 2): ?>
+            <input type="hidden" name="anonimo" value="0">
+        <?php endif; ?>
+
         <div class="row g-4">
-            <div class="col-md-6">
+            <!-- Grupo ¿Es anónimo? (solo visible si la política es opcional) -->
+            <div id="grupoAnonimo" class="col-md-6" <?= $pol !== 0 ? 'style="display:none;"' : '' ?>>
                 <label class="form-label">¿Es anónimo?</label>
                 <div class="d-flex gap-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" checked required>
+                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" <?= $pol === 0 ? 'checked' : 'disabled' ?> required>
                         <label class="form-check-label" for="anonimo-si">Sí</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
+                        <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" <?= $pol !== 0 ? 'disabled' : '' ?> required>
                         <label class="form-check-label" for="anonimo-no">No</label>
                     </div>
                 </div>
             </div>
 
-            <!-- Información adicional cuando no es anónimo -->
-            <div id="infoAdicional" class="row g-3" style="display: none;" aria-hidden="true">
+            <!-- Información adicional cuando NO es anónimo -->
+            <?php
+            // Mostrar por defecto si la política es "forzar identificadas"; ocultar en los demás casos (lo maneja JS también)
+            $showIdent = ($pol === 2);
+            ?>
+            <div id="infoAdicional" class="row g-3" style="<?= $showIdent ? '' : 'display:none;' ?>" aria-hidden="<?= $showIdent ? 'false' : 'true' ?>">
                 <div class="col-md-6">
                     <label for="nombre_completo" class="form-label">Nombre Completo</label>
                     <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" placeholder="Ingrese su nombre completo">
@@ -44,6 +71,7 @@
                     <label for="telefono" class="form-label">Teléfono (opcional)</label>
                     <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su teléfono (opcional)">
                 </div>
+
                 <div class="col-md-6">
                     <label for="id_sexo" class="form-label">Sexo</label>
                     <select class="form-select select2" id="id_sexo" name="id_sexo">
@@ -53,18 +81,17 @@
                         <option value="3">Otro</option>
                     </select>
                 </div>
-
             </div>
 
-            <hr>
+            <hr class="mt-2">
 
-            <!-- Información de sucursal y categoría -->
+            <!-- Información de sucursal y (posible) categoría -->
             <div class="col-md-6">
                 <label for="id_sucursal" class="form-label">Sucursal <span class="text-danger">*</span></label>
                 <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
                     <option value="">Seleccione una sucursal</option>
                     <?php foreach ($sucursales as $sucursal): ?>
-                        <option value="<?= $sucursal['id'] ?>"><?= $sucursal['nombre'] ?></option>
+                        <option value="<?= $sucursal['id'] ?>"><?= esc($sucursal['nombre']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -113,15 +140,22 @@
             <div class="col-md-12">
                 <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
                 <div id="dropzoneArchivos" class="dropzone border p-3" style="border-radius: 10px;"></div>
-                <small class="text-muted">Máximo tamaño de archivo: 10 MB para imágenes y PDF, 20 MB para videos. Formatos permitidos: PDF, JPG, PNG, MP4, WEBM, OGG.</small>
+                <small class="text-muted d-block mt-1">
+                    Máximo tamaño de archivo: 10 MB para imágenes y PDF, 20 MB para videos.
+                    Formatos permitidos: PDF, JPG, PNG, MP4, WEBM, OGG.
+                </small>
             </div>
 
             <!-- Audio -->
             <div class="col-md-12">
                 <label for="audio_input" class="form-label">¿Nos quieres dejar un audio?</label>
                 <div class="input-group">
-                    <button id="startRecording" type="button" class="btn btn-outline-secondary"><i class="fa fa-microphone"></i> Iniciar Grabación</button>
-                    <button id="stopRecording" type="button" class="btn btn-outline-secondary" disabled><i class="fa fa-stop"></i> Detener Grabación</button>
+                    <button id="startRecording" type="button" class="btn btn-outline-secondary">
+                        <i class="fa fa-microphone"></i> Iniciar Grabación
+                    </button>
+                    <button id="stopRecording" type="button" class="btn btn-outline-secondary" disabled>
+                        <i class="fa fa-stop"></i> Detener Grabación
+                    </button>
                     <input type="file" name="audio_file" id="audio_input" class="form-control" accept="audio/*">
                 </div>
                 <audio id="audioPlayback" controls style="display: none;" class="mt-3"></audio>
@@ -135,7 +169,6 @@
             </button>
         </div>
     </form>
-
 </section>
 <?= $this->endSection() ?>
 
@@ -154,6 +187,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
 <script>
     const slug = '<?= $cliente['slug'] ?>';
+    const POLITICA = <?= (int)$pol ?>; // 0=Opcional, 1=Forzar anónimas, 2=Forzar identificadas
 </script>
 <script src="<?= base_url("assets/js/denuncias_public.js") ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

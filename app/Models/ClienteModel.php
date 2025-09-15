@@ -22,6 +22,7 @@ class ClienteModel extends Model
         'primary_color',
         'secondary_color',
         'link_color',
+        'politica_anonimato',
         'created_at'
     ];
 

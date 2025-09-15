@@ -21,6 +21,14 @@ $.validator.addMethod(
     'Por favor, ingrese un valor válido.'
 );
 
+// Mapea la política a badge/etiqueta
+function politicaFormatter(value) {
+    const v = Number(value);
+    if (v === 1) return '<span class="badge text-bg-success">Forzar anónimas</span>';
+    if (v === 2) return '<span class="badge text-bg-warning">Forzar identificadas</span>';
+    return '<span class="badge text-bg-secondary">Opcional</span>';
+}
+
 $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplDetalleTabla = $('#tplDetalleTabla').html();
@@ -29,26 +37,11 @@ $(function () {
     $tablaClientes = $('#tablaClientes').bootstrapTable({
         url: `${Server}clientes/listar`,
         columns: [
-            {
-                field: 'id',
-                title: 'ID'
-            },
-            {
-                field: 'nombre_empresa',
-                title: 'Nombre Empresa'
-            },
-            {
-                field: 'correo_contacto',
-                title: 'Correo Contacto'
-            },
-            {
-                field: 'telefono_contacto',
-                title: 'Teléfono Contacto'
-            },
-            {
-                field: 'slug',
-                title: 'SLUG'
-            },
+            { field: 'id', title: 'ID' },
+            { field: 'nombre_empresa', title: 'Nombre Empresa' },
+            { field: 'correo_contacto', title: 'Correo Contacto' },
+            { field: 'telefono_contacto', title: 'Teléfono Contacto' },
+            { field: 'politica_anonimato', title: 'Política de Anonimato', formatter: politicaFormatter },
             {
                 field: 'operate',
                 title: 'Acciones',
@@ -65,105 +58,110 @@ $(function () {
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
 
+            // Setear valor del select de política
+            $detail
+                .find('[name="politica_anonimato"]')
+                .val(row.politica_anonimato ?? 0)
+                .trigger('change');
+
+            // Inicializar Dropzones
             initializeDropzone(`dropzoneLogo-${row.id}`, 'logo', row.id);
             initializeDropzone(`dropzoneBanner-${row.id}`, 'banner', row.id);
 
-            // Inicializar select2 y validación para el formulario de edición
+            // Selects (si alguno usa select2)
             $detail.find('select').select2();
-            const rolSelect = $detail.find('[name="rol_id"]');
-            rolSelect.on('change', function () {
-                const selectedRole = $(this).val();
-                const clienteContainer = $detail.find('#clienteContainer-' + row.id);
-                if (selectedRole == 4) {
-                    clienteContainer.show();
-                    $detail.find('[name="id_cliente"]').prop('required', true);
-                } else {
-                    clienteContainer.hide();
-                    $detail.find('[name="id_cliente"]').prop('required', false);
-                }
-            });
-            rolSelect.trigger('change');
-            $detail.find('.formEditarCliente').validate({
-                rules: {
-                    nombre_empresa: {
-                        required: true,
-                        minlength: 3,
-                        remote: {
-                            url: `${Server}clientes/validarUnico`,
-                            type: 'post',
-                            data: {
-                                nombre_empresa: function () {
-                                    return $detail.find('[name="nombre_empresa"]').val();
-                                },
-                                id: function () {
-                                    return $detail.find('[name="id"]').val();
+
+            // Validación:
+            // - ADMIN: validación completa
+            // - CLIENTE: solo permitir enviar política (no exigir otros campos)
+            const isAdmin = rol === 'ADMIN';
+
+            const $frm = $detail.find('.formEditarCliente');
+
+            if (isAdmin) {
+                $frm.validate({
+                    rules: {
+                        nombre_empresa: {
+                            required: true,
+                            minlength: 3,
+                            remote: {
+                                url: `${Server}clientes/validarUnico`,
+                                type: 'post',
+                                data: {
+                                    nombre_empresa: function () {
+                                        return $frm.find('[name="nombre_empresa"]').val();
+                                    },
+                                    id: function () {
+                                        return $frm.find('[name="id"]').val();
+                                    }
+                                }
+                            }
+                        },
+                        correo_contacto: {
+                            required: true,
+                            email: true,
+                            remote: {
+                                url: `${Server}clientes/validarUnico`,
+                                type: 'post',
+                                data: {
+                                    correo_contacto: function () {
+                                        return $frm.find('[name="correo_contacto"]').val();
+                                    },
+                                    id: function () {
+                                        return $frm.find('[name="id"]').val();
+                                    }
+                                }
+                            }
+                        },
+                        telefono_contacto: { required: true },
+                        direccion: { required: true },
+                        slug: {
+                            required: true,
+                            regex: /^[a-zA-Z0-9-]+$/,
+                            remote: {
+                                url: `${Server}clientes/validarUnico`,
+                                type: 'post',
+                                data: {
+                                    slug: function () {
+                                        return $frm.find('[name="slug"]').val();
+                                    },
+                                    id: function () {
+                                        return $frm.find('[name="id"]').val();
+                                    }
                                 }
                             }
                         }
                     },
-                    correo_contacto: {
-                        required: true,
-                        email: true,
-                        remote: {
-                            url: `${Server}clientes/validarUnico`,
-                            type: 'post',
-                            data: {
-                                correo_contacto: function () {
-                                    return $detail.find('[name="correo_contacto"]').val();
-                                },
-                                id: function () {
-                                    return $detail.find('[name="id"]').val();
-                                }
-                            }
-                        }
-                    },
-                    telefono_contacto: {
-                        required: true
-                    },
-                    direccion: {
-                        required: true
-                    },
-                    slug: {
-                        required: true,
-                        regex: /^[a-zA-Z0-9-]+$/,
-                        remote: {
-                            url: `${Server}clientes/validarUnico`,
-                            type: 'post',
-                            data: {
-                                slug: function () {
-                                    return $detail.find('[name="slug"]').val();
-                                },
-                                id: function () {
-                                    return $detail.find('[name="id"]').val();
-                                }
-                            }
+                    messages: {
+                        nombre_empresa: {
+                            required: 'Por favor ingrese el nombre de la empresa',
+                            minlength: 'El nombre de la empresa debe tener al menos 3 caracteres',
+                            remote: 'El nombre de la empresa ya está en uso'
+                        },
+                        correo_contacto: {
+                            required: 'Por favor ingrese el correo de contacto',
+                            email: 'Por favor ingrese un correo electrónico válido',
+                            remote: 'El correo de contacto ya está en uso'
+                        },
+                        telefono_contacto: { required: 'Por favor ingrese el teléfono de contacto' },
+                        direccion: { required: 'Por favor ingrese la dirección' },
+                        slug: {
+                            required: 'Por favor ingrese el slug',
+                            regex: 'El slug solo puede contener letras, números y guiones',
+                            remote: 'El slug ya está en uso'
                         }
                     }
-                },
-                messages: {
-                    nombre_empresa: {
-                        required: 'Por favor ingrese el nombre de la empresa',
-                        minlength: 'El nombre de la empresa debe tener al menos 3 caracteres',
-                        remote: 'El nombre de la empresa ya está en uso'
-                    },
-                    correo_contacto: {
-                        required: 'Por favor ingrese el correo de contacto',
-                        email: 'Por favor ingrese un correo electrónico válido',
-                        remote: 'El correo de contacto ya está en uso'
-                    },
-                    telefono_contacto: {
-                        required: 'Por favor ingrese el teléfono de contacto'
-                    },
-                    direccion: {
-                        required: 'Por favor ingrese la dirección'
-                    },
-                    slug: {
-                        required: 'Por favor ingrese el slug',
-                        regex: 'El slug solo puede contener letras, números y guiones',
-                        remote: 'El slug ya está en uso'
+                });
+            } else {
+                // Validación mínima para CLIENTE (permite enviar sin exigir otros campos)
+                $frm.validate({
+                    rules: {
+                        politica_anonimato: {
+                            required: true
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     });
 
@@ -207,12 +205,8 @@ $(function () {
                     }
                 }
             },
-            telefono_contacto: {
-                required: true
-            },
-            direccion: {
-                required: true
-            },
+            telefono_contacto: { required: true },
+            direccion: { required: true },
             slug: {
                 required: true,
                 regex: /^[a-zA-Z0-9-]+$/,
@@ -225,7 +219,8 @@ $(function () {
                         }
                     }
                 }
-            }
+            },
+            politica_anonimato: { required: true }
         },
         messages: {
             nombre_empresa: {
@@ -242,12 +237,8 @@ $(function () {
                 email: 'Por favor ingrese un correo electrónico válido',
                 remote: 'El correo de contacto ya está en uso'
             },
-            telefono_contacto: {
-                required: 'Por favor ingrese el teléfono de contacto'
-            },
-            direccion: {
-                required: 'Por favor ingrese la dirección'
-            },
+            telefono_contacto: { required: 'Por favor ingrese el teléfono de contacto' },
+            direccion: { required: 'Por favor ingrese la dirección' },
             slug: {
                 required: 'Por favor ingrese el slug',
                 regex: 'El slug solo puede contener letras, números y guiones',
@@ -262,10 +253,10 @@ $(function () {
                 error.insertAfter(element);
             }
         },
-        highlight: function (element, errorClass, validClass) {
+        highlight: function (element) {
             $(element).addClass('is-invalid').removeClass('is-valid');
         },
-        unhighlight: function (element, errorClass, validClass) {
+        unhighlight: function (element) {
             $(element).addClass('is-valid').removeClass('is-invalid');
         },
         submitHandler: function (form) {
@@ -278,7 +269,7 @@ $(function () {
                 url: `${Server}clientes/guardar`,
                 method: 'POST',
                 data: formData,
-                success: function (data) {
+                success: function () {
                     loadingFormXHR($frm, false);
                     $modalCrearCliente.modal('hide');
                     $tablaClientes.bootstrapTable('refresh');
@@ -313,7 +304,7 @@ $(function () {
             url: `${Server}clientes/guardar`,
             method: 'POST',
             data: formData,
-            success: function (data) {
+            success: function () {
                 loadingFormXHR($frm, false);
                 $tablaClientes.bootstrapTable('refresh');
                 showToast('¡Listo!, se actualizó correctamente el cliente.', 'success');
@@ -323,6 +314,9 @@ $(function () {
                 if (xhr.status === 409) {
                     const response = JSON.parse(xhr.responseText);
                     showToast(response.message, 'error');
+                } else if (xhr.status === 403) {
+                    const response = JSON.parse(xhr.responseText);
+                    showToast(response.message || 'No autorizado.', 'error');
                 }
             }
         });
@@ -346,7 +340,7 @@ $(function () {
             url: `${Server}clientes/guardar`,
             method: 'POST',
             data: formData,
-            success: function (data) {
+            success: function () {
                 loadingFormXHR($frm, false);
                 $tablaClientes.bootstrapTable('refresh');
                 showToast('¡Listo!, se actualizó correctamente el cliente.', 'success');
@@ -388,7 +382,7 @@ function initializeDropzone(elementId, fieldName, clienteId = null) {
             this.on('success', function (file, response) {
                 $(`#formCrearCliente, #formActualizarImagenes-${clienteId}`).append(`<input type="hidden" name="${fieldName}" value="assets/images/clientes/${response.filename}">`);
             });
-            this.on('removedfile', function (file) {
+            this.on('removedfile', function () {
                 $(`input[name="${fieldName}"]`).remove();
             });
         }
@@ -439,11 +433,11 @@ async function eliminarCliente(id) {
         ajaxCall({
             url: `${Server}clientes/eliminar/${id}`,
             method: 'POST',
-            success: function (response) {
+            success: function () {
                 $tablaClientes.bootstrapTable('refresh');
                 showToast('¡Cliente eliminado correctamente!', 'success');
             },
-            error: function (xhr, status, error) {
+            error: function (xhr) {
                 let errorMessage = 'Ocurrió un error al eliminar el cliente.';
                 if (xhr.status === 409) {
                     const response = JSON.parse(xhr.responseText);

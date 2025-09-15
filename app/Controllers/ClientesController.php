@@ -25,36 +25,61 @@ class ClientesController extends Controller
     public function listar()
     {
         $clienteModel = new ClienteModel();
-        $clientes = $clienteModel->findAll();
+        $clientes = $clienteModel->findAll(); // incluirá politica_anonimato
 
         return $this->response->setJSON($clientes);
     }
 
     public function guardar()
     {
+        $session      = session();
+        $rolSlug      = $session->get('rol_slug');
         $clienteModel = new ClienteModel();
+
         $id = $this->request->getVar('id');
 
+        // Leer todos los campos que podrían venir del formulario
         $data = [
-            'nombre_empresa' => $this->request->getVar('nombre_empresa'),
+            'nombre_empresa'       => $this->request->getVar('nombre_empresa'),
             'numero_identificacion' => $this->request->getVar('numero_identificacion'),
-            'correo_contacto' => $this->request->getVar('correo_contacto'),
-            'telefono_contacto' => $this->request->getVar('telefono_contacto'),
-            'direccion' => $this->request->getVar('direccion'),
-            'slug' => $this->request->getVar('slug'),
-            'logo' => $this->request->getVar('logo'),
-            'banner' => $this->request->getVar('banner'),
-            'saludo' => $this->request->getVar('saludo'),
-            'whatsapp' => $this->request->getVar('whatsapp'),
-            'primary_color' => $this->request->getVar('primary_color'),
-            'secondary_color' => $this->request->getVar('secondary_color'),
-            'link_color' => $this->request->getVar('link_color')
+            'correo_contacto'      => $this->request->getVar('correo_contacto'),
+            'telefono_contacto'    => $this->request->getVar('telefono_contacto'),
+            'direccion'            => $this->request->getVar('direccion'),
+            'slug'                 => $this->request->getVar('slug'),
+            'logo'                 => $this->request->getVar('logo'),
+            'banner'               => $this->request->getVar('banner'),
+            'saludo'               => $this->request->getVar('saludo'),
+            'whatsapp'             => $this->request->getVar('whatsapp'),
+            'primary_color'        => $this->request->getVar('primary_color'),
+            'secondary_color'      => $this->request->getVar('secondary_color'),
+            'link_color'           => $this->request->getVar('link_color'),
         ];
 
+        // Normalizar/validar política si viene en la petición
+        $politica = $this->request->getVar('politica_anonimato');
+        if ($politica !== null) {
+            $politica = (int) $politica;
+            if (!in_array($politica, [0, 1, 2], true)) {
+                $politica = 0;
+            }
+            $data['politica_anonimato'] = $politica;
+        }
+
+        // === Reglas de permisos ===
+        // CLIENTE sólo puede actualizar su propio registro y únicamente 'politica_anonimato'
+        if ($rolSlug === 'CLIENTE') {
+            $miClienteId = (int) ($session->get('id_cliente') ?? 0);
+            if ((int)$id !== $miClienteId) {
+                return $this->response->setStatusCode(403)->setJSON(['message' => 'No autorizado.']);
+            }
+            // Limitar campos a sólo la política
+            $data = array_intersect_key($data, array_flip(['politica_anonimato']));
+        }
+
+        // === Validación de unicidad (solo aplica si ADMIN crea/edita más campos) ===
         if ($id) {
             $existingClient = $clienteModel->find($id);
 
-            // Validar unicidad del nombre de empresa, correo de contacto y slug
             $clienteExistente = $clienteModel->where('id !=', $id)
                 ->groupStart()
                 ->where('nombre_empresa', $this->request->getVar('nombre_empresa'))
@@ -71,7 +96,7 @@ class ClientesController extends Controller
                 ->first();
         }
 
-        if ($clienteExistente) {
+        if ($clienteExistente && $rolSlug === 'ADMIN') {
             $message = [];
             if ($clienteExistente['nombre_empresa'] == $this->request->getVar('nombre_empresa')) {
                 $message[] = 'El nombre de la empresa ya está en uso';
@@ -86,18 +111,25 @@ class ClientesController extends Controller
         }
 
         if ($id) {
-            // Filtrar los campos no enviados
+            // Filtrar campos vacíos, conservando '0'
             foreach ($data as $key => $value) {
-                if (empty($value) && $value !== '0') {
+                if ($value === null || $value === '') {
                     unset($data[$key]);
                 }
             }
 
-            $clienteModel->update($id, $data);
-            registrarAccion(session()->get('id'), 'Actualización de cliente', 'ID: ' . $id);
+
+            if (!empty($data)) {
+                $clienteModel->update($id, $data);
+                registrarAccion(session()->get('id'), 'Actualización de cliente', 'ID: ' . $id);
+            }
         } else {
+            // Alta (sólo ADMIN)
+            if ($rolSlug !== 'ADMIN') {
+                return $this->response->setStatusCode(403)->setJSON(['message' => 'No autorizado.']);
+            }
             $clienteModel->save($data);
-            $newId = $clienteModel->insertID(); // Obtener el ID del nuevo cliente creado
+            $newId = $clienteModel->insertID();
             registrarAccion(session()->get('id'), 'Creación de cliente', 'ID: ' . $newId);
         }
 
@@ -179,22 +211,7 @@ class ClientesController extends Controller
             }
 
             $cliente = $clienteModel->first();
-
             if ($cliente) {
-                $messages = [];
-                if ($cliente['nombre_empresa'] == $nombre_empresa) {
-                    $messages[] = 'El nombre de la empresa ya está en uso';
-                }
-                if ($cliente['numero_identificacion'] == $numero_identificacion) {
-                    $messages[] = 'El número de identificación ya está en uso';
-                }
-                if ($cliente['correo_contacto'] == $correo_contacto) {
-                    $messages[] = 'El correo de contacto ya está en uso';
-                }
-                if ($cliente['slug'] == $slug) {
-                    $messages[] = 'El slug ya está en uso';
-                }
-
                 return $this->response->setJSON(false);
             }
         }
