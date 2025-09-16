@@ -164,7 +164,7 @@
                     </div>
                 {{/if}}
 
-                <!-- Botón de Actualizar 666-->
+                <!-- Botón de Actualizar -->
                 <div class="mt-5">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i> Actualizar
@@ -172,6 +172,7 @@
                 </div>
             </div>
         </form>
+
         <!-- Formulario para actualizar imágenes -->
         <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card" enctype="multipart/form-data">
             <input type="hidden" name="id" value="{{id}}">
@@ -303,7 +304,6 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="medio_recepcion" value="Plataforma">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalCrearDenunciaLabel">Agregar Denuncia</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -320,6 +320,7 @@
                                 <option value="Email">Email</option>
                             </select>
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">¿Es anónimo?</label>
                             <div class="d-flex gap-3">
@@ -332,7 +333,9 @@
                                     <label class="form-check-label" for="anonimo-no">No</label>
                                 </div>
                             </div>
+                            <small class="text-muted d-block mt-1">Esta preferencia puede bloquearse según la política del cliente seleccionado.</small>
                         </div>
+
                         <!-- Información adicional cuando no es anónimo -->
                         <div id="infoAdicional" class="row g-3" style="display: none;" aria-hidden="true">
                             <div class="col-md-6">
@@ -350,7 +353,9 @@
                                 <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su teléfono (opcional)">
                             </div>
                         </div>
+
                         <hr>
+
                         <!-- Sección 1: Información del Cliente -->
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>
@@ -387,6 +392,7 @@
                                 <option value="3">Otro</option>
                             </select>
                         </div>
+
                         <div class="col-md-6">
                             <label for="categoria" class="form-label">Categoría</label>
                             <select class="form-select select2" id="categoria" name="categoria" required>
@@ -435,6 +441,7 @@
                             <label for="descripcion" class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcion" name="descripcion" rows="14" required placeholder="Describa la denuncia"></textarea>
                         </div>
+
                         <!-- Sección 5: Archivos Adjuntos -->
                         <div class="col-md-12">
                             <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>

@@ -348,6 +348,7 @@
                                     <label class="form-check-label" for="anonimo-no">No</label>
                                 </div>
                             </div>
+                            <small id="politicaHelp" class="form-text text-muted d-block mt-2"></small>
                         </div>
                         <!-- Información adicional cuando no es anónimo -->
                         <div id="infoAdicional" class="row g-3" style="display: none;" aria-hidden="true">
@@ -373,7 +374,10 @@
                             <select class="form-select select2" id="id_cliente" name="id_cliente" required>
                                 <option value="">Seleccione un cliente</option>
                                 <?php foreach ($clientes as $cliente) : ?>
-                                    <option value="<?= $cliente['id'] ?>"><?= $cliente['nombre_empresa'] ?></option>
+                                    <option value="<?= $cliente['id'] ?>"
+                                        data-politica="<?= isset($cliente['politica_anonimato']) ? $cliente['politica_anonimato'] : 0 ?>">
+                                        <?= $cliente['nombre_empresa'] ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

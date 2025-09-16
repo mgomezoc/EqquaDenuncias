@@ -11,18 +11,6 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
         <p class="text-muted">Complete el formulario para reportar una denuncia. Todos los campos son obligatorios.</p>
     </div>
 
-    <?php if ($pol === 1): ?>
-        <div class="alert alert-info mb-4">
-            <i class="fa fa-user-secret me-1"></i>
-            Este cliente exige que las denuncias sean <strong>anónimas</strong>. No se solicitarán datos personales.
-        </div>
-    <?php elseif ($pol === 2): ?>
-        <div class="alert alert-warning mb-4">
-            <i class="fa fa-id-card me-1"></i>
-            Este cliente exige que las denuncias sean <strong>identificadas</strong>. Se requerirá su nombre y al menos <strong>correo o teléfono</strong>.
-        </div>
-    <?php endif; ?>
-
     <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
         <!-- Datos ocultos -->
         <input type="hidden" name="id_cliente" value="<?= esc($cliente['id']) ?>">

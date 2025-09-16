@@ -1,5 +1,5 @@
 /**
- * DENUNCIAS
+ * DENUNCIAS - AGENTE
  */
 let tplAccionesTabla;
 let tplDetalleTabla;
@@ -14,13 +14,58 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearDenuncia = $('#modalCrearDenuncia');
 
+    // Mostrar/Ocultar datos adicionales cuando cambia el radio
     $('input[name="anonimo"]').on('change', function () {
-        if ($(this).val() == '0') {
-            $('#infoAdicional').show(); // Mostrar los campos adicionales si no es anónimo
+        if ($(this).val() === '0') {
+            $('#infoAdicional').show();
         } else {
-            $('#infoAdicional').hide(); // Ocultar los campos adicionales si es anónimo
+            $('#infoAdicional').hide();
         }
     });
+
+    // -------- Política de anonimato (0=Opcional, 1=Forzar anónimas, 2=Forzar identificadas)
+    function aplicarPoliticaAnonimato(politica) {
+        const $radios = $modalCrearDenuncia.find('input[name="anonimo"]');
+        const $si = $('#anonimo-si');
+        const $no = $('#anonimo-no');
+
+        // Reset
+        $radios.prop('disabled', false);
+
+        const p = Number(politica);
+
+        if (p === 1) {
+            // Forzar ANÓNIMAS
+            $si.prop('checked', true);
+            $radios.prop('disabled', true);
+            $('#infoAdicional').hide();
+        } else if (p === 2) {
+            // Forzar IDENTIFICADAS
+            $no.prop('checked', true);
+            $radios.prop('disabled', true);
+            $('#infoAdicional').show();
+        } else {
+            // Opcional
+            if ($('input[name="anonimo"]:checked').val() === '0') {
+                $('#infoAdicional').show();
+            } else {
+                $('#infoAdicional').hide();
+            }
+        }
+    }
+
+    function cargarPoliticaDeCliente(clienteId) {
+        if (!clienteId) {
+            aplicarPoliticaAnonimato(0);
+            return;
+        }
+        $.get(`${Server}clientes/obtener/${clienteId}`, function (cliente) {
+            aplicarPoliticaAnonimato(cliente?.politica_anonimato ?? 0);
+        }).fail(function () {
+            aplicarPoliticaAnonimato(0);
+        });
+    }
+    // -------- fin política de anonimato
 
     // Inicializar select2 en los selects dentro del modal
     $('#modalCrearDenuncia .select2').select2({
@@ -29,7 +74,7 @@ $(function () {
         dropdownParent: $('#modalCrearDenuncia')
     });
 
-    // Configurar la validación del formulario
+    // Validación del formulario de creación
     $('#formCrearDenuncia').validate({
         errorClass: 'is-invalid',
         validClass: 'is-valid',
@@ -58,46 +103,20 @@ $(function () {
             }
         },
         rules: {
-            id_cliente: {
-                required: true
-            },
-            id_sucursal: {
-                required: true
-            },
-            categoria: {
-                required: true
-            },
-            subcategoria: {
-                required: true
-            },
-            fecha_incidente: {
-                required: true,
-                date: true
-            },
-            descripcion: {
-                required: true
-            }
+            id_cliente: { required: true },
+            id_sucursal: { required: true },
+            categoria: { required: true },
+            subcategoria: { required: true },
+            fecha_incidente: { required: true, date: true },
+            descripcion: { required: true }
         },
         messages: {
-            id_cliente: {
-                required: 'Por favor seleccione un cliente'
-            },
-            id_sucursal: {
-                required: 'Por favor seleccione una sucursal'
-            },
-            categoria: {
-                required: 'Por favor seleccione una categoría'
-            },
-            subcategoria: {
-                required: 'Por favor seleccione una subcategoría'
-            },
-            fecha_incidente: {
-                required: 'Por favor ingrese la fecha del incidente',
-                date: 'Ingrese una fecha válida'
-            },
-            descripcion: {
-                required: 'Por favor ingrese la descripción'
-            }
+            id_cliente: { required: 'Por favor seleccione un cliente' },
+            id_sucursal: { required: 'Por favor seleccione una sucursal' },
+            categoria: { required: 'Por favor seleccione una categoría' },
+            subcategoria: { required: 'Por favor seleccione una subcategoría' },
+            fecha_incidente: { required: 'Por favor ingrese la fecha del incidente', date: 'Ingrese una fecha válida' },
+            descripcion: { required: 'Por favor ingrese la descripción' }
         },
         submitHandler: function (form) {
             const $frm = $(form);
@@ -105,30 +124,25 @@ $(function () {
 
             loadingFormXHR($frm, true);
 
-            // Enviar la solicitud AJAX para guardar la denuncia
             $.ajax({
                 url: `${Server}denuncias/guardar`,
                 method: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function (data) {
+                success: function () {
                     loadingFormXHR($frm, false);
                     $tablaDenuncias.bootstrapTable('refresh');
                     showToast('¡Listo!, se creó correctamente la denuncia.', 'success');
 
-                    // Limpiar el formulario y los estilos de validación
+                    // Reset UI
                     $frm[0].reset();
-                    $frm.find('.is-valid').removeClass('is-valid');
-                    $frm.find('.is-invalid').removeClass('is-invalid');
-
-                    // Resetear todos los select2
+                    $frm.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
                     $frm.find('.select2').val(null).trigger('change', true);
-
-                    // Limpiar los archivos de Dropzone
-                    if (dropzones['archivosAdjuntos']) {
-                        dropzones['archivosAdjuntos'].removeAllFiles(true);
-                    }
+                    if (dropzones['archivosAdjuntos']) dropzones['archivosAdjuntos'].removeAllFiles(true);
+                    // habilitar radios y ocultar info
+                    $frm.find('input[name="anonimo"]').prop('disabled', false);
+                    $('#infoAdicional').hide();
 
                     $modalCrearDenuncia.modal('hide');
                 },
@@ -143,40 +157,29 @@ $(function () {
         }
     });
 
-    // Cuando se selecciona una opción en select2, se debe actualizar la validación
+    // Cuando se selecciona una opción en select2, validar
     $('#modalCrearDenuncia .select2').on('change', function (e, trigger) {
-        if (!trigger) {
-            $(this).valid();
-        }
+        if (!trigger) $(this).valid();
     });
 
-    // Resetear el formulario al cerrar el modal de creación
+    // Resetear el formulario al cerrar el modal
     $modalCrearDenuncia.on('hidden.bs.modal', function () {
         const $form = $('#formCrearDenuncia');
         $form[0].reset();
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
-
-        // Reinicializar todos los select2
         $form.find('.select2').val(null).trigger('change');
-
-        // Resetear los archivos subidos en Dropzone
-        if (dropzones['archivosAdjuntos']) {
-            // Llama a removeAllFiles y establece el parámetro en true para asegurarte de eliminar completamente los archivos
-            dropzones['archivosAdjuntos'].removeAllFiles(true);
-
-            // También restablece el estado visual del contenedor de Dropzone (por si acaso)
-            dropzones['archivosAdjuntos'].element.classList.remove('dz-started');
-        }
+        if (dropzones['archivosAdjuntos']) dropzones['archivosAdjuntos'].removeAllFiles(true);
+        // radios habilitados y ocultar info adicional
+        $form.find('input[name="anonimo"]').prop('disabled', false);
+        $('#infoAdicional').hide();
     });
 
-    // Funcionalidades para los botones de la tabla
+    // ==== Tabla de denuncias del agente ====
     window.operateEvents = {
-        // Funcionalidad para el botón de eliminar
-        'click .remove': function (e, value, row, index) {
+        'click .remove': function (e, value, row) {
             confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
                 if (result.isConfirmed) {
-                    // Si se confirma, proceder con la eliminación
                     $.ajax({
                         url: `${Server}denuncias/eliminar/${row.id}`,
                         method: 'POST',
@@ -191,79 +194,66 @@ $(function () {
                 }
             });
         },
-
-        // Funcionalidad para el botón de ver detalle
-        'click .view-detail': function (e, value, row, index) {
+        'click .view-detail': function (e, value, row) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
                 const contenido = `
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Folio:</strong> ${data.folio}</p>
-                    <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
-                    <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
-                    <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
-                    <p><strong>Sexo:</strong> ${data.sexo_nombre || 'No especificado'}</p>
-                    <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
-                    <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
-                    <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
-                    <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
-                    <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
-                    <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
-                    <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
-                </div>
-                <div class="col-12 mt-3">
-                    <p><strong>Descripción:</strong></p>
-                    <p>${data.descripcion || 'N/A'}</p>
-                </div>
-                <div class="col-12 mt-3">
-                    <h5>Historial de Seguimiento</h5>
-                    <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>De</th>
-                                <th>A</th>
-                                <th>Comentario</th>
-                                <th>Por</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.seguimientos
-                                .map(
-                                    seg => `
-                                    <tr>
-                                        <td>${seg.fecha}</td>
-                                        <td>${seg.estado_anterior_nombre}</td>
-                                        <td>${seg.estado_nuevo_nombre}</td>
-                                        <td>${seg.comentario || 'N/A'}</td>
-                                        <td>${seg.usuario_nombre}</td>
-                                    </tr>
-                                `
-                                )
-                                .join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        `;
-
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Folio:</strong> ${data.folio}</p>
+                                <p><strong>Cliente:</strong> ${data.cliente_nombre || 'N/A'}</p>
+                                <p><strong>Sucursal:</strong> ${data.sucursal_nombre || 'N/A'}</p>
+                                <p><strong>Tipo de Denunciante:</strong> ${data.tipo_denunciante}</p>
+                                <p><strong>Sexo:</strong> ${data.sexo_nombre || 'No especificado'}</p>
+                                <p><strong>Categoría:</strong> ${data.categoria_nombre || 'N/A'}</p>
+                                <p><strong>Subcategoría:</strong> ${data.subcategoria_nombre || 'N/A'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
+                                <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
+                                <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
+                                <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
+                                <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
+                                <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <p><strong>Descripción:</strong></p>
+                                <p>${data.descripcion || 'N/A'}</p>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <h5>Historial de Seguimiento</h5>
+                                <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th><th>De</th><th>A</th><th>Comentario</th><th>Por</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.seguimientos
+                                            .map(
+                                                seg => `
+                                            <tr>
+                                                <td>${seg.fecha}</td>
+                                                <td>${seg.estado_anterior_nombre}</td>
+                                                <td>${seg.estado_nuevo_nombre}</td>
+                                                <td>${seg.comentario || 'N/A'}</td>
+                                                <td>${seg.usuario_nombre}</td>
+                                            </tr>`
+                                            )
+                                            .join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
                 $('#modalVerDetalle .modal-body').html(contenido);
                 modal.show();
             });
         },
-
-        // Funcionalidad para el botón de cambiar estado
-        'click .change-status': function (e, value, row, index) {
+        'click .change-status': function (e, value, row) {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
-                // Filtrar solo los estados "Recepción" (1) y "Clasificada" (2)
                 const estadosFiltrados = estados.filter(estado => estado.id === '1' || estado.id === '2');
-
                 let opciones = '';
                 estadosFiltrados.forEach(estado => {
                     const selected = estado.id === row.estado_actual ? 'selected' : '';
@@ -272,31 +262,28 @@ $(function () {
 
                 const modal = new bootstrap.Modal($('#modalCambiarEstado'));
                 $('#modalCambiarEstado .modal-body').html(`
-            <form id="formCambiarEstado">
-                <div class="mb-3">
-                    <label for="estado_nuevo" class="form-label">Nuevo Estatus</label>
-                    <select id="estado_nuevo" name="estado_nuevo" class="form-select">
-                        ${opciones}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="comentario" class="form-label">Comentario (opcional)</label>
-                    <textarea id="comentario" name="comentario" class="form-control" rows="3" placeholder="Escribe un comentario..."></textarea>
-                </div>
-            </form>
-        `);
+                    <form id="formCambiarEstado">
+                        <div class="mb-3">
+                            <label for="estado_nuevo" class="form-label">Nuevo Estatus</label>
+                            <select id="estado_nuevo" name="estado_nuevo" class="form-select">${opciones}</select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comentario" class="form-label">Comentario (opcional)</label>
+                            <textarea id="comentario" name="comentario" class="form-control" rows="3" placeholder="Escribe un comentario..."></textarea>
+                        </div>
+                    </form>
+                `);
                 $('#modalCambiarEstado .modal-footer .btn-primary')
                     .off('click')
                     .on('click', function () {
                         const estadoNuevo = $('#estado_nuevo').val();
-                        const comentario = $('#comentario').val(); // Obtener el comentario
-
+                        const comentario = $('#comentario').val();
                         $.post(
                             `${Server}denuncias/cambiarEstado`,
                             {
                                 id: row.id,
                                 estado_nuevo: estadoNuevo,
-                                comentario: comentario // Enviar el comentario al servidor
+                                comentario
                             },
                             function () {
                                 showToast('Estatus actualizado correctamente.', 'success');
@@ -310,100 +297,31 @@ $(function () {
                 modal.show();
             });
         },
-
-        'click .view-comments': function (e, value, row, index) {
-            // Cargar comentarios de la denuncia
+        'click .view-comments': function (e, value, row) {
             cargarComentarios(row.id);
-
-            // Establecer la ID de la denuncia en el formulario
             $('#id_denuncia').val(row.id);
             $('#folioDenuncia').html(row.folio);
-
-            // Mostrar el modal
             $('#modalVerComentarios').modal('show');
         }
     };
 
-    // Agregar flatpickr a la fecha del incidente al cargar el detalle para edición
-    function initializeFlatpickrForEdit(selector) {
-        $(selector).flatpickr({
-            dateFormat: 'Y-m-d',
-            altInput: true,
-            altFormat: 'd/m/Y',
-            maxDate: 'today'
-        });
-    }
-
-    // Inicialización de la tabla de denuncias
+    // Inicialización de la tabla
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
         url: `${Server}denuncias/listar-denuncias-agente`,
         columns: [
-            {
-                field: 'id',
-                title: 'ID',
-                formatter: function (value) {
-                    return `<b>${value}</b>`;
-                }
-            },
-            {
-                field: 'folio',
-                title: 'Folio',
-                cellStyle: {
-                    css: { 'white-space': 'nowrap', 'max-width': '250px', overflow: 'hidden', 'text-overflow': 'ellipsis' }
-                }
-            },
-            {
-                field: 'cliente_nombre',
-                title: 'Cliente'
-            },
-            {
-                field: 'sucursal_nombre',
-                title: 'Sucursal'
-            },
-            {
-                field: 'tipo_denunciante',
-                title: 'Tipo Denunciante'
-            },
-            {
-                field: 'categoria_nombre',
-                title: 'Categoría'
-            },
-            {
-                field: 'subcategoria_nombre',
-                title: 'Subcategoría'
-            },
-            {
-                field: 'departamento_nombre',
-                title: 'Departamento'
-            },
-            {
-                field: 'estado_nombre',
-                title: 'Estado',
-                formatter: operateFormatterEstado
-            },
-            {
-                field: 'medio_recepcion',
-                title: 'Canal de Recepcion'
-            },
-            {
-                field: 'fecha_hora_reporte',
-                title: 'Fecha',
-                formatter: operateFormatterFecha
-            },
-            {
-                field: 'sexo_nombre',
-                title: 'Sexo',
-                visible: false
-            },
-            {
-                field: 'operate',
-                title: 'Acciones',
-                align: 'center',
-                valign: 'middle',
-                clickToSelect: false,
-                formatter: operateFormatter,
-                events: operateEvents
-            }
+            { field: 'id', title: 'ID', formatter: v => `<b>${v}</b>` },
+            { field: 'folio', title: 'Folio', cellStyle: { css: { 'white-space': 'nowrap', 'max-width': '250px', overflow: 'hidden', 'text-overflow': 'ellipsis' } } },
+            { field: 'cliente_nombre', title: 'Cliente' },
+            { field: 'sucursal_nombre', title: 'Sucursal' },
+            { field: 'tipo_denunciante', title: 'Tipo Denunciante' },
+            { field: 'categoria_nombre', title: 'Categoría' },
+            { field: 'subcategoria_nombre', title: 'Subcategoría' },
+            { field: 'departamento_nombre', title: 'Departamento' },
+            { field: 'estado_nombre', title: 'Estado', formatter: operateFormatterEstado },
+            { field: 'medio_recepcion', title: 'Canal de Recepcion' },
+            { field: 'fecha_hora_reporte', title: 'Fecha', formatter: operateFormatterFecha },
+            { field: 'sexo_nombre', title: 'Sexo', visible: false },
+            { field: 'operate', title: 'Acciones', align: 'center', valign: 'middle', clickToSelect: false, formatter: operateFormatter, events: operateEvents }
         ],
         showColumns: true,
         detailView: true,
@@ -415,7 +333,6 @@ $(function () {
                 { id: 'Estaba involucrado', name: 'Estaba involucrado' },
                 { id: 'Otro', name: 'Otro' }
             ];
-
             const comboMedioRecepcion = [
                 { id: 'Llamada', name: 'Llamada' },
                 { id: 'Formulario', name: 'Formulario' },
@@ -423,52 +340,29 @@ $(function () {
                 { id: 'Email', name: 'Email' },
                 { id: 'Plataforma Pública', name: 'Plataforma Pública' }
             ];
-
             const comboSexo = [
                 { id: '1', name: 'Masculino' },
                 { id: '2', name: 'Femenino' },
                 { id: '3', name: 'Otro' }
             ];
 
-            const requests = [
-                $.get(`${Server}clientes/listar`),
-                $.get(`${Server}categorias/listarCategorias`),
-                $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`),
-                $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`),
-                $.get(`${Server}denuncias/detalle/${row.id}`),
-                $.get(`${Server}denuncias/obtenerEstados`),
-                $.get(`${Server}denuncias/obtenerAnexos/${row.id}`) // Obtener los anexos
-            ];
-
-            // Solo incluir la llamada a listarSubcategorias si row.categoria no está vacío
-            if (row.categoria) {
-                requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
-            }
+            const requests = [$.get(`${Server}clientes/listar`), $.get(`${Server}categorias/listarCategorias`), $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`), $.get(`${Server}denuncias/detalle/${row.id}`), $.get(`${Server}denuncias/obtenerEstados`), $.get(`${Server}denuncias/obtenerAnexos/${row.id}`)];
+            if (row.categoria) requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
 
             $.when(...requests).done(function (...responses) {
-                const [
-                    clientes,
-                    categorias,
-                    sucursales,
-                    departamentos,
-                    denunciaDetalles,
-                    estados,
-                    anexos,
-                    subcategorias = [{ 0: [] }] // Si no se llamó listarSubcategorias, este es el valor por defecto
-                ] = responses;
+                const [clientes, categorias, sucursales, departamentos, denunciaDetalles, estados, anexos, subcategorias = [{ 0: [] }]] = responses;
 
                 const safeSubcategorias = Array.isArray(subcategorias[0]) ? subcategorias[0] : [];
-
                 const esAnonimo = row.anonimo === '0';
 
                 const data = {
                     id: row.id,
-                    clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
-                    categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
-                    subcategorias: safeSubcategorias.map(subcategoria => ({ id: subcategoria.id, name: subcategoria.nombre })),
-                    sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
-                    departamentos: departamentos[0].map(departamento => ({ id: departamento.id, name: departamento.nombre })),
-                    estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
+                    clientes: clientes[0].map(c => ({ id: c.id, name: c.nombre_empresa })),
+                    categorias: categorias[0].map(c => ({ id: c.id, name: c.nombre })),
+                    subcategorias: safeSubcategorias.map(s => ({ id: s.id, name: s.nombre })),
+                    sucursales: sucursales[0].map(s => ({ id: s.id, name: s.nombre })),
+                    departamentos: departamentos[0].map(d => ({ id: d.id, name: d.nombre })),
+                    estados: estados[0].map(e => ({ id: e.id, name: e.nombre })),
                     anexos: anexos[0],
                     id_cliente: row.id_cliente,
                     id_sucursal: row.id_sucursal,
@@ -477,7 +371,7 @@ $(function () {
                     estado_actual: row.estado_actual,
                     descripcion: row.descripcion,
                     anonimo: row.anonimo,
-                    esAnonimo: esAnonimo,
+                    esAnonimo,
                     nombre_completo: row.nombre_completo,
                     correo_electronico: row.correo_electronico,
                     telefono: row.telefono,
@@ -487,40 +381,32 @@ $(function () {
                     como_se_entero: denunciaDetalles[0].como_se_entero,
                     area_incidente: denunciaDetalles[0].area_incidente,
                     denunciar_a_alguien: denunciaDetalles[0].denunciar_a_alguien,
-                    comboComoSeEntero: comboComoSeEntero,
-                    comboMedioRecepcion: comboMedioRecepcion,
-                    comboSexo: comboSexo,
+                    comboComoSeEntero,
+                    comboMedioRecepcion,
+                    comboSexo,
                     id_sexo: row.id_sexo,
                     medio_recepcion: row.medio_recepcion
                 };
 
                 const renderData = Handlebars.compile(tplDetalleTabla)(data);
-
-                // Renderizar y mostrar el detalle
                 $detail.html(renderData);
 
-                // Si la denuncia está cerrada, deshabilitar los campos y ocultar el botón de actualización
                 if (row.estado_actual == 6) {
                     $detail.find('input, select, textarea').prop('disabled', true);
                     $detail.find('.btn-actualizar-denuncia').hide();
                 }
 
-                // Inicializar select2 para los nuevos selectores
                 $detail.find('select').select2();
-                // Aplicar flatpickr a "Fecha del Incidente" en la edición
                 initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
 
-                // Validación del formulario y configuración de eventos
                 $detail.find('.formEditarDenuncia').validate({
                     errorClass: 'is-invalid',
                     validClass: 'is-valid',
                     errorElement: 'div',
                     errorPlacement: function (error, element) {
                         if (element.hasClass('select2-hidden-accessible')) {
-                            // Para campos Select2, coloca el error después del contenedor de Select2
                             error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
                         } else if (element.is(':checkbox') || element.is(':radio')) {
-                            // Para checkboxes y radios
                             error.addClass('invalid-feedback').insertAfter(element.closest('div'));
                         } else {
                             error.addClass('invalid-feedback').insertAfter(element);
@@ -541,52 +427,28 @@ $(function () {
                         }
                     },
                     rules: {
-                        id_cliente: {
-                            required: true
-                        },
-                        id_sucursal: {
-                            required: true
-                        },
-                        id_departamento: {
-                            required: true
-                        },
-                        estado_actual: {
-                            required: true
-                        },
-                        descripcion: {
-                            required: true
-                        }
+                        id_cliente: { required: true },
+                        id_sucursal: { required: true },
+                        id_departamento: { required: true },
+                        estado_actual: { required: true },
+                        descripcion: { required: true }
                     },
                     messages: {
-                        id_cliente: {
-                            required: 'Por favor seleccione un cliente'
-                        },
-                        id_sucursal: {
-                            required: 'Por favor seleccione una sucursal'
-                        },
-                        id_departamento: {
-                            // <-- Añadido aquí
-                            required: 'Por favor seleccione un departamento'
-                        },
-                        estado_actual: {
-                            required: 'Por favor seleccione un estatus'
-                        },
-                        descripcion: {
-                            required: 'Por favor ingrese la descripción'
-                        }
+                        id_cliente: { required: 'Por favor seleccione un cliente' },
+                        id_sucursal: { required: 'Por favor seleccione una sucursal' },
+                        id_departamento: { required: 'Por favor seleccione un departamento' },
+                        estado_actual: { required: 'Por favor seleccione un estatus' },
+                        descripcion: { required: 'Por favor ingrese la descripción' }
                     },
                     submitHandler: function (form) {
                         const $frm = $(form);
                         const formData = $frm.serializeObject();
-
                         loadingFormXHR($frm, true);
-
-                        // Enviar la solicitud AJAX para actualizar la denuncia
                         $.ajax({
                             url: `${Server}denuncias/guardar`,
                             method: 'POST',
                             data: formData,
-                            success: function (data) {
+                            success: function () {
                                 loadingFormXHR($frm, false);
                                 $tablaDenuncias.bootstrapTable('refresh');
                                 showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
@@ -602,34 +464,23 @@ $(function () {
                     }
                 });
 
-                // Cargar dinámicamente las subcategorías según la categoría seleccionada
                 $detail.find(`#categoria-${row.id}`).change(function () {
-                    const categoriaId = $(this).val();
-                    loadSubcategorias(categoriaId, `#subcategoria-${row.id}`);
+                    loadSubcategorias($(this).val(), `#subcategoria-${row.id}`);
                 });
-
-                // Cargar dinámicamente las sucursales según el cliente seleccionado
                 $detail.find(`#id_cliente-${row.id}`).change(function () {
-                    const clienteId = $(this).val();
-                    loadSucursales(clienteId, `#id_sucursal-${row.id}`);
+                    loadSucursales($(this).val(), `#id_sucursal-${row.id}`);
                 });
-
-                // Cargar dinámicamente los departamentos según la sucursal seleccionada
                 $detail.find(`#id_sucursal-${row.id}`).change(function () {
-                    const sucursalId = $(this).val();
-                    loadDepartamentos(sucursalId, `#id_departamento-${row.id}`);
+                    loadDepartamentos($(this).val(), `#id_departamento-${row.id}`);
                 });
 
-                // Inicializar Dropzone
                 initializeDropzone(`dropzoneArchivos-${row.id}`, `formActualizarAnexos-${row.id}`);
 
-                // Manejo de la eliminación de anexos
                 $detail.on('click', '.delete-anexo', function () {
                     const anexoId = $(this).data('id');
                     eliminarAnexo(anexoId, row.id);
                 });
 
-                // Manejo del formulario de actualización de anexos
                 $detail.find(`#formActualizarAnexos-${row.id}`).submit(function (e) {
                     e.preventDefault();
                     const formData = new FormData(this);
@@ -639,7 +490,7 @@ $(function () {
         }
     });
 
-    // Inicializar flatpickr para el campo de fecha
+    // Flatpickr creación
     $('#fecha_incidente').flatpickr({
         dateFormat: 'Y-m-d',
         altInput: true,
@@ -647,28 +498,25 @@ $(function () {
         maxDate: 'today'
     });
 
-    // Cargar dinámicamente las subcategorías según la categoría seleccionada en el formulario de creación
+    // Dependencias creación
     $('#categoria').change(function () {
-        const categoriaId = $(this).val();
-        loadSubcategorias(categoriaId, '#subcategoria');
+        loadSubcategorias($(this).val(), '#subcategoria');
     });
 
-    // Cargar dinámicamente las sucursales según el cliente seleccionado en el formulario de creación
     $('#id_cliente').change(function () {
         const clienteId = $(this).val();
         loadSucursales(clienteId, '#id_sucursal');
+        cargarPoliticaDeCliente(clienteId); // <-- aplica política al cambiar cliente
     });
 
-    // Cargar dinámicamente los departamentos según la sucursal seleccionada en el formulario de creación
     $('#id_sucursal').change(function () {
-        const sucursalId = $(this).val();
-        loadDepartamentos(sucursalId, '#id_departamento');
+        loadDepartamentos($(this).val(), '#id_departamento');
     });
 
-    // Inicializar Dropzone para los archivos adjuntos en la creación de denuncia
+    // Dropzone creación
     initializeDropzone('dropzoneArchivos', 'formCrearDenuncia');
 
-    // Enviar nuevo comentario
+    // Comentarios
     $('#formAgregarComentario').submit(function (e) {
         e.preventDefault();
         const $frm = $(this);
@@ -676,15 +524,13 @@ $(function () {
         const $submitButton = $frm.find('button[type="submit"]');
         const formData = $frm.serialize();
 
-        // Deshabilitar el textarea y el botón, y cambiar el texto del botón
         $textarea.prop('disabled', true);
-        $submitButton.prop('disabled', true);
-        $submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
+        $submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
 
-        $.post(`${Server}comentarios/guardar`, formData, function (response) {
-            cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
+        $.post(`${Server}comentarios/guardar`, formData, function () {
+            cargarComentarios($('#id_denuncia').val());
             showToast('Comentario agregado exitosamente.', 'success');
-            $textarea.val(''); // Limpiar el campo de texto
+            $textarea.val('');
             $frm[0].reset();
         })
             .fail(function (err) {
@@ -692,19 +538,24 @@ $(function () {
                 showToast(message, 'error');
             })
             .always(function () {
-                // Rehabilitar el textarea y el botón, y restaurar el texto del botón original
                 $textarea.prop('disabled', false);
-                $submitButton.prop('disabled', false);
-                $submitButton.html('<i class="fas fa-paper-plane"></i> Enviar');
+                $submitButton.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Enviar');
             });
     });
 });
 
-// Función para inicializar Dropzone
-function initializeDropzone(elementId, formId) {
-    const dropzoneElement = $(`#${elementId}`);
-    const formElement = $(`#${formId}`);
+// -------- utilidades existentes (sin cambios) --------
+function initializeFlatpickrForEdit(selector) {
+    $(selector).flatpickr({
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        maxDate: 'today'
+    });
+}
 
+function initializeDropzone(elementId, formId) {
+    const formElement = $(`#${formId}`);
     const myDropzone = new Dropzone(`#${elementId}`, {
         url: `${Server}denuncias/subirAnexo`,
         maxFiles: 5,
@@ -722,25 +573,20 @@ function initializeDropzone(elementId, formId) {
             });
         }
     });
-
     dropzones[elementId] = myDropzone;
 }
 
-// Función para eliminar un anexo con confirmación usando SweetAlert2
 function eliminarAnexo(anexoId, denunciaId) {
-    // Llamar a la función de confirmación
     confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
-        // Si el usuario confirma la acción
         if (result.isConfirmed) {
-            // Proceder con la eliminación
             $.ajax({
                 url: `${Server}denuncias/anexos/eliminar/${anexoId}`,
                 method: 'POST',
-                success: function (response) {
+                success: function () {
                     showToast('Anexo eliminado correctamente.', 'success');
                     $(`#formActualizarAnexos-${denunciaId}`).find(`.delete-anexo[data-id="${anexoId}"]`).closest('.card').remove();
                 },
-                error: function (xhr) {
+                error: function () {
                     showToast('Error al eliminar el anexo.', 'error');
                 }
             });
@@ -748,29 +594,26 @@ function eliminarAnexo(anexoId, denunciaId) {
     });
 }
 
-// Función para actualizar anexos
 function actualizarAnexos(formData, denunciaId) {
     loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), true);
-
     $.ajax({
         url: `${Server}denuncias/actualizarAnexos`,
         method: 'POST',
         data: formData,
         processData: false,
         contentType: false,
-        success: function (response) {
+        success: function () {
             loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
             showToast('Archivos actualizados correctamente.', 'success');
             $tablaDenuncias.bootstrapTable('refresh');
         },
-        error: function (xhr) {
+        error: function () {
             loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
             showToast('Error al actualizar los archivos.', 'error');
         }
     });
 }
 
-// Función para cargar subcategorías
 function loadSubcategorias(categoriaId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
     $.ajax({
@@ -791,7 +634,6 @@ function loadSubcategorias(categoriaId, selectSelector) {
     });
 }
 
-// Función para cargar sucursales
 function loadSucursales(clienteId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
     $.ajax({
@@ -811,9 +653,7 @@ function loadSucursales(clienteId, selectSelector) {
     });
 }
 
-// Función para cargar departamentos
 function loadDepartamentos(sucursalId, selectSelector) {
-    console.log(sucursalId, selectSelector);
     $(selectSelector).html('<option>Cargando...</option>');
     $.ajax({
         url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
@@ -832,38 +672,35 @@ function loadDepartamentos(sucursalId, selectSelector) {
     });
 }
 
-function operateFormatter(value, row, index) {
-    const renderData = Handlebars.compile(tplAccionesTabla)(row);
-    return renderData;
+function operateFormatter(value, row) {
+    return Handlebars.compile(tplAccionesTabla)(row);
 }
 
-function operateFormatterEstado(value, row, index) {
+function operateFormatterEstado(value, row) {
     const estado = row.estado_nombre;
     let badgeClass = '';
-
     switch (estado) {
         case 'Recepción':
-            badgeClass = 'bg-yellow'; // Amarillo (#f4b400)
+            badgeClass = 'bg-yellow';
             break;
         case 'Clasificada':
-            badgeClass = 'bg-purple'; // Púrpura (#4285f4)
+            badgeClass = 'bg-purple';
             break;
         case 'Revisada por Calidad':
-            badgeClass = 'bg-teal'; // Verde Azulado (#0f9d58)
+            badgeClass = 'bg-teal';
             break;
         case 'Liberada al Cliente':
-            badgeClass = 'bg-red'; // Rojo (#db4437)
+            badgeClass = 'bg-red';
             break;
         case 'En Revisión por Cliente':
-            badgeClass = 'bg-light-purple'; // Púrpura Claro
+            badgeClass = 'bg-light-purple';
             break;
         case 'Cerrada':
-            badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+            badgeClass = 'bg-dark-teal';
             break;
         default:
-            badgeClass = 'bg-light text-dark'; // Para estados no reconocidos
+            badgeClass = 'bg-light text-dark';
     }
-
     return `<span class="badge ${badgeClass}">${estado}</span>`;
 }
 
@@ -872,33 +709,29 @@ function cargarComentarios(denunciaId) {
         let comentariosHtml = '';
         if (data.length > 0) {
             data.forEach(comentario => {
-                let iniciales = comentario.nombre_usuario.charAt(0).toUpperCase();
                 let badgeClass = '';
-
-                // Asignar el color correspondiente según el estado
                 switch (comentario.estado_nombre) {
                     case 'Recepción':
-                        badgeClass = 'bg-yellow'; // Amarillo
+                        badgeClass = 'bg-yellow';
                         break;
                     case 'Clasificada':
-                        badgeClass = 'bg-purple'; // Púrpura
+                        badgeClass = 'bg-purple';
                         break;
                     case 'Revisada por Calidad':
-                        badgeClass = 'bg-teal'; // Verde Azulado
+                        badgeClass = 'bg-teal';
                         break;
                     case 'Liberada al Cliente':
-                        badgeClass = 'bg-red'; // Rojo
+                        badgeClass = 'bg-red';
                         break;
                     case 'En Revisión por Cliente':
-                        badgeClass = 'bg-light-purple'; // Púrpura Claro
+                        badgeClass = 'bg-light-purple';
                         break;
                     case 'Cerrada':
-                        badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+                        badgeClass = 'bg-dark-teal';
                         break;
                     default:
-                        badgeClass = 'bg-light text-dark'; // Estado no reconocido
+                        badgeClass = 'bg-light text-dark';
                 }
-
                 comentariosHtml += `
                     <div class="comentario-item d-flex mb-3">
                         <div class="contenido flex-grow-1">
@@ -910,8 +743,7 @@ function cargarComentarios(denunciaId) {
                             <p class="mb-0">${comentario.contenido}</p>
                         </div>
                     </div>
-                    <hr>
-                `;
+                    <hr>`;
             });
         } else {
             comentariosHtml = '<p class="text-muted">No hay comentarios aún.</p>';
