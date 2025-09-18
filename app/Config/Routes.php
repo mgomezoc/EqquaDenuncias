@@ -260,6 +260,40 @@ $routes->group('comentarios', function ($routes) {
     $routes->post('eliminar/(:num)', 'ComentariosController::eliminar/$1'); // ← Nueva ruta para eliminar comentario
 });
 
+// Rutas para funcionalidad de IA en denuncias
+$routes->group('api/denuncias', ['namespace' => 'App\Controllers'], function ($routes) {
+
+    // Generar sugerencia de IA para una denuncia
+    $routes->post('(:num)/sugerencia-ia', 'DenunciasController::generarSugerenciaIA/$1');
+
+    // Obtener sugerencia de IA existente
+    $routes->get('(:num)/sugerencia-ia', 'DenunciasController::obtenerSugerenciaIA/$1');
+
+    // Regenerar sugerencia de IA
+    $routes->put('(:num)/sugerencia-ia/regenerar', 'DenunciasController::regenerarSugerenciaIA/$1');
+
+    // Evaluar sugerencia de IA
+    $routes->post('sugerencia-ia/evaluar', 'DenunciasController::evaluarSugerenciaIA');
+
+    // Obtener estadísticas de uso de IA
+    $routes->get('estadisticas-ia', 'DenunciasController::estadisticasIA');
+});
+
+// Rutas adicionales para administración de IA (solo para administradores)
+$routes->group('admin/ia', ['namespace' => 'App\Controllers', 'filter' => 'auth'], function ($routes) {
+
+    // Dashboard de estadísticas de IA
+    $routes->get('dashboard', 'IAAdminController::dashboard');
+
+    // Configuración del servicio de IA
+    $routes->get('configuracion', 'IAAdminController::configuracion');
+    $routes->post('configuracion', 'IAAdminController::guardarConfiguracion');
+
+    // Logs y monitoreo
+    $routes->get('logs', 'IAAdminController::logs');
+    $routes->get('costos', 'IAAdminController::reporteCostos');
+});
+
 
 /**
  * Cargar rutas adicionales basadas en el entorno

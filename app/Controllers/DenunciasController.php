@@ -11,8 +11,10 @@ use App\Models\SucursalModel;
 use App\Models\AnexoDenunciaModel;
 use App\Models\DepartamentoModel;
 use App\Models\SeguimientoDenunciaModel;
+use App\Models\SugerenciaIAModel;
 use App\Models\UsuarioModel;
 use App\Services\EmailService;
+use App\Services\IAService;
 use CodeIgniter\Controller;
 
 class DenunciasController extends Controller
@@ -206,6 +208,12 @@ class DenunciasController extends Controller
         return $this->response->setJSON($denuncia);
     }
 
+    /**
+     * Guardar/actualizar denuncia
+     * - Mantiene la transacción para denuncia + anexos
+     * - Genera sugerencia IA automáticamente SOLO para denuncias nuevas (si está habilitado)
+     * - Devuelve el id_denuncia al frontend
+     */
     public function guardar()
     {
         $denunciaModel = new DenunciaModel();
@@ -217,6 +225,9 @@ class DenunciasController extends Controller
         if (!$idCreador) {
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Usuario no autenticado o sesión no iniciada']);
         }
+
+        // ¿Es una denuncia nueva?
+        $esNueva = empty($id);
 
         // Recopilar solo los datos enviados, incluyendo estado_actual y medio_recepcion
         $data = array_filter([
@@ -244,15 +255,12 @@ class DenunciasController extends Controller
             return $value !== null && $value !== '';
         });
 
-
-
         $db = \Config\Database::connect();
         $db->transStart(); // Inicia una transacción
 
         try {
             // Guardar o actualizar la denuncia
             if ($id) {
-                // Actualizar solo los campos que se han proporcionado en la solicitud
                 if (!$denunciaModel->update($id, $data)) {
                     throw new \RuntimeException('Error al actualizar la denuncia.');
                 }
@@ -278,7 +286,7 @@ class DenunciasController extends Controller
                         'id_denuncia' => $id,
                         'nombre_archivo' => $nombreArchivo,
                         'ruta_archivo' => $rutaArchivo,
-                        'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
+                        'tipo' => @mime_content_type(WRITEPATH . '../public/' . $rutaArchivo) ?: 'application/octet-stream',
                     ])) {
                         throw new \RuntimeException('Error al guardar el anexo.');
                     }
@@ -296,7 +304,15 @@ class DenunciasController extends Controller
             return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al guardar la denuncia y los archivos adjuntos. Error: ' . $e->getMessage()]);
         }
 
-        return $this->response->setJSON(['message' => 'Denuncia guardada correctamente']);
+        // === Generación automática de sugerencia IA SOLO para denuncias NUEVAS ===
+        if ($esNueva && !empty($id)) {
+            $this->generarSugerenciaAutomatica((int)$id);
+        }
+
+        return $this->response->setJSON([
+            'message' => 'Denuncia guardada correctamente',
+            'id_denuncia' => (int)$id
+        ]);
     }
 
     public function eliminar($id)
@@ -373,9 +389,7 @@ class DenunciasController extends Controller
                 ->where('recibe_notificaciones', 1)
                 ->findAll();
 
-            $emailService = new EmailService();
             $erroresCorreo = [];
-
             foreach ($usuarios as $usuario) {
                 $correoDestino = !empty($usuario['correo_notificaciones']) ? $usuario['correo_notificaciones'] : $usuario['correo_electronico'];
 
@@ -397,13 +411,11 @@ class DenunciasController extends Controller
         ]);
     }
 
-
-
     public function subirAnexo()
     {
         $file = $this->request->getFile('file');
 
-        if ($file->isValid() && !$file->hasMoved()) {
+        if ($file && $file->isValid() && !$file->hasMoved()) {
             $newName = $file->getRandomName();
             $file->move(WRITEPATH . '../public/assets/denuncias', $newName);
             return $this->response->setJSON(['filename' => $newName]);
@@ -490,7 +502,7 @@ class DenunciasController extends Controller
                         'id_denuncia' => $denunciaId,
                         'nombre_archivo' => $nombreArchivo,
                         'ruta_archivo' => $rutaArchivo,
-                        'tipo' => mime_content_type(WRITEPATH . '../public/' . $rutaArchivo),
+                        'tipo' => @mime_content_type(WRITEPATH . '../public/' . $rutaArchivo) ?: 'application/octet-stream',
                     ])) {
                         throw new \RuntimeException('Error al guardar el anexo.');
                     }
@@ -541,89 +553,393 @@ class DenunciasController extends Controller
         }
     }
 
-    // Función para enviar el correo al cliente cuando la denuncia es liberada
+    // =======================
+    //  Notificación por correo
+    // =======================
     private function enviarCorreoLiberacionCliente($email, $nombreUsuario, $denuncia)
     {
-        $emailService = new EmailService();
+        try {
+            $emailService = new EmailService();
 
-        // Crear el mensaje de notificación
-        $mensaje = '
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Denuncia Liberada</title>
-        <style>
-            /* Estilos generales */
-            body {
-                font-family: "Arial", sans-serif;
-                background-color: #f4f4f4;
-                color: #333333;
-                margin: 0;
-                padding: 0;
-                width: 100%;
-            }
-            table {
-                max-width: 600px;
-                width: 100%;
-                margin: 0 auto;
-                background-color: #ffffff;
-                border-collapse: collapse;
-            }
-            h1, h2, h3, p {
-                margin: 0;
-            }
-            .header {
-                background-color: #0047ba; /* Color primario del sistema */
-                padding: 20px;
-                text-align: center;
-                color: #ffffff;
-            }
-            .body-content {
-                padding: 20px;
-            }
-            .footer {
-                background-color: #0047ba;
-                color: #ffffff;
-                text-align: center;
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-            .footer a {
-                color: #ffffff;
-                text-decoration: underline;
-            }
-        </style>
-    </head>
-    <body>
-        <table>
-            <tr>
-                <td class="header">
-                    <h1>Denuncia Liberada</h1>
-                </td>
-            </tr>
-            <tr>
-                <td class="body-content">
-                    <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
-                    <p>Le informamos que la denuncia registrada bajo el folio <strong>' . esc($denuncia['folio']) . '</strong> ha sido liberada.</p>
-                    <p>A partir de este momento, usted tiene acceso completo a la información relacionada para establecer seguimiento. Para consultar los detalles, por favor inicie sesión en su cuenta a través del portal de denuncias.</p>
-                    <p>Puede acceder directamente ingresando al siguiente enlace: <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
-                    <p>Agradecemos su confianza.</p>
-                    <p>Atentamente,<br><strong>Equipo de Eqqua</strong></p>
-                </td>
-            </tr>
-            <tr>
-                <td class="footer">
-                    <p>&copy; ' . date('Y') . ' Eqqua</p>
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>';
+            // Crear el mensaje de notificación
+            $mensaje = '
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Denuncia Liberada</title>
+            <style>
+                /* Estilos generales */
+                body {
+                    font-family: "Arial", sans-serif;
+                    background-color: #f4f4f4;
+                    color: #333333;
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+                }
+                table {
+                    max-width: 600px;
+                    width: 100%;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    border-collapse: collapse;
+                }
+                h1, h2, h3, p {
+                    margin: 0;
+                }
+                .header {
+                    background-color: #0047ba; /* Color primario del sistema */
+                    padding: 20px;
+                    text-align: center;
+                    color: #ffffff;
+                }
+                .body-content {
+                    padding: 20px;
+                }
+                .footer {
+                    background-color: #0047ba;
+                    color: #ffffff;
+                    text-align: center;
+                    padding: 10px 20px;
+                    font-size: 14px;
+                }
+                .footer a {
+                    color: #ffffff;
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <table>
+                <tr>
+                    <td class="header">
+                        <h1>Denuncia Liberada</h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="body-content">
+                        <p>Estimado/a <strong>' . esc($nombreUsuario) . '</strong>,</p>
+                        <p>Le informamos que la denuncia registrada bajo el folio <strong>' . esc($denuncia['folio']) . '</strong> ha sido liberada.</p>
+                        <p>A partir de este momento, usted tiene acceso completo a la información relacionada para establecer seguimiento. Para consultar los detalles, por favor inicie sesión en su cuenta a través del portal de denuncias.</p>
+                        <p>Puede acceder directamente ingresando al siguiente enlace: <a href="' . base_url() . '">Eqqua Denuncias</a>.</p>
+                        <p>Agradecemos su confianza.</p>
+                        <p>Atentamente,<br><strong>Equipo de Eqqua</strong></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="footer">
+                        <p>&copy; ' . date('Y') . ' Eqqua</p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>';
 
+            // Enviar el correo
+            $emailService->sendEmail($email, 'Nueva Denuncia: ' . esc($denuncia['folio']), $mensaje);
+            return true;
+        } catch (\Throwable $t) {
+            log_message('error', 'Error enviando correo de liberación: ' . $t->getMessage());
+            return 'Error al enviar correo: ' . $t->getMessage();
+        }
+    }
 
-        // Enviar el correo
-        $emailService->sendEmail($email, 'Nueva Denuncia: ' . esc($denuncia['folio']), $mensaje);
+    // =======================
+    //  IA: Sugerencias
+    // =======================
+
+    /**
+     * Genera una sugerencia de IA para una denuncia específica
+     */
+    public function generarSugerenciaIA($idDenuncia)
+    {
+        try {
+            $denunciaModel = new DenunciaModel();
+            $iaService = new IAService();
+            $sugerenciaModel = new SugerenciaIAModel();
+
+            // Verificar que no exista ya una sugerencia para esta denuncia
+            $sugerenciaExistente = $sugerenciaModel->getSugerenciaPorDenuncia($idDenuncia);
+            if ($sugerenciaExistente) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Ya existe una sugerencia para esta denuncia'
+                ]);
+            }
+
+            // Obtener los datos completos de la denuncia
+            $denuncia = $denunciaModel->select('
+                denuncias.*, 
+                categorias_denuncias.nombre AS categoria_nombre,
+                subcategorias_denuncias.nombre AS subcategoria_nombre,
+                departamentos.nombre AS departamento_nombre,
+                sucursales.nombre AS sucursal_nombre
+            ')
+                ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
+                ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
+                ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
+                ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
+                ->find($idDenuncia);
+
+            if (!$denuncia) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Denuncia no encontrada'
+                ]);
+            }
+
+            // Validar que tenemos los datos mínimos
+            if (!$iaService->validarDatosMinimos($denuncia)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Datos insuficientes para generar sugerencia'
+                ]);
+            }
+
+            // Medir tiempo de generación
+            $tiempoInicio = microtime(true);
+
+            // Generar la sugerencia
+            $resultado = $iaService->generarSugerenciaSolucion($denuncia);
+
+            $tiempoFin = microtime(true);
+            $tiempoGeneracion = round($tiempoFin - $tiempoInicio, 3);
+
+            if ($resultado['success']) {
+                // Calcular costo estimado
+                $costoEstimado = $iaService->calcularCostoEstimado($resultado['tokens_usados']);
+
+                // Guardar la sugerencia en la base de datos
+                $sugerenciaData = [
+                    'id_denuncia' => $idDenuncia,
+                    'sugerencia' => $resultado['sugerencia'],
+                    'tokens_usados' => $resultado['tokens_usados'],
+                    'costo_estimado' => $costoEstimado,
+                    'modelo' => 'gpt-4o',
+                    'tiempo_generacion' => $tiempoGeneracion
+                ];
+
+                if ($sugerenciaModel->guardarSugerencia($sugerenciaData)) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => 'Sugerencia generada exitosamente',
+                        'sugerencia' => $resultado['sugerencia'],
+                        'tokens_usados' => $resultado['tokens_usados'],
+                        'costo_estimado' => number_format($costoEstimado, 6),
+                        'tiempo_generacion' => $tiempoGeneracion
+                    ]);
+                } else {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Error al guardar la sugerencia'
+                    ]);
+                }
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => $resultado['error']
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error en generarSugerenciaIA: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+        }
+    }
+
+    /**
+     * Obtiene la sugerencia de IA para una denuncia específica
+     */
+    public function obtenerSugerenciaIA($idDenuncia)
+    {
+        try {
+            $sugerenciaModel = new SugerenciaIAModel();
+
+            $sugerencia = $sugerenciaModel->getSugerenciaPorDenuncia($idDenuncia);
+
+            if (!$sugerencia) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'No se encontró sugerencia para esta denuncia'
+                ]);
+            }
+
+            // Marcar como vista si aún no se ha marcado
+            if ($sugerencia['estado_sugerencia'] === 'generada') {
+                $sugerenciaModel->marcarComoVista($sugerencia['id']);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'sugerencia' => $sugerencia
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error en obtenerSugerenciaIA: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+        }
+    }
+
+    /**
+     * Permite al usuario evaluar la sugerencia de IA
+     */
+    public function evaluarSugerenciaIA()
+    {
+        try {
+            $sugerenciaModel = new SugerenciaIAModel();
+
+            $idSugerencia = $this->request->getPost('id_sugerencia');
+            $evaluacion = $this->request->getPost('evaluacion');
+            $comentarios = $this->request->getPost('comentarios') ?? '';
+
+            // Validaciones
+            if (!$idSugerencia || !$evaluacion) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Datos incompletos'
+                ]);
+            }
+
+            if ($evaluacion < 1 || $evaluacion > 5) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'La evaluación debe estar entre 1 y 5'
+                ]);
+            }
+
+            // Actualizar la evaluación
+            if ($sugerenciaModel->evaluarSugerencia($idSugerencia, $evaluacion, $comentarios)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Evaluación guardada exitosamente'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Error al guardar la evaluación'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error en evaluarSugerenciaIA: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+        }
+    }
+
+    /**
+     * Regenera una sugerencia de IA para una denuncia
+     */
+    public function regenerarSugerenciaIA($idDenuncia)
+    {
+        try {
+            $sugerenciaModel = new SugerenciaIAModel();
+
+            // Eliminar la sugerencia anterior si existe
+            $sugerenciaAnterior = $sugerenciaModel->getSugerenciaPorDenuncia($idDenuncia);
+            if ($sugerenciaAnterior) {
+                $sugerenciaModel->delete($sugerenciaAnterior['id']);
+            }
+
+            // Generar nueva sugerencia
+            return $this->generarSugerenciaIA($idDenuncia);
+        } catch (\Exception $e) {
+            log_message('error', 'Error en regenerarSugerenciaIA: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+        }
+    }
+
+    /**
+     * Obtiene estadísticas de uso de las sugerencias de IA
+     */
+    public function estadisticasIA()
+    {
+        try {
+            $sugerenciaModel = new SugerenciaIAModel();
+            $clienteId = session()->get('id_cliente'); // Si es necesario filtrar por cliente
+
+            $estadisticas = $sugerenciaModel->getEstadisticasUso($clienteId);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'estadisticas' => $estadisticas
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error en estadisticasIA: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+        }
+    }
+
+    /**
+     * Generación automática de sugerencia IA después de crear denuncia.
+     * - Respeta variable de entorno IA_GENERACION_AUTOMATICA
+     * - Verifica límites diarios de uso (tokens) antes de generar
+     * - No altera la respuesta principal al usuario
+     */
+    protected function generarSugerenciaAutomatica(int $idDenuncia): void
+    {
+        try {
+            $generacionAutomatica = getenv('IA_GENERACION_AUTOMATICA') === 'true';
+            if (!$generacionAutomatica) {
+                return;
+            }
+
+            if (!$this->verificarLimitesIA()) {
+                log_message('warning', 'Límites de IA alcanzados, no se generará sugerencia automática');
+                return;
+            }
+
+            // Llamada sin afectar la salida principal
+            $this->generarSugerenciaIA($idDenuncia);
+        } catch (\Exception $e) {
+            // Log del error pero no afectar el flujo principal
+            log_message('error', 'Error en generación automática de sugerencia: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Verificar límites de uso de IA (tokens diarios)
+     */
+    private function verificarLimitesIA(): bool
+    {
+        try {
+            $sugerenciaModel = new SugerenciaIAModel();
+
+            // Límite diario por variable de entorno o 50k por defecto
+            $limiteDiario = (int)(getenv('IA_LIMITE_DIARIO_TOKENS') ?: 50000);
+
+            // Sumar tokens usados hoy
+            $row = $sugerenciaModel->builder()
+                ->select('COALESCE(SUM(tokens_usados), 0) AS total')
+                ->where('DATE(created_at)', date('Y-m-d'))
+                ->get()
+                ->getRowArray();
+
+            $tokensHoy = (int)($row['total'] ?? 0);
+
+            return $tokensHoy < $limiteDiario;
+        } catch (\Exception $e) {
+            log_message('error', 'Error al verificar límites IA: ' . $e->getMessage());
+            // En caso de error, ser conservador y NO generar para evitar sobrepasar límites
+            return false;
+        }
     }
 }
