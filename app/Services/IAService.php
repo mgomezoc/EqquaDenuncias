@@ -14,12 +14,15 @@ class IAService
         $this->apiKey = getenv('OPENAI_API_KEY');
 
         if (!$this->apiKey) {
-            // Importante: log explícito si falta la API key
+            // Log explícito si falta la API key
             log_message('error', '[IAService] OPENAI_API_KEY no configurada en .env');
             throw new Exception('API Key de OpenAI no configurada en el archivo .env');
         }
     }
 
+    /**
+     * Genera una sugerencia de solución (una sola respuesta, accionable)
+     */
     public function generarSugerenciaSolucion(array $denunciaData): array
     {
         try {
@@ -30,15 +33,15 @@ class IAService
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'Eres un experto consultor en recursos humanos y compliance empresarial. Tu trabajo es analizar denuncias laborales y proporcionar sugerencias de solución profesionales, constructivas y enfocadas en la resolución de conflictos.'
+                        'content' => 'Eres un consultor senior en RRHH, seguridad y compliance. Entregas planes accionables, claros, cronológicos y medibles. Evitas teoría general; das instrucciones concretas aplicables en el sitio de trabajo.'
                     ],
                     [
                         'role' => 'user',
                         'content' => $prompt
                     ]
                 ],
-                'max_tokens' => 1000,
-                'temperature' => 0.7
+                'max_tokens' => 800,
+                'temperature' => 0.4
             ];
 
             log_message('debug', '[IAService] Solicitando a OpenAI. Campos denuncia: {keys}', ['keys' => implode(',', array_keys($denunciaData))]);
@@ -46,7 +49,7 @@ class IAService
             $response = $this->realizarPeticionAPI($postData);
 
             if ($response && isset($response['choices'][0]['message']['content'])) {
-                $sugerencia  = trim($response['choices'][0]['message']['content']);
+                $sugerencia   = trim($response['choices'][0]['message']['content']);
                 $tokensUsados = (int)($response['usage']['total_tokens'] ?? 0);
 
                 log_message('debug', '[IAService] Respuesta OpenAI tokens:{t} len:{l}', ['t' => $tokensUsados, 'l' => strlen($sugerencia)]);
@@ -66,39 +69,81 @@ class IAService
         }
     }
 
-    private function construirPrompt(array $data): string
+    /**
+     * Construye un prompt que obliga a una ÚNICA respuesta, tipo plan accionable.
+     * Usa solo los campos que ya tienes en la BD/joins actuales.
+     */
+    private function construirPrompt(array $d): string
     {
-        // Usa placeholders si faltan datos (p.ej. flujo público sin categoría)
-        $prompt  = "Analiza la siguiente denuncia y proporciona una sugerencia de solución profesional:\n\n";
-        $prompt .= "**INFORMACIÓN DE LA DENUNCIA:**\n";
-        $prompt .= "- Folio: " . ($data['folio'] ?? 'N/A') . "\n";
-        $prompt .= "- Tipo de denunciante: " . ($data['tipo_denunciante'] ?? 'N/A') . "\n";
-        $prompt .= "- Categoría: " . ($data['categoria_nombre'] ?? 'Sin categoría asignada') . "\n";
-        $prompt .= "- Subcategoría: " . ($data['subcategoria_nombre'] ?? 'N/A') . "\n";
-        $prompt .= "- Departamento afectado: " . ($data['departamento_nombre'] ?? 'N/A') . "\n";
-        $prompt .= "- Sucursal: " . ($data['sucursal_nombre'] ?? 'N/A') . "\n";
-        $prompt .= "- Área del incidente: " . ($data['area_incidente'] ?? 'N/A') . "\n";
-        $prompt .= "- Fecha del incidente: " . ($data['fecha_incidente'] ?? 'N/A') . "\n";
-        $prompt .= "- Descripción: " . ($data['descripcion'] ?? 'N/A') . "\n\n";
+        // Inferencia simple de tipología (no se guarda en BD, solo para enriquecer el prompt)
+        $desc = mb_strtolower($d['descripcion'] ?? '');
+        $tipologia = 'incidente laboral';
+        $map = [
+            'nalgad' => 'acoso sexual físico',
+            'tocó' => 'acoso sexual físico',
+            'toque' => 'acoso sexual físico',
+            'manose' => 'acoso sexual físico',
+            'golpe' => 'agresión física',
+            'empuj' => 'agresión física',
+            'insult' => 'acoso verbal',
+            'grit' => 'acoso verbal',
+            'amenaz' => 'amenaza'
+        ];
+        foreach ($map as $needle => $label) {
+            if (mb_strpos($desc, $needle) !== false) {
+                $tipologia = $label;
+                break;
+            }
+        }
 
-        $prompt .= "**SOLICITUD:**\n";
-        $prompt .= "Basándote en la información proporcionada, genera una sugerencia de solución que incluya:\n";
-        $prompt .= "1. **Acciones inmediatas** a tomar\n";
-        $prompt .= "2. **Investigación recomendada** (qué aspectos investigar)\n";
-        $prompt .= "3. **Medidas preventivas** para evitar situaciones similares\n";
-        $prompt .= "4. **Seguimiento sugerido** para monitorear la resolución\n\n";
+        // Campos con fallback legible
+        $folio         = $d['folio']               ?? 'N/A';
+        $tipoDen       = $d['tipo_denunciante']    ?? 'N/A';
+        $cat           = $d['categoria_nombre']    ?? 'Sin categoría asignada';
+        $subcat        = $d['subcategoria_nombre'] ?? 'N/A';
+        $depto         = $d['departamento_nombre'] ?? 'N/A';
+        $sucursal      = $d['sucursal_nombre']     ?? 'N/A';
+        $area          = $d['area_incidente']      ?? 'N/A';
+        $fechaInc      = $d['fecha_incidente']     ?? 'N/A';
+        $comoEnt       = $d['como_se_entero']      ?? 'N/A';
+        $denunciado    = $d['denunciar_a_alguien'] ?? 'N/A';
+        $descripcion   = $d['descripcion']         ?? 'N/A';
 
-        $prompt .= "**IMPORTANTE:**\n";
-        $prompt .= "- La sugerencia debe ser profesional y constructiva\n";
-        $prompt .= "- Enfócate en resolver el conflicto, no en culpar\n";
-        $prompt .= "- Considera las mejores prácticas de recursos humanos\n";
-        $prompt .= "- Mantén un tono neutral y objetivo\n";
-        $prompt .= "- La respuesta debe ser en español\n";
-        $prompt .= "- Máximo 500 palabras\n";
+        // Prompt: una sola propuesta de resolución, con secciones exigidas
+        $prompt  = "Caso real de denuncia en entorno laboral. Genera UNA SOLA propuesta de resolución, tipo plan operativo, ";
+        $prompt .= "con pasos concretos, responsables y tiempos. Evita teoría general.\n\n";
+
+        $prompt .= "**Contexto del caso**\n";
+        $prompt .= "- Folio: {$folio}\n";
+        $prompt .= "- Tipo de denunciante: {$tipoDen} (posible tipología: {$tipologia})\n";
+        $prompt .= "- Categoría/Subcategoría (si existieran): {$cat} / {$subcat}\n";
+        $prompt .= "- Departamento: {$depto} | Sucursal: {$sucursal} | Área: {$area}\n";
+        $prompt .= "- Fecha del incidente: {$fechaInc}\n";
+        $prompt .= "- Cómo se enteró: {$comoEnt}\n";
+        $prompt .= "- Persona denunciada o involucrada (si aplica): {$denunciado}\n";
+        $prompt .= "- Descripción: \"{$descripcion}\"\n\n";
+
+        $prompt .= "**Entrega exactamente estas secciones, con bullets y verbos de acción; no agregues otras secciones:**\n";
+        $prompt .= "1) 0–24 horas (acciones inmediatas, responsables y tiempos)\n";
+        $prompt .= "2) 24–72 horas (investigación: evidencia específica del sitio: CCTV/pasillos/cocina, bitácoras, turnos; entrevistas en orden)\n";
+        $prompt .= "3) 3–7 días (decisión con criterios: corroborado / indicios / no corroborado; debidos procesos y sanciones posibles)\n";
+        $prompt .= "4) Medidas cautelares (separación de partes, reubicación temporal, suspensión preventiva pagada si aplica)\n";
+        $prompt .= "5) Aseguramiento de evidencia (qué solicitar, a quién y en qué ventana de tiempo)\n";
+        $prompt .= "6) Entrevistas (orden, guion breve, confidencialidad, registro)\n";
+        $prompt .= "7) Comunicación y no-represalias (mensajes internos neutros; canal para que el denunciante amplíe sin perder anonimato)\n";
+        $prompt .= "8) KPIs de seguimiento (2–4 métricas medibles y plazos)\n\n";
+
+        $prompt .= "**Reglas de estilo**\n";
+        $prompt .= "- Español neutro. Máximo 450–500 palabras.\n";
+        $prompt .= "- Una sola respuesta; nada de alternativas. Sin teoría ni párrafos vacíos. ";
+        $prompt .= "Si un dato falta, indica el paso igual con una asunción razonable.\n";
 
         return $prompt;
     }
 
+    /**
+     * Llamada HTTP a OpenAI
+     */
     private function realizarPeticionAPI(array $postData): ?array
     {
         $headers = [
@@ -117,9 +162,9 @@ class IAService
             CURLOPT_SSL_VERIFYPEER => true
         ]);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
+        $response  = curl_exec($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error     = curl_error($ch);
         curl_close($ch);
 
         if ($error) {
@@ -136,21 +181,22 @@ class IAService
     }
 
     /**
-     * Ahora solo exigimos descripción (categoría opcional para flujo público)
+     * Validación mínima: con que haya descripción basta (flujo público puede no tener categoría aún)
      */
     public function validarDatosMinimos(array $data): bool
     {
-        if (empty($data['descripcion'])) {
-            return false;
-        }
-        return true;
+        return !empty($data['descripcion']);
     }
 
+    /**
+     * Estimación costo por tokens (gpt-4o referencia)
+     */
     public function calcularCostoEstimado(int $tokens): float
     {
         $precioInput  = 5.00;   // $/1M tokens
         $precioOutput = 15.00;  // $/1M tokens
 
+        // Estimación simple 70/30
         $tokensInput  = $tokens * 0.7;
         $tokensOutput = $tokens * 0.3;
 
