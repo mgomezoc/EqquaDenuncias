@@ -9,8 +9,6 @@ use App\Models\DenunciaModel;
 use App\Models\SubcategoriaDenunciaModel;
 use App\Models\AnexoDenunciaModel;
 use App\Models\ComentarioDenunciaModel;
-use App\Models\SugerenciaIAModel;
-use App\Services\IAService;
 
 class Publico extends BaseController
 {
@@ -53,10 +51,7 @@ class Publico extends BaseController
     }
 
     /**
-     * Guarda denuncia pública
-     * - Respeta política de anonimato
-     * - Adjunta archivos (incluido audio)
-     * - Genera sugerencia IA si está habilitada
+     * Guarda denuncia pública (sin generar sugerencia IA aquí)
      */
     public function guardarDenunciaPublica()
     {
@@ -117,10 +112,7 @@ class Publico extends BaseController
             'id_cliente'          => $idCliente,
             'id_sucursal'         => $this->request->getPost('id_sucursal'),
             'id_departamento'     => $this->request->getPost('id_departamento'),
-            // OJO: en tu BD `categoria`/`subcategoria` pueden ser NOT NULL,
-            // pero tu formulario público no los envía. No los incluimos aquí
-            // para que el modelo/BD resuelvan sus defaults. Si quieres forzar
-            // un ID por defecto, descomenta estas 2 líneas:
+            // Si quieres defaults para categoría/subcategoría, define en .env y descomenta:
             // 'categoria'           => getenv('DEFAULT_CATEGORIA_ID') ?: null,
             // 'subcategoria'        => getenv('DEFAULT_SUBCATEGORIA_ID') ?: null,
             'tipo_denunciante'    => $anonimo ? 'Anónimo' : 'No anónimo',
@@ -150,11 +142,10 @@ class Publico extends BaseController
 
         if (!$denunciaModel->save($data)) {
             $db->transRollback();
-            // Ayuda de depuración: muestra validaciones del modelo
             return $this->response->setStatusCode(400)->setJSON([
                 'success' => false,
                 'message' => 'Error al guardar la denuncia',
-                'debug'   => $denunciaModel->errors() // <— quítalo en producción
+                'debug'   => $denunciaModel->errors() // quitar en producción si no lo necesitas
             ]);
         }
 
@@ -162,7 +153,7 @@ class Publico extends BaseController
         $denuncia   = $denunciaModel->find($denunciaId);
         $folio      = $denuncia['folio'] ?? '';
 
-        // Anexos “normales” (rutas desde Dropzone)
+        // Anexos “normales”
         $anexos = $this->request->getPost('archivos');
         if ($anexos && is_array($anexos)) {
             $anexoModel = new AnexoDenunciaModel();
@@ -211,9 +202,7 @@ class Publico extends BaseController
             ]);
         }
 
-        // 5) Sugerencia IA automática (no bloquea la respuesta)
-        $this->generarSugerenciaAutomatica($denunciaId);
-
+        // Importante: YA NO se genera sugerencia IA aquí.
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Denuncia guardada correctamente',
@@ -354,134 +343,6 @@ class Publico extends BaseController
             'comentarios' => array_values($comentariosVisibles),
             'archivos'   => $archivosDenuncia
         ]);
-    }
-
-    // =======================
-    //  IA (flujo público)
-    // =======================
-
-    public function generarSugerenciaIA($idDenuncia)
-    {
-        try {
-            $denunciaModel   = new DenunciaModel();
-            $iaService       = new IAService();
-            $sugerenciaModel = new SugerenciaIAModel();
-
-            $existente = $sugerenciaModel->getSugerenciaPorDenuncia((int)$idDenuncia);
-            if ($existente) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Ya existe una sugerencia para esta denuncia'
-                ]);
-            }
-
-            $denuncia = $denunciaModel->select('
-                denuncias.*,
-                categorias_denuncias.nombre    AS categoria_nombre,
-                subcategorias_denuncias.nombre AS subcategoria_nombre,
-                departamentos.nombre           AS departamento_nombre,
-                sucursales.nombre              AS sucursal_nombre
-            ')
-                ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
-                ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
-                ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
-                ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
-                ->find((int)$idDenuncia);
-
-            if (!$denuncia) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Denuncia no encontrada'
-                ]);
-            }
-
-            if (!$iaService->validarDatosMinimos($denuncia)) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Datos insuficientes para generar sugerencia'
-                ]);
-            }
-
-            $t0        = microtime(true);
-            $resultado = $iaService->generarSugerenciaSolucion($denuncia);
-            $elapsed   = round(microtime(true) - $t0, 3);
-
-            if ($resultado['success'] ?? false) {
-                $costoEstimado = $iaService->calcularCostoEstimado((int)($resultado['tokens_usados'] ?? 0));
-
-                $ok = $sugerenciaModel->guardarSugerencia([
-                    'id_denuncia'      => (int)$idDenuncia,
-                    'sugerencia'       => $resultado['sugerencia'],
-                    'tokens_usados'    => (int)($resultado['tokens_usados'] ?? 0),
-                    'costo_estimado'   => $costoEstimado,
-                    'modelo'           => 'gpt-4o',
-                    'tiempo_generacion' => $elapsed
-                ]);
-
-                if ($ok) {
-                    return $this->response->setJSON([
-                        'success'          => true,
-                        'message'          => 'Sugerencia generada exitosamente',
-                        'tokens_usados'    => (int)($resultado['tokens_usados'] ?? 0),
-                        'costo_estimado'   => number_format($costoEstimado, 6),
-                        'tiempo_generacion' => $elapsed
-                    ]);
-                }
-
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Error al guardar la sugerencia'
-                ]);
-            }
-
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => $resultado['error'] ?? 'No se pudo generar la sugerencia'
-            ]);
-        } catch (\Throwable $e) {
-            log_message('error', 'Error en generarSugerenciaIA (público): ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error interno del servidor'
-            ]);
-        }
-    }
-
-    protected function generarSugerenciaAutomatica(int $idDenuncia): void
-    {
-        try {
-            $habilitada = getenv('IA_GENERACION_AUTOMATICA') === 'true';
-            if (!$habilitada) return;
-
-            if (!$this->verificarLimitesIA()) {
-                log_message('warning', 'Límites IA alcanzados (público); no se generará sugerencia automática.');
-                return;
-            }
-
-            $this->generarSugerenciaIA($idDenuncia);
-        } catch (\Throwable $e) {
-            log_message('error', 'Error en generación automática IA (público): ' . $e->getMessage());
-        }
-    }
-
-    private function verificarLimitesIA(): bool
-    {
-        try {
-            $sugerenciaModel = new SugerenciaIAModel();
-            $limiteDiario    = (int)(getenv('IA_LIMITE_DIARIO_TOKENS') ?: 50000);
-
-            $row = $sugerenciaModel->builder()
-                ->select('COALESCE(SUM(tokens_utilizados), 0) AS total')
-                ->where('DATE(created_at)', date('Y-m-d'))
-                ->get()
-                ->getRowArray();
-
-            $tokensHoy = (int)($row['total'] ?? 0);
-            return $tokensHoy < $limiteDiario;
-        } catch (\Throwable $e) {
-            log_message('error', 'Error al verificar límites IA (público): ' . $e->getMessage());
-            return false;
-        }
     }
 
     private function convertirFecha($fecha)

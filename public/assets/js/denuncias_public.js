@@ -43,6 +43,8 @@ $(document).ready(function () {
     function initializeComponents() {
         initializeSelect2();
         initializeFlatpickr();
+        // Registrar validador de fecha D/M/Y ANTES de crear reglas
+        registerDateDMYValidator();
         initializeDropzone();
         initializeValidation();
         initializeEventListeners();
@@ -94,13 +96,39 @@ $(document).ready(function () {
         });
     }
 
+    /** ---------- Validador de fecha dd/mm/yyyy ---------- */
+    function registerDateDMYValidator() {
+        // Valida 31/12/2025, sin permitir fechas imposibles
+        $.validator.addMethod(
+            'dateDMY',
+            function (value, element) {
+                const v = (value || '').trim();
+                if (v === '') return true; // required se controla aparte
+                const parts = v.split('/');
+                if (parts.length !== 3) return false;
+                const d = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10) - 1; // 0..11
+                const y = parseInt(parts[2], 10);
+                if (isNaN(d) || isNaN(m) || isNaN(y)) return false;
+                const dt = new Date(y, m, d);
+                // Comprobar que Date no “corrigió” una fecha inválida
+                if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return false;
+                // No permitir fechas futuras (flatpickr ya lo limita, esto es defensa adicional)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return dt <= today;
+            },
+            'Ingrese una fecha válida (dd/mm/aaaa).'
+        );
+    }
+
     /** ---------- Validación del formulario ---------- */
     function initializeValidation() {
         // Reglas dinámicas (solo agregamos si el campo existe)
         const rules = {
             id_sucursal: { required: true },
             // id_departamento es opcional en el formulario público (no agregamos required)
-            fecha_incidente: { required: true, date: true },
+            fecha_incidente: { required: true, dateDMY: true }, // <<< usamos dateDMY
             como_se_entero: { required: true },
             area_incidente: { required: true, minlength: 5 },
             descripcion: { required: true, minlength: 10 },
@@ -146,7 +174,8 @@ $(document).ready(function () {
         $('#formCrearDenuncia').validate({
             errorClass: 'is-invalid',
             validClass: 'is-valid',
-            ignore: ':hidden:not(.select2)',
+            // Select2 deja el input oculto con .select2-hidden-accessible
+            ignore: ':hidden:not(.select2-hidden-accessible)',
             rules,
             messages,
             errorPlacement: function (error, element) {
