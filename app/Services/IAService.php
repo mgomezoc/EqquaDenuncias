@@ -28,10 +28,10 @@ class IAService
             throw new Exception('API Key de OpenAI no configurada');
         }
 
-        // Lee configuración desde .env con defaults razonables
+        // Lee configuración desde .env con defaults orientados a respuesta breve y natural
         $this->modelo      = (string) (getenv('IA_MODELO_USADO') ?: 'gpt-4o');
-        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 800);
-        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.4);
+        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 350); // antes 800
+        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.6); // antes 0.4
         $this->timeout     = (int)    (getenv('IA_TIMEOUT_SEGUNDOS') ?: 30);
 
         // Flags de logging
@@ -54,7 +54,8 @@ class IAService
                 'messages' => [
                     [
                         'role'    => 'system',
-                        'content' => 'Eres un consultor senior en RRHH, seguridad y compliance. Entregas planes accionables, claros, cronológicos y medibles. Evitas teoría general; das instrucciones concretas aplicables en el sitio de trabajo.'
+                        // Tono conversacional y práctico; evita burocracia y listas largas
+                        'content' => 'Eres un asistente empático y claro. Das consejos breves, prácticos y realistas en un tono humano y respetuoso. Evitas listas largas, jerga y lenguaje burocrático. Prefieres 1–2 párrafos y, si aporta, hasta 3 ideas puntuales.'
                     ],
                     [
                         'role'    => 'user',
@@ -112,71 +113,72 @@ class IAService
     }
 
     /**
-     * Construye un prompt que obliga a UNA sola respuesta, estilo plan accionable.
+     * Prompt conversacional: pide consejo breve y natural (no plan ni secciones).
      */
     private function construirPrompt(array $d): string
     {
-        // Inferencia simple de tipología
+        // Inferencia simple de tipología para dar contexto, con mapeo ampliado
         $desc = mb_strtolower($d['descripcion'] ?? '');
-        $tipologia = 'incidente laboral';
+        $tipologia = 'situación laboral';
         $map = [
-            'nalgad' => 'acoso sexual físico',
-            'tocó'   => 'acoso sexual físico',
-            'toque'  => 'acoso sexual físico',
-            'manose' => 'acoso sexual físico',
-            'golpe'  => 'agresión física',
-            'empuj'  => 'agresión física',
-            'insult' => 'acoso verbal',
-            'grit'   => 'acoso verbal',
-            'amenaz' => 'amenaza',
+            'nalgad' => 'acoso físico',
+            'tocó'   => 'contacto inapropiado',
+            'toque'  => 'contacto inapropiado',
+            'manose' => 'acoso físico',
+            'golpe'  => 'agresión',
+            'empuj'  => 'agresión',
+            'insult' => 'trato irrespetuoso',
+            'grit'   => 'trato irrespetuoso',
+            'amenaz' => 'intimidación',
+            'celular' => 'falta de atención al cliente',
+            'jugando' => 'distracción en el trabajo',
+            'no me hacia caso' => 'falta de atención al cliente',
+            'no me hacía caso' => 'falta de atención al cliente',
         ];
         foreach ($map as $needle => $label) {
-            if (mb_strpos($desc, $needle) !== false) {
+            if ($needle !== '' && mb_strpos($desc, $needle) !== false) {
                 $tipologia = $label;
                 break;
             }
         }
 
         // Campos con fallback legible
-        $folio       = $d['folio']               ?? 'N/A';
-        $tipoDen     = $d['tipo_denunciante']    ?? 'N/A';
-        $cat         = $d['categoria_nombre']    ?? 'Sin categoría asignada';
+        $folio       = $d['folio']               ?? 'Sin folio';
+        $tipoDen     = $d['tipo_denunciante']    ?? 'No especificado';
+        $cat         = $d['categoria_nombre']    ?? 'Sin categorizar';
         $subcat      = $d['subcategoria_nombre'] ?? 'N/A';
-        $depto       = $d['departamento_nombre'] ?? 'N/A';
-        $sucursal    = $d['sucursal_nombre']     ?? 'N/A';
-        $area        = $d['area_incidente']      ?? 'N/A';
-        $fechaInc    = $d['fecha_incidente']     ?? 'N/A';
-        $comoEnt     = $d['como_se_entero']      ?? 'N/A';
-        $denunciado  = $d['denunciar_a_alguien'] ?? 'N/A';
-        $descripcion = $d['descripcion']         ?? 'N/A';
+        $depto       = $d['departamento_nombre'] ?? 'No especificado';
+        $sucursal    = $d['sucursal_nombre']     ?? 'No especificada';
+        $area        = $d['area_incidente']      ?? 'área no especificada';
+        $fechaInc    = $d['fecha_incidente']     ?? 'fecha no especificada';
+        $comoEnt     = $d['como_se_entero']      ?? 'no especificado';
+        $denunciado  = $d['denunciar_a_alguien'] ?? 'persona no identificada';
+        $descripcion = $d['descripcion']         ?? 'Sin descripción';
 
-        $prompt  = "Caso real de denuncia en entorno laboral. Genera UNA SOLA propuesta de resolución, tipo plan operativo, ";
-        $prompt .= "con pasos concretos, responsables y tiempos. Evita teoría general.\n\n";
+        // Prompt natural y personal. Permite (opcional) hasta 3 bullets cortos si aporta.
+        $prompt = <<<TXT
+Te pido un consejo breve y natural (no un plan formal) sobre un caso real del trabajo. 
+Piensa como un compañero con experiencia que quiere ayudar sin burocracia.
 
-        $prompt .= "**Contexto del caso**\n";
-        $prompt .= "- Folio: {$folio}\n";
-        $prompt .= "- Tipo de denunciante: {$tipoDen} (posible tipología: {$tipologia})\n";
-        $prompt .= "- Categoría/Subcategoría (si existieran): {$cat} / {$subcat}\n";
-        $prompt .= "- Departamento: {$depto} | Sucursal: {$sucursal} | Área: {$area}\n";
-        $prompt .= "- Fecha del incidente: {$fechaInc}\n";
-        $prompt .= "- Cómo se enteró: {$comoEnt}\n";
-        $prompt .= "- Persona denunciada o involucrada (si aplica): {$denunciado}\n";
-        $prompt .= "- Descripción: \"{$descripcion}\"\n\n";
+Contexto:
+- Folio: {$folio}
+- Denunciante: {$tipoDen}
+- Sucursal/Área: {$sucursal} / {$area}
+- Departamento: {$depto}
+- Categoría/Subcategoría: {$cat} / {$subcat}
+- Fecha del incidente: {$fechaInc}
+- Cómo se enteró: {$comoEnt}
+- Persona involucrada: {$denunciado}
+- Tipología aproximada: {$tipologia}
+- Descripción de la persona: "{$descripcion}"
 
-        $prompt .= "**Entrega exactamente estas secciones, con bullets y verbos de acción; no agregues otras secciones:**\n";
-        $prompt .= "1) 0–24 horas (acciones inmediatas, responsables y tiempos)\n";
-        $prompt .= "2) 24–72 horas (investigación: evidencia específica del sitio: CCTV/pasillos/cocina, bitácoras, turnos; entrevistas en orden)\n";
-        $prompt .= "3) 3–7 días (decisión con criterios: corroborado / indicios / no corroborado; debidos procesos y sanciones posibles)\n";
-        $prompt .= "4) Medidas cautelares (separación de partes, reubicación temporal, suspensión preventiva pagada si aplica)\n";
-        $prompt .= "5) Aseguramiento de evidencia (qué solicitar, a quién y en qué ventana de tiempo)\n";
-        $prompt .= "6) Entrevistas (orden, guion breve, confidencialidad, registro)\n";
-        $prompt .= "7) Comunicación y no-represalias (mensajes internos neutros; canal para que el denunciante amplíe sin perder anonimato)\n";
-        $prompt .= "8) KPIs de seguimiento (2–4 métricas medibles y plazos)\n\n";
-
-        $prompt .= "**Reglas de estilo**\n";
-        $prompt .= "- Español neutro. Máximo 450–500 palabras.\n";
-        $prompt .= "- Una sola respuesta; nada de alternativas. Sin teoría ni párrafos vacíos. ";
-        $prompt .= "Si un dato falta, indica el paso igual con una asunción razonable.\n";
+Qué necesito exactamente:
+- Una sola respuesta, en tono humano y empático.
+- 1–2 párrafos claros con una sugerencia realista de qué podría hacerse.
+- Si agrega valor, incluye hasta 3 ideas puntuales como viñetas (máximo 3 bullets).
+- Evita pasos cronológicos, KPIs, secciones numeradas o lenguaje legal/burocrático.
+- Mantente breve (~160–220 palabras), español neutro.
+TXT;
 
         return $prompt;
     }
