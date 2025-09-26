@@ -146,6 +146,31 @@
                     <label for="descripcion-{{id}}" class="form-label">Descripción</label>
                     <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" rows="14" required>{{descripcion}}</textarea>
                 </div>
+
+                <!-- Botón / resultado Sugerencia IA -->
+                <div class="col-md-12 mt-3">
+                    <div id="iaBox-{{id}}" class="border rounded p-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0"><i class="fa fa-robot me-1"></i> Sugerencia de solución (IA)</h6>
+                            <div class="btn-group">
+                                <button type="button"
+                                    class="btn btn-outline-primary btn-sm btn-generar-ia"
+                                    data-id="{{id}}">
+                                    <i class="fa fa-magic me-1"></i> Generar con IA
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-secondary btn-sm btn-regenerar-ia d-none"
+                                    data-id="{{id}}">
+                                    <i class="fa fa-sync me-1"></i> Regenerar
+                                </button>
+                            </div>
+                        </div>
+                        <div id="iaResult-{{id}}" class="ia-result small text-muted">
+                            No hay sugerencia generada aún.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-md-4">
                     <label for="medio_recepcion-{{id}}" class="form-label">Canal de Recepción</label>
                     <select name="medio_recepcion" id="medio_recepcion-{{id}}" class="form-select select2" required>

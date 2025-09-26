@@ -1,3 +1,4 @@
+/* global Server, Handlebars, Dropzone, Swal */
 /**
  * DENUNCIAS
  */
@@ -8,6 +9,25 @@ let $modalCrearDenuncia;
 let dropzones = {};
 
 Dropzone.autoDiscover = false;
+
+// --- Polyfill serializeObject (por si no existe) ---
+if (typeof $.fn.serializeObject !== 'function') {
+    $.fn.serializeObject = function () {
+        const o = {};
+        const a = this.serializeArray();
+        $.each(a, function () {
+            if (o[this.name] !== undefined) {
+                if (!Array.isArray(o[this.name])) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+}
 
 $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
@@ -151,8 +171,8 @@ $(function () {
                     // Reset select2
                     $frm.find('.select2').val(null).trigger('change', true);
                     // Reset Dropzone
-                    if (dropzones['archivosAdjuntos']) {
-                        dropzones['archivosAdjuntos'].removeAllFiles(true);
+                    if (dropzones['dropzoneArchivos']) {
+                        dropzones['dropzoneArchivos'].removeAllFiles(true);
                     }
                     // Reset radios y secciones
                     $frm.find('input[name="anonimo"]').prop('disabled', false);
@@ -165,6 +185,8 @@ $(function () {
                     if (xhr.status === 409) {
                         const response = JSON.parse(xhr.responseText);
                         showToast(response.message, 'error');
+                    } else {
+                        showToast('Ocurrió un error al guardar la denuncia.', 'error');
                     }
                 }
             });
@@ -185,7 +207,7 @@ $(function () {
         // Reinicializar select2
         $form.find('.select2').val(null).trigger('change');
         // Resetear los archivos subidos en Dropzone
-        if (dropzones['archivosAdjuntos']) dropzones['archivosAdjuntos'].removeAllFiles(true);
+        if (dropzones['dropzoneArchivos']) dropzones['dropzoneArchivos'].removeAllFiles(true);
         // Asegurar radios habilitados y ocultar info
         $form.find('input[name="anonimo"]').prop('disabled', false);
         $('#infoAdicional').hide();
@@ -195,7 +217,7 @@ $(function () {
 
     // Funcionalidades para los botones de la tabla
     window.operateEvents = {
-        // Funcionalidad para el botón de eliminar
+        // Eliminar
         'click .remove': function (e, value, row) {
             confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
                 if (result.isConfirmed) {
@@ -214,11 +236,11 @@ $(function () {
             });
         },
 
-        // Funcionalidad para el botón de ver detalle
+        // Ver detalle
         'click .view-detail': function (e, value, row) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
-                const fechaIncidente = operateFormatterFecha(data.fecha_incidente);
+                const fechaIncidente = data?.fecha_incidente ? formatoFechaHora(data.fecha_incidente) : 'N/A';
 
                 const getFileIcon = filename => {
                     const ext = filename.split('.').pop().toLowerCase();
@@ -329,7 +351,7 @@ $(function () {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${data.seguimientos
+                                        ${(data.seguimientos || [])
                                             .map(
                                                 seg => `
                                             <tr>
@@ -366,7 +388,7 @@ $(function () {
             });
         },
 
-        // Funcionalidad para el botón de cambiar estatus
+        // Cambiar estatus
         'click .change-status': function (e, value, row) {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
                 let opciones = '';
@@ -414,6 +436,7 @@ $(function () {
             });
         },
 
+        // Ver comentarios
         'click .view-comments': function (e, value, row) {
             cargarComentarios(row.id);
             $('#id_denuncia').val(row.id);
@@ -460,11 +483,11 @@ $(function () {
 
         $.post(`${Server}comentarios/guardar`, formData, function () {
             cargarComentarios($('#id_denuncia').val());
-            $('#contenido').val('');
+            $('#contenidoComentario').val('');
             showToast('Comentario agregado exitosamente.', 'success');
             $frm[0].reset();
         }).fail(function (err) {
-            const message = err.responseJSON.message;
+            const message = err.responseJSON?.message || 'No se pudo agregar el comentario.';
             showToast(message, 'error');
         });
     });
@@ -641,6 +664,8 @@ $(function () {
                                 if (xhr.status === 409) {
                                     const response = JSON.parse(xhr.responseText);
                                     showToast(response.message, 'error');
+                                } else {
+                                    showToast('Ocurrió un error al actualizar la denuncia.', 'error');
                                 }
                             }
                         });
@@ -678,6 +703,9 @@ $(function () {
                     const formData = new FormData(this);
                     actualizarAnexos(formData, row.id);
                 });
+
+                // ===== IA: cargar sugerencia si existe =====
+                iaLoadIfExists(row.id);
             });
         }
     });
@@ -719,7 +747,7 @@ function initializeDropzone(elementId, formId) {
                 formElement.append(`<input type="hidden" name="archivos[]" value="assets/denuncias/${response.filename}">`);
             });
             this.on('removedfile', function (file) {
-                const name = file.upload.filename;
+                const name = file.upload?.filename || file.name;
                 formElement.find(`input[value="assets/denuncias/${name}"]`).remove();
             });
         }
@@ -957,4 +985,124 @@ $(document).on('click', '.btn-eliminar-comentario', function () {
             });
         }
     });
+});
+
+/**
+ * ===== IA: helpers UI =====
+ */
+function iaShowLoading($box, msg) {
+    const html = `
+    <div class="d-flex align-items-center">
+      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+      <span>${msg || 'Generando sugerencia...'}</span>
+    </div>`;
+    $box.html(html).removeClass('text-muted');
+}
+
+function iaRenderMarkdown(text) {
+    // Conversión simple para **negritas** y saltos de línea
+    if (!text) return '';
+    let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    return html;
+}
+
+function iaRenderResult(id, data, wasRegenerated = false) {
+    const $res = $(`#iaResult-${id}`);
+    const $btnGen = $(`.btn-generar-ia[data-id="${id}"]`);
+    const $btnRegen = $(`.btn-regenerar-ia[data-id="${id}"]`);
+
+    if (data && data.sugerencia_generada) {
+        $res.removeClass('text-muted').html(iaRenderMarkdown(data.sugerencia_generada));
+        $btnGen.addClass('d-none');
+        $btnRegen.removeClass('d-none');
+        if (wasRegenerated) Swal.fire('Listo', 'Sugerencia regenerada.', 'success');
+    } else if (data && data.sugerencia) {
+        // respuesta de POST/PUT directa
+        $res.removeClass('text-muted').html(iaRenderMarkdown(data.sugerencia));
+        $btnGen.addClass('d-none');
+        $btnRegen.removeClass('d-none');
+        if (wasRegenerated) Swal.fire('Listo', 'Sugerencia regenerada.', 'success');
+    } else {
+        $res.addClass('text-muted').text('No hay sugerencia generada aún.');
+        $btnGen.removeClass('d-none');
+        $btnRegen.addClass('d-none');
+    }
+}
+
+/**
+ * Carga sugerencia existente (si hay) cuando se expande la fila.
+ * GET  /api/denuncias/{id}/sugerencia-ia
+ *    -> { success: true, sugerencia: { sugerencia_generada: "..."} }  ó  { success: false }
+ */
+function iaLoadIfExists(idDenuncia) {
+    const $res = $(`#iaResult-${idDenuncia}`);
+    iaShowLoading($res, 'Buscando sugerencia existente...');
+    $.get(`${Server}api/denuncias/${idDenuncia}/sugerencia-ia`)
+        .done(resp => {
+            if (resp.success && resp.sugerencia) {
+                iaRenderResult(idDenuncia, resp.sugerencia);
+            } else {
+                iaRenderResult(idDenuncia, null);
+            }
+        })
+        .fail(() => {
+            iaRenderResult(idDenuncia, null);
+        });
+}
+
+/**
+ * Generar con IA
+ * POST /api/denuncias/{id}/sugerencia-ia
+ *    -> { success: true, sugerencia: "..." }
+ */
+$(document).on('click', '.btn-generar-ia', function (e) {
+    e.preventDefault();
+    const id = $(this).data('id');
+    const $res = $(`#iaResult-${id}`);
+    iaShowLoading($res, 'Generando sugerencia con IA...');
+
+    $.post(`${Server}api/denuncias/${id}/sugerencia-ia`)
+        .done(resp => {
+            if (resp.success) {
+                iaRenderResult(id, resp);
+            } else {
+                Swal.fire('Aviso', resp.message || 'No se pudo generar la sugerencia.', 'warning');
+                iaRenderResult(id, null);
+            }
+        })
+        .fail(xhr => {
+            console.error(xhr);
+            Swal.fire('Error', 'Error al generar la sugerencia.', 'error');
+            iaRenderResult(id, null);
+        });
+});
+
+/**
+ * Regenerar con IA
+ * PUT /api/denuncias/{id}/sugerencia-ia/regenerar
+ *    -> { success: true, sugerencia: "..." }
+ */
+$(document).on('click', '.btn-regenerar-ia', function (e) {
+    e.preventDefault();
+    const id = $(this).data('id');
+    const $res = $(`#iaResult-${id}`);
+    iaShowLoading($res, 'Regenerando sugerencia con IA...');
+
+    $.ajax({
+        url: `${Server}api/denuncias/${id}/sugerencia-ia/regenerar`,
+        type: 'PUT'
+    })
+        .done(resp => {
+            if (resp.success) {
+                iaRenderResult(id, resp, true);
+            } else {
+                Swal.fire('Aviso', resp.message || 'No se pudo regenerar la sugerencia.', 'warning');
+                iaRenderResult(id, null);
+            }
+        })
+        .fail(xhr => {
+            console.error(xhr);
+            Swal.fire('Error', 'Error al regenerar la sugerencia.', 'error');
+            iaRenderResult(id, null);
+        });
 });
