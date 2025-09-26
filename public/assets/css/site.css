@@ -257,3 +257,17 @@ label.error {
 .badge {
   white-space: break-spaces;
 }
+/* overlay para el bloque de IA */
+.ia-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+[id^='iaBox-'] {
+  position: relative;
+}

@@ -1086,7 +1086,14 @@ $(document).on('click', '.btn-regenerar-ia', function (e) {
     e.preventDefault();
     const id = $(this).data('id');
     const $res = $(`#iaResult-${id}`);
+
     iaShowLoading($res, 'Regenerando sugerencia con IA...');
+    iaBusyOn(id, 'Regenerando…');
+
+    // aviso si tarda (opcional)
+    const slowTimer = setTimeout(() => {
+        showToast('La IA sigue trabajando…', 'info');
+    }, 8000);
 
     $.ajax({
         url: `${Server}api/denuncias/${id}/sugerencia-ia/regenerar`,
@@ -1104,5 +1111,37 @@ $(document).on('click', '.btn-regenerar-ia', function (e) {
             console.error(xhr);
             Swal.fire('Error', 'Error al regenerar la sugerencia.', 'error');
             iaRenderResult(id, null);
+        })
+        .always(() => {
+            clearTimeout(slowTimer);
+            iaBusyOff(id);
         });
 });
+
+function iaBusyOn(id, msg) {
+    const $box = $(`#iaBox-${id}`);
+    if (!$box.find('.ia-overlay').length) {
+        $box.append(`
+      <div class="ia-overlay">
+        <div class="spinner-border" role="status" aria-hidden="true"></div>
+        <small class="mt-2">${msg || 'Procesando...'}</small>
+      </div>
+    `);
+    }
+    // deshabilita y pone spinner en botones
+    $(`.btn-generar-ia[data-id="${id}"], .btn-regenerar-ia[data-id="${id}"]`).each(function () {
+        const $b = $(this);
+        if (!$b.data('origHtml')) $b.data('origHtml', $b.html());
+        $b.prop('disabled', true).html(`<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${$b.text().trim()}`);
+    });
+}
+
+function iaBusyOff(id) {
+    $(`#iaBox-${id} .ia-overlay`).remove();
+    $(`.btn-generar-ia[data-id="${id}"], .btn-regenerar-ia[data-id="${id}"]`).each(function () {
+        const $b = $(this);
+        const orig = $b.data('origHtml');
+        if (orig) $b.html(orig);
+        $b.prop('disabled', false);
+    });
+}
