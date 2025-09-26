@@ -148,11 +148,15 @@
                         <textarea class="form-control" id="descripcion-{{id}}" name="descripcion" rows="14" required>{{descripcion}}</textarea>
                     </div>
 
-                    <!-- Botón / resultado Sugerencia IA -->
+                    <!-- ======= Bloque IA: Sugerencia / Edición / Publicación ======= -->
                     <div class="col-md-12 mt-3">
                         <div id="iaBox-{{id}}" class="border rounded p-3 bg-light">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0"><i class="fa fa-robot me-1"></i> Sugerencia de solución (IA)</h6>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                                <h6 class="mb-0">
+                                    <i class="fa fa-robot me-1"></i> Sugerencia de solución (IA)
+                                    <span class="badge bg-secondary ms-2 ia-estado" id="iaEstado-{{id}}">sin generar</span>
+                                    <span class="badge bg-info text-dark ms-1 d-none ia-publicado" id="iaPublicado-{{id}}">publicado</span>
+                                </h6>
                                 <div class="btn-group">
                                     <button type="button"
                                         class="btn btn-outline-primary btn-sm btn-generar-ia"
@@ -164,13 +168,54 @@
                                         data-id="{{id}}">
                                         <i class="fa fa-sync me-1"></i> Regenerar
                                     </button>
+                                    <button type="button"
+                                        class="btn btn-outline-dark btn-sm btn-ver-prompt-ia d-none"
+                                        data-id="{{id}}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalPromptIA">
+                                        <i class="fa fa-eye me-1"></i> Ver Prompt
+                                    </button>
                                 </div>
                             </div>
-                            <div id="iaResult-{{id}}" class="ia-result small text-muted">
+
+                            <!-- Metadatos -->
+                            <div class="small text-muted mb-2 ia-meta d-none" id="iaMeta-{{id}}">
+                                <span class="me-2"><i class="fa fa-cube me-1"></i><strong>Modelo:</strong> <span class="ia-meta-modelo" id="iaMetaModelo-{{id}}">-</span></span>
+                                <span class="me-2"><i class="fa fa-coins me-1"></i><strong>Tokens:</strong> <span class="ia-meta-tokens" id="iaMetaTokens-{{id}}">0</span></span>
+                                <span class="me-2"><i class="fa fa-dollar-sign me-1"></i><strong>Costo aprox:</strong> $<span class="ia-meta-costo" id="iaMetaCosto-{{id}}">0.000000</span></span>
+                                <span class="me-2"><i class="fa fa-stopwatch me-1"></i><strong>Tiempo:</strong> <span class="ia-meta-tiempo" id="iaMetaTiempo-{{id}}">0.000</span>s</span>
+                                <span class="me-2 d-none"><strong>ID Sug:</strong> <span class="ia-id" id="iaId-{{id}}"></span></span>
+                            </div>
+
+                            <!-- Resultado actual (lectura) -->
+                            <div id="iaResult-{{id}}" class="ia-result small text-muted border bg-white p-3 rounded" style="min-height: 80px;">
                                 No hay sugerencia generada aún.
+                            </div>
+
+                            <!-- Editor de agente (oculto hasta presionar Editar) -->
+                            <div class="mt-2 d-none" id="iaEditorWrap-{{id}}">
+                                <label class="form-label small text-muted">Edición del agente</label>
+                                <textarea id="iaEdit-{{id}}" class="form-control" rows="8" placeholder="Ajusta aquí la sugerencia antes de publicarla al cliente..."></textarea>
+                            </div>
+
+                            <!-- Acciones de edición / publicación -->
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm d-none btn-editar-ia" data-id="{{id}}">
+                                    <i class="fa fa-pen me-1"></i> Editar
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm d-none btn-guardar-edicion-ia" data-id="{{id}}">
+                                    <i class="fa fa-save me-1"></i> Guardar edición
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm d-none btn-publicar-ia" data-id="{{id}}" data-publicar="1">
+                                    <i class="fa fa-upload me-1"></i> Publicar al cliente
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm d-none btn-retirar-ia" data-id="{{id}}" data-publicar="0">
+                                    <i class="fa fa-eye-slash me-1"></i> Retirar de cliente
+                                </button>
                             </div>
                         </div>
                     </div>
+                    <!-- ======= /Bloque IA ======= -->
 
                     <div class="col-md-4">
                         <label for="medio_recepcion-{{id}}" class="form-label">Canal de Recepción</label>
@@ -499,6 +544,27 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Prompt IA -->
+<div class="modal fade" id="modalPromptIA" tabindex="-1" aria-labelledby="modalPromptIALabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-terminal me-1"></i> Prompt usado por IA</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <pre class="bg-light p-3 rounded small" id="promptIAContent" style="white-space: pre-wrap; min-height: 120px;">Cargando...</pre>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnCopiarPrompt">
+                    <i class="fa fa-copy me-1"></i> Copiar
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -523,5 +589,26 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4/dist/fancybox.umd.js"></script>
+
+<script>
+    /* Helpers UI mínimos para el modal de prompt (el resto va en assets/js/denuncias.js) */
+    document.addEventListener('click', function(e) {
+        // Copiar prompt
+        if (e.target && e.target.id === 'btnCopiarPrompt') {
+            const pre = document.getElementById('promptIAContent');
+            if (!pre) return;
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(pre);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            try {
+                document.execCommand('copy');
+            } catch (_) {}
+            sel.removeAllRanges();
+        }
+    });
+</script>
+
 <script src="<?= base_url('assets/js/denuncias.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

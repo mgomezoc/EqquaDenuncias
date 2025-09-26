@@ -6,22 +6,43 @@ use Exception;
 
 class IAService
 {
-    private $apiKey;
-    private $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    private string $apiKey;
+    private string $apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+    // Config .env
+    private string $modelo;
+    private int    $maxTokens;
+    private float  $temperature;
+    private int    $timeout;
+
+    // Flags de log
+    private bool $logRequests;
+    private bool $logResponses;
+    private bool $logPrompts;
 
     public function __construct()
     {
-        $this->apiKey = getenv('OPENAI_API_KEY');
-
+        $this->apiKey = (string) getenv('OPENAI_API_KEY');
         if (!$this->apiKey) {
-            // Log explícito si falta la API key
             log_message('error', '[IAService] OPENAI_API_KEY no configurada en .env');
-            throw new Exception('API Key de OpenAI no configurada en el archivo .env');
+            throw new Exception('API Key de OpenAI no configurada');
         }
+
+        // Lee configuración desde .env con defaults razonables
+        $this->modelo      = (string) (getenv('IA_MODELO_USADO') ?: 'gpt-4o');
+        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 800);
+        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.4);
+        $this->timeout     = (int)    (getenv('IA_TIMEOUT_SEGUNDOS') ?: 30);
+
+        // Flags de logging
+        $this->logRequests  = $this->boolEnv('IA_LOG_REQUESTS', true);
+        $this->logResponses = $this->boolEnv('IA_LOG_RESPONSES', false);
+        $this->logPrompts   = $this->boolEnv('IA_LOG_PROMPTS', true);
     }
 
     /**
-     * Genera una sugerencia de solución (una sola respuesta, accionable)
+     * Genera una sugerencia de solución y devuelve:
+     * - success, sugerencia, tokens_usados, prompt_usado
      */
     public function generarSugerenciaSolucion(array $denunciaData): array
     {
@@ -29,35 +50,56 @@ class IAService
             $prompt = $this->construirPrompt($denunciaData);
 
             $postData = [
-                'model' => 'gpt-4o',
+                'model' => $this->modelo,
                 'messages' => [
                     [
-                        'role' => 'system',
+                        'role'    => 'system',
                         'content' => 'Eres un consultor senior en RRHH, seguridad y compliance. Entregas planes accionables, claros, cronológicos y medibles. Evitas teoría general; das instrucciones concretas aplicables en el sitio de trabajo.'
                     ],
                     [
-                        'role' => 'user',
+                        'role'    => 'user',
                         'content' => $prompt
                     ]
                 ],
-                'max_tokens' => 800,
-                'temperature' => 0.4
+                'max_tokens'  => $this->maxTokens,
+                'temperature' => $this->temperature,
             ];
 
-            log_message('debug', '[IAService] Solicitando a OpenAI. Campos denuncia: {keys}', ['keys' => implode(',', array_keys($denunciaData))]);
+            if ($this->logRequests) {
+                log_message(
+                    'debug',
+                    '[IAService] Enviando a OpenAI: model:{m} max_tokens:{mt} temp:{t}',
+                    ['m' => $this->modelo, 'mt' => $this->maxTokens, 't' => $this->temperature]
+                );
+            }
+            if ($this->logPrompts) {
+                log_message('debug', '[IAService] Prompt usado (truncado): {p}', [
+                    'p' => $this->truncateForLog($prompt, 2000)
+                ]);
+            }
 
             $response = $this->realizarPeticionAPI($postData);
 
-            if ($response && isset($response['choices'][0]['message']['content'])) {
-                $sugerencia   = trim($response['choices'][0]['message']['content']);
-                $tokensUsados = (int)($response['usage']['total_tokens'] ?? 0);
+            if ($this->logResponses) {
+                log_message('debug', '[IAService] Respuesta OpenAI (truncada): {r}', [
+                    'r' => $this->truncateForLog(json_encode($response), 2000)
+                ]);
+            }
 
-                log_message('debug', '[IAService] Respuesta OpenAI tokens:{t} len:{l}', ['t' => $tokensUsados, 'l' => strlen($sugerencia)]);
+            if ($response && isset($response['choices'][0]['message']['content'])) {
+                $sugerencia   = trim((string) $response['choices'][0]['message']['content']);
+                $tokensUsados = (int) ($response['usage']['total_tokens'] ?? 0);
+
+                log_message('debug', '[IAService] OK tokens:{t} len:{l}', [
+                    't' => $tokensUsados,
+                    'l' => strlen($sugerencia)
+                ]);
 
                 return [
                     'success'       => true,
                     'sugerencia'    => $sugerencia,
-                    'tokens_usados' => $tokensUsados
+                    'tokens_usados' => $tokensUsados,
+                    'prompt_usado'  => $prompt,
                 ];
             }
 
@@ -70,24 +112,23 @@ class IAService
     }
 
     /**
-     * Construye un prompt que obliga a una ÚNICA respuesta, tipo plan accionable.
-     * Usa solo los campos que ya tienes en la BD/joins actuales.
+     * Construye un prompt que obliga a UNA sola respuesta, estilo plan accionable.
      */
     private function construirPrompt(array $d): string
     {
-        // Inferencia simple de tipología (no se guarda en BD, solo para enriquecer el prompt)
+        // Inferencia simple de tipología
         $desc = mb_strtolower($d['descripcion'] ?? '');
         $tipologia = 'incidente laboral';
         $map = [
             'nalgad' => 'acoso sexual físico',
-            'tocó' => 'acoso sexual físico',
-            'toque' => 'acoso sexual físico',
+            'tocó'   => 'acoso sexual físico',
+            'toque'  => 'acoso sexual físico',
             'manose' => 'acoso sexual físico',
-            'golpe' => 'agresión física',
-            'empuj' => 'agresión física',
+            'golpe'  => 'agresión física',
+            'empuj'  => 'agresión física',
             'insult' => 'acoso verbal',
-            'grit' => 'acoso verbal',
-            'amenaz' => 'amenaza'
+            'grit'   => 'acoso verbal',
+            'amenaz' => 'amenaza',
         ];
         foreach ($map as $needle => $label) {
             if (mb_strpos($desc, $needle) !== false) {
@@ -97,19 +138,18 @@ class IAService
         }
 
         // Campos con fallback legible
-        $folio         = $d['folio']               ?? 'N/A';
-        $tipoDen       = $d['tipo_denunciante']    ?? 'N/A';
-        $cat           = $d['categoria_nombre']    ?? 'Sin categoría asignada';
-        $subcat        = $d['subcategoria_nombre'] ?? 'N/A';
-        $depto         = $d['departamento_nombre'] ?? 'N/A';
-        $sucursal      = $d['sucursal_nombre']     ?? 'N/A';
-        $area          = $d['area_incidente']      ?? 'N/A';
-        $fechaInc      = $d['fecha_incidente']     ?? 'N/A';
-        $comoEnt       = $d['como_se_entero']      ?? 'N/A';
-        $denunciado    = $d['denunciar_a_alguien'] ?? 'N/A';
-        $descripcion   = $d['descripcion']         ?? 'N/A';
+        $folio       = $d['folio']               ?? 'N/A';
+        $tipoDen     = $d['tipo_denunciante']    ?? 'N/A';
+        $cat         = $d['categoria_nombre']    ?? 'Sin categoría asignada';
+        $subcat      = $d['subcategoria_nombre'] ?? 'N/A';
+        $depto       = $d['departamento_nombre'] ?? 'N/A';
+        $sucursal    = $d['sucursal_nombre']     ?? 'N/A';
+        $area        = $d['area_incidente']      ?? 'N/A';
+        $fechaInc    = $d['fecha_incidente']     ?? 'N/A';
+        $comoEnt     = $d['como_se_entero']      ?? 'N/A';
+        $denunciado  = $d['denunciar_a_alguien'] ?? 'N/A';
+        $descripcion = $d['descripcion']         ?? 'N/A';
 
-        // Prompt: una sola propuesta de resolución, con secciones exigidas
         $prompt  = "Caso real de denuncia en entorno laboral. Genera UNA SOLA propuesta de resolución, tipo plan operativo, ";
         $prompt .= "con pasos concretos, responsables y tiempos. Evita teoría general.\n\n";
 
@@ -148,23 +188,23 @@ class IAService
     {
         $headers = [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . $this->apiKey
+            'Authorization: Bearer ' . $this->apiKey,
         ];
 
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL => $this->apiUrl,
+            CURLOPT_URL            => $this->apiUrl,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($postData),
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_SSL_VERIFYPEER => true
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($postData),
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_TIMEOUT        => $this->timeout,
+            CURLOPT_SSL_VERIFYPEER => true,
         ]);
 
-        $response  = curl_exec($ch);
-        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error     = curl_error($ch);
+        $response = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error    = curl_error($ch);
         curl_close($ch);
 
         if ($error) {
@@ -173,15 +213,18 @@ class IAService
         }
 
         if ($httpCode !== 200) {
-            log_message('error', '[IAService] HTTP {code} cuerpo:{body}', ['code' => $httpCode, 'body' => $response]);
-            throw new Exception('Error HTTP: ' . $httpCode . ' - ' . $response);
+            log_message('error', '[IAService] HTTP {code} body:{body}', [
+                'code' => $httpCode,
+                'body' => $this->truncateForLog((string) $response, 2000),
+            ]);
+            throw new Exception('Error HTTP: ' . $httpCode);
         }
 
-        return json_decode($response, true);
+        return json_decode((string) $response, true);
     }
 
     /**
-     * Validación mínima: con que haya descripción basta (flujo público puede no tener categoría aún)
+     * Validación mínima: basta con descripción.
      */
     public function validarDatosMinimos(array $data): bool
     {
@@ -189,7 +232,7 @@ class IAService
     }
 
     /**
-     * Estimación costo por tokens (gpt-4o referencia)
+     * Estimación de costo por tokens (gpt-4o referencia).
      */
     public function calcularCostoEstimado(int $tokens): float
     {
@@ -204,5 +247,25 @@ class IAService
         $costoOutput = ($tokensOutput / 1_000_000) * $precioOutput;
 
         return $costoInput + $costoOutput;
+    }
+
+    // ========= Helpers =========
+
+    private function boolEnv(string $key, bool $default = false): bool
+    {
+        $val = getenv($key);
+        if ($val === false || $val === null || $val === '') {
+            return $default;
+        }
+        $val = strtolower((string) $val);
+        return in_array($val, ['1', 'true', 'on', 'yes'], true);
+    }
+
+    private function truncateForLog(string $text, int $maxLen = 1000): string
+    {
+        if (mb_strlen($text) <= $maxLen) {
+            return $text;
+        }
+        return mb_substr($text, 0, $maxLen) . '…(truncado)';
     }
 }
