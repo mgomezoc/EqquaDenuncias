@@ -19,45 +19,44 @@ $routes->group('', function ($routes) {
     $routes->get('c/(:segment)/seguimiento-denuncia', 'Publico::seguimientoDenuncia/$1');
 
     // Rutas públicas para obtener categorías y subcategorías
-    $routes->get('categorias/listarSubcategorias', 'CategoriasController::listarSubcategorias'); // Obtener subcategorías según la categoría
+    $routes->get('categorias/listarSubcategorias', 'CategoriasController::listarSubcategorias');
 
     // Rutas públicas para obtener sucursales y departamentos
-    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'SucursalesController::obtenerSucursalesPorCliente/$1'); // Obtener sucursales de un cliente
-    $routes->get('departamentos/listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1'); // Listar departamentos según sucursal
+    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'SucursalesController::obtenerSucursalesPorCliente/$1');
+    $routes->get('departamentos/listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1');
 
     // Ruta pública para guardar denuncias
-    $routes->post('denuncias/guardar-public', 'Publico::guardarDenunciaPublica'); // Guardar denuncia pública
+    $routes->post('denuncias/guardar-public', 'Publico::guardarDenunciaPublica');
 
     // Ruta pública para subir archivos adjuntos usando Dropzone
-    $routes->post('denuncias/subir-anexo-public', 'Publico::subirAnexoPublico'); // Subir anexos públicos
+    $routes->post('denuncias/subir-anexo-public', 'Publico::subirAnexoPublico');
 
-    // Ruta para la consulta de seguimiento de denuncias
-    $routes->get('denuncias/consultar', 'Publico::consultarDenuncia'); // Nueva ruta para buscar la denuncia por folio
+    // Consulta de seguimiento de denuncias
+    $routes->get('denuncias/consultar', 'Publico::consultarDenuncia');
 });
 
 
 /**
  * Rutas para la autenticación y gestión de sesión
  */
-$routes->get('/', 'Home::index', ['filter' => 'authFilter']); // Ruta principal, autenticada
-$routes->get('/login', 'Auth::login'); // Mostrar formulario de login
-$routes->post('/auth/loginSubmit', 'Auth::loginSubmit'); // Procesar login
-$routes->get('/logout', 'Auth::logout'); // Cerrar sesión
-$routes->get('/register', 'Auth::register'); // Mostrar formulario de registro
-$routes->post('/auth/registerSubmit', 'Auth::registerSubmit'); // Procesar registro
-$routes->get('/noautorizado', 'Error::noautorizado'); // Página de error para accesos no autorizados
+$routes->get('/', 'Home::index', ['filter' => 'authFilter']);
+$routes->get('/login', 'Auth::login');
+$routes->post('/auth/loginSubmit', 'Auth::loginSubmit');
+$routes->get('/logout', 'Auth::logout');
+$routes->get('/register', 'Auth::register');
+$routes->post('/auth/registerSubmit', 'Auth::registerSubmit');
+$routes->get('/noautorizado', 'Error::noautorizado');
 
-$routes->get('/forgot-password', 'Auth::forgotPassword'); // Mostrar formulario de recuperación de contraseña
-$routes->post('/forgot-password-submit', 'Auth::forgotPasswordSubmit'); // Procesar solicitud de recuperación
-$routes->get('/reset-password/(:any)', 'Auth::resetPassword/$1'); // Mostrar formulario para restablecer la contraseña
-$routes->post('/reset-password-submit', 'Auth::resetPasswordSubmit'); // Procesar nueva contraseña
+$routes->get('/forgot-password', 'Auth::forgotPassword');
+$routes->post('/forgot-password-submit', 'Auth::forgotPasswordSubmit');
+$routes->get('/reset-password/(:any)', 'Auth::resetPassword/$1');
+$routes->post('/reset-password-submit', 'Auth::resetPasswordSubmit');
 
 
 /**
  * Rutas para el dashboard
- * Accesible para todos los usuarios autenticados
  */
-$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']); // Dashboard principal
+$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']);
 $routes->post('/dashboard/filtrar', 'DashboardController::filtrar');
 $routes->post('/dashboard/getDenunciasPorAnio', 'DashboardController::getDenunciasPorAnio');
 $routes->post('dashboard/getSubcategoriasPorCategoria', 'DashboardController::getSubcategoriasPorCategoria');
@@ -65,26 +64,23 @@ $routes->post('dashboard/getCategoriasResumen', 'DashboardController::getCategor
 $routes->post('dashboard/getResumenCategoriasConFiltros', 'DashboardController::getResumenCategoriasConFiltros');
 
 
-
 /**
  * Grupo de rutas accesibles solo por ADMIN y otros roles específicos
- * Usuarios autenticados con roles ADMIN, CLIENTE, AGENTE, SUPERVISOR_CALIDAD
  */
 $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALIDAD'], function ($routes) {
-    //Configuración
-    $routes->get('configuracion', 'ConfiguracionController::index', ['filter' => 'authFilter']); // Ver la configuración del usuario
-    $routes->post('configuracion/actualizar', 'ConfiguracionController::actualizar', ['filter' => 'authFilter']); // Actualizar contraseña
+    // Configuración
+    $routes->get('configuracion', 'ConfiguracionController::index', ['filter' => 'authFilter']);
+    $routes->post('configuracion/actualizar', 'ConfiguracionController::actualizar', ['filter' => 'authFilter']);
 
-
-    // Ruta para la página de administración
+    // Admin
     $routes->get('/admin', 'Admin::index');
 
-    // Gestión de reportes de denuncias
+    // Reportes
     $routes->group('reportes', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
         $routes->get('/', 'ReportesController::index');
         $routes->post('listar', 'ReportesController::listar');
         $routes->post('exportarCSV', 'ReportesController::exportarCSV');
-        $routes->post('eliminarDenuncia/(:num)', 'ReportesController::eliminarDenuncia/$1'); // Ruta para 
+        $routes->post('eliminarDenuncia/(:num)', 'ReportesController::eliminarDenuncia/$1');
 
         $routes->get('cliente', 'ReportesController::cliente');
         $routes->post('listarParaCliente', 'ReportesController::listarParaCliente');
@@ -92,172 +88,170 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
 
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
 
-
-    // Gestión de usuarios
+    // Usuarios
     $routes->group('usuarios', function ($routes) {
-        $routes->get('/', 'UsuariosController::index'); // Listar usuarios
-        $routes->get('listar', 'UsuariosController::listar'); // API para listar usuarios
-        $routes->post('guardar', 'UsuariosController::guardar'); // Guardar/crear usuario
-        $routes->get('obtener/(:num)', 'UsuariosController::obtener/$1'); // Obtener usuario por ID
-        $routes->post('eliminar/(:num)', 'UsuariosController::eliminar/$1'); // Eliminar usuario por ID
-        $routes->post('validarUnico', 'UsuariosController::validarUnico'); // Validar unicidad de usuario
+        $routes->get('/', 'UsuariosController::index');
+        $routes->get('listar', 'UsuariosController::listar');
+        $routes->post('guardar', 'UsuariosController::guardar');
+        $routes->get('obtener/(:num)', 'UsuariosController::obtener/$1');
+        $routes->post('eliminar/(:num)', 'UsuariosController::eliminar/$1');
+        $routes->post('validarUnico', 'UsuariosController::validarUnico');
+        $routes->get('(:num)/tipos-denunciante', 'UsuariosController::tiposDenunciante/$1');
     });
 
-    // Gestión de clientes
+    // Clientes
     $routes->group('clientes', function ($routes) {
-        $routes->get('/', 'ClientesController::index'); // Listar clientes
-        $routes->get('listar', 'ClientesController::listar'); // API para listar clientes
-        $routes->post('guardar', 'ClientesController::guardar'); // Guardar/crear cliente
-        $routes->get('obtener/(:num)', 'ClientesController::obtener/$1'); // Obtener cliente por ID
-        $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1'); // Eliminar cliente por ID
-        $routes->post('subirImagen', 'ClientesController::subirImagen'); // Subir imagen del cliente
-        $routes->post('validarUnico', 'ClientesController::validarUnico'); // Validar unicidad de cliente
+        $routes->get('/', 'ClientesController::index');
+        $routes->get('listar', 'ClientesController::listar');
+        $routes->post('guardar', 'ClientesController::guardar');
+        $routes->get('obtener/(:num)', 'ClientesController::obtener/$1');
+        $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1');
+        $routes->post('subirImagen', 'ClientesController::subirImagen');
+        $routes->post('validarUnico', 'ClientesController::validarUnico');
     });
 
-    // Gestión de categorías y subcategorías de denuncias
+    // Categorías
     $routes->group('categorias', function ($routes) {
-        $routes->get('/', 'CategoriasController::index'); // Listar categorías
-        $routes->get('listarCategorias', 'CategoriasController::listarCategorias'); // API para listar categorías
-        $routes->get('listarSubcategorias', 'CategoriasController::listarSubcategorias'); // API para listar subcategorías
-        $routes->get('listarCategoriasYSubcategorias', 'CategoriasController::listarCategoriasYSubcategorias'); // Listar todo
-        $routes->post('guardarCategoria', 'CategoriasController::guardarCategoria'); // Guardar categoría
-        $routes->post('guardarSubcategoria', 'CategoriasController::guardarSubcategoria'); // Guardar subcategoría
-        $routes->post('eliminarCategoria/(:num)', 'CategoriasController::eliminarCategoria/$1'); // Eliminar categoría
-        $routes->post('eliminarSubcategoria/(:num)', 'CategoriasController::eliminarSubcategoria/$1'); // Eliminar subcategoría
+        $routes->get('/', 'CategoriasController::index');
+        $routes->get('listarCategorias', 'CategoriasController::listarCategorias');
+        $routes->get('listarSubcategorias', 'CategoriasController::listarSubcategorias');
+        $routes->get('listarCategoriasYSubcategorias', 'CategoriasController::listarCategoriasYSubcategorias');
+        $routes->post('guardarCategoria', 'CategoriasController::guardarCategoria');
+        $routes->post('guardarSubcategoria', 'CategoriasController::guardarSubcategoria');
+        $routes->post('eliminarCategoria/(:num)', 'CategoriasController::eliminarCategoria/$1');
+        $routes->post('eliminarSubcategoria/(:num)', 'CategoriasController::eliminarSubcategoria/$1');
     });
 
-    // Gestión de sucursales
+    // Sucursales
     $routes->group('sucursales', function ($routes) {
-        $routes->get('/', 'SucursalesController::index'); // Listar sucursales
-        $routes->get('listar', 'SucursalesController::listar'); // API para listar sucursales
-        $routes->post('guardar', 'SucursalesController::guardar'); // Guardar/crear sucursal
-        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1'); // Obtener sucursal por ID
-        $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1'); // Eliminar sucursal por ID
+        $routes->get('/', 'SucursalesController::index');
+        $routes->get('listar', 'SucursalesController::listar');
+        $routes->post('guardar', 'SucursalesController::guardar');
+        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1');
+        $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1');
     });
 
-    // Gestión de departamentos
+    // Departamentos
     $routes->group('departamentos', function ($routes) {
-        $routes->get('/', 'DepartamentosController::index'); // Listar departamentos
-        $routes->get('listar', 'DepartamentosController::listarDepartamentos'); // API para listar departamentos
-        $routes->post('guardar', 'DepartamentosController::guardarDepartamento'); // Guardar departamento
-        $routes->post('eliminar/(:num)', 'DepartamentosController::eliminarDepartamento/$1'); // Eliminar departamento
-        $routes->get('obtener/(:num)', 'DepartamentosController::obtener/$1'); // Obtener departamento por ID
-        $routes->get('listarClientes', 'DepartamentosController::listarClientes'); // Listar clientes asociados
-        $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1'); // Listar sucursales por cliente
-        $routes->get('listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1'); // Listar departamentos por sucursal
+        $routes->get('/', 'DepartamentosController::index');
+        $routes->get('listar', 'DepartamentosController::listarDepartamentos');
+        $routes->post('guardar', 'DepartamentosController::guardarDepartamento');
+        $routes->post('eliminar/(:num)', 'DepartamentosController::eliminarDepartamento/$1');
+        $routes->get('obtener/(:num)', 'DepartamentosController::obtener/$1');
+        $routes->get('listarClientes', 'DepartamentosController::listarClientes');
+        $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1');
+        $routes->get('listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1');
     });
 });
 
 /**
  * Rutas relacionadas con la gestión de denuncias
- * Accesibles por roles ADMIN, AGENTE, SUPERVISOR_CALIDAD y CLIENTE
  */
 $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CALIDAD,CLIENTE'], function ($routes) {
-    $routes->get('/', 'DenunciasController::index'); // Página principal de denuncias
-    $routes->get('listar', 'DenunciasController::listar'); // API para listar denuncias
-    $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1'); // Ver detalle de denuncia por ID
-    $routes->post('guardar', 'DenunciasController::guardar'); // Guardar/crear denuncia
-    $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1'); // Eliminar denuncia por ID
-    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado'); // Cambiar estado de denuncia
-    $routes->post('subirAnexo', 'DenunciasController::subirAnexo'); // Subir archivos anexos a una denuncia
-    $routes->post('actualizarAnexos', 'DenunciasController::actualizarAnexos'); // Actualizar anexos
-    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1'); // Obtener sucursales por cliente
-    $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados'); // Obtener estados de denuncia
-    $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1'); // Obtener anexos de una denuncia
+    $routes->get('/', 'DenunciasController::index');
+    $routes->get('listar', 'DenunciasController::listar');
+    $routes->get('detalle/(:num)', 'DenunciasController::detalle/$1');
+    $routes->post('guardar', 'DenunciasController::guardar');
+    $routes->post('eliminar/(:num)', 'DenunciasController::eliminar/$1');
+    $routes->post('cambiarEstado', 'DenunciasController::cambiarEstado');
+    $routes->post('subirAnexo', 'DenunciasController::subirAnexo');
+    $routes->post('actualizarAnexos', 'DenunciasController::actualizarAnexos');
+    $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
+    $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
+    $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
 
     // Denuncias del agente
-    $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente'); // Denuncias asignadas al agente
-    $routes->get('listar-denuncias-agente', 'DenunciasController::listarDenunciasAgente'); // Listar denuncias por agente
-    $routes->get('listar-denuncias-calidad', 'DenunciasController::listarDenunciasCalidad', ['filter' => 'authFilter:SUPERVISOR_CALIDAD']); // Listar denuncias para supervisión de calidad
-    $routes->get('listarDenunciasCliente', 'DenunciasController::listarDenunciasCliente'); // Listar denuncias del cliente
+    $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente');
+    $routes->get('listar-denuncias-agente', 'DenunciasController::listarDenunciasAgente');
+    $routes->get('listar-denuncias-calidad', 'DenunciasController::listarDenunciasCalidad', ['filter' => 'authFilter:SUPERVISOR_CALIDAD']);
+    $routes->get('listarDenunciasCliente', 'DenunciasController::listarDenunciasCliente');
 
     // Gestión de anexos
     $routes->group('anexos', function ($routes) {
-        $routes->post('eliminar/(:num)', 'DenunciasController::eliminarAnexo/$1'); // Eliminar anexo
+        $routes->post('eliminar/(:num)', 'DenunciasController::eliminarAnexo/$1');
     });
 
-    // Rutas exclusivas para la supervisión de calidad
+    // Supervisor de calidad
     $routes->group('supervision', ['filter' => 'authFilter:SUPERVISOR_CALIDAD'], function ($routes) {
-        $routes->get('gestion', 'DenunciasController::gestionSupervisor'); // Gestión de denuncias por el supervisor de calidad
+        $routes->get('gestion', 'DenunciasController::gestionSupervisor');
     });
 });
 
 /**
  * Grupo de rutas exclusivas para el CLIENTE autenticado
- * Denuncias, clientes, sucursales y departamentos
  */
 $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
     // Denuncias del cliente
     $routes->group('denuncias', function ($routes) {
-        $routes->get('mis-denuncias-cliente', 'DenunciasController::misDenunciasCliente'); // Ver denuncias del cliente autenticado
+        $routes->get('mis-denuncias-cliente', 'DenunciasController::misDenunciasCliente');
     });
 
     $routes->group('cliente', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
-        //Dashboard
+        // Dashboard
         $routes->get('dashboard', 'DashboardClienteController::index');
         $routes->post('dashboard/filtrar', 'DashboardClienteController::filtrar');
-        // Gestión del perfil del cliente
+
+        // Perfil
         $routes->get('perfil', 'PerfilClienteController::perfil');
         $routes->post('perfil/actualizar', 'PerfilClienteController::actualizarPerfil');
 
-        // Gestión de usuarios del cliente
+        // Usuarios del cliente
         $routes->group('usuarios', function ($routes) {
-            $routes->get('/', 'UsuariosClienteController::index'); // Página principal de usuarios del cliente
-            $routes->get('listar', 'UsuariosClienteController::listar'); // API para listar usuarios del cliente
-            $routes->post('guardar', 'UsuariosClienteController::guardar'); // Guardar/crear usuario del cliente
-            $routes->post('eliminar/(:num)', 'UsuariosClienteController::eliminar/$1'); // Eliminar usuario por ID
-            $routes->post('validarUnico', 'UsuariosClienteController::validarUnico'); // Validar unicidad de usuario
+            $routes->get('/', 'UsuariosClienteController::index');
+            $routes->get('listar', 'UsuariosClienteController::listar');
+            $routes->post('guardar', 'UsuariosClienteController::guardar');
+            $routes->post('eliminar/(:num)', 'UsuariosClienteController::eliminar/$1');
+            $routes->post('validarUnico', 'UsuariosClienteController::validarUnico');
+            $routes->get('(:num)/tipos-denunciante', 'UsuariosController::tiposDenunciante/$1');
         });
 
-        // Gestión de usuarios del cliente
         $routes->get('usuarios', 'UsuariosClienteController::index');
         $routes->post('usuarios/guardar', 'UsuariosClienteController::guardar');
         $routes->post('usuarios/eliminar/(:num)', 'UsuariosClienteController::eliminar/$1');
     });
 
-    // Gestión de clientes (solo accesible para el cliente autenticado)
+    // Clientes
     $routes->group('clientes', function ($routes) {
-        $routes->get('/', 'ClientesController::index'); // Listar clientes
-        $routes->get('listar', 'ClientesController::listar'); // Listar clientes en API
-        $routes->post('guardar', 'ClientesController::guardar'); // Guardar cliente
-        $routes->get('obtener/(:num)', 'ClientesController::obtener/$1'); // Obtener cliente por ID
-        $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1'); // Eliminar cliente por ID
+        $routes->get('/', 'ClientesController::index');
+        $routes->get('listar', 'ClientesController::listar');
+        $routes->post('guardar', 'ClientesController::guardar');
+        $routes->get('obtener/(:num)', 'ClientesController::obtener/$1');
+        $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1');
     });
 
-    // Gestión de sucursales del cliente
+    // Sucursales del cliente
     $routes->group('sucursales', function ($routes) {
-        $routes->get('/', 'SucursalesController::index'); // Listar sucursales
-        $routes->get('listar', 'SucursalesController::listar'); // API para listar sucursales
-        $routes->post('guardar', 'SucursalesController::guardar'); // Guardar sucursal
-        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1'); // Obtener sucursal por ID
-        $routes->get('listarSucursales/(:num)', 'SucursalesController::listarSucursales/$1'); // Listar sucursales por cliente
-        $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1'); // Eliminar sucursal
+        $routes->get('/', 'SucursalesController::index');
+        $routes->get('listar', 'SucursalesController::listar');
+        $routes->post('guardar', 'SucursalesController::guardar');
+        $routes->get('obtener/(:num)', 'SucursalesController::obtener/$1');
+        $routes->get('listarSucursales/(:num)', 'SucursalesController::listarSucursales/$1');
+        $routes->post('eliminar/(:num)', 'SucursalesController::eliminar/$1');
 
-        $routes->post('subir-imagen', 'SucursalesController::subirImagen'); // Subir imagen de sucursal
-        $routes->get('listar-imagenes/(:num)', 'SucursalesController::listarImagenes/$1'); // Listar imágenes de una sucursal
-        $routes->post('eliminar-imagen', 'SucursalesController::eliminarImagen'); // Eliminar imagen de una sucursal
+        $routes->post('subir-imagen', 'SucursalesController::subirImagen');
+        $routes->get('listar-imagenes/(:num)', 'SucursalesController::listarImagenes/$1');
+        $routes->post('eliminar-imagen', 'SucursalesController::eliminarImagen');
     });
 
-    // Gestión de departamentos del cliente
+    // Departamentos del cliente
     $routes->group('departamentos', function ($routes) {
-        $routes->get('/', 'DepartamentosController::index'); // Listar departamentos
-        $routes->get('listar', 'DepartamentosController::listarDepartamentos'); // API para listar departamentos
-        $routes->post('guardar', 'DepartamentosController::guardarDepartamento'); // Guardar departamento
-        $routes->post('eliminar/(:num)', 'DepartamentosController::eliminarDepartamento/$1'); // Eliminar departamento
-        $routes->get('obtener/(:num)', 'DepartamentosController::obtener/$1'); // Obtener departamento por ID
-        $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1'); // Listar sucursales por cliente
+        $routes->get('/', 'DepartamentosController::index');
+        $routes->get('listar', 'DepartamentosController::listarDepartamentos');
+        $routes->post('guardar', 'DepartamentosController::guardarDepartamento');
+        $routes->post('eliminar/(:num)', 'DepartamentosController::eliminarDepartamento/$1');
+        $routes->get('obtener/(:num)', 'DepartamentosController::obtener/$1');
+        $routes->get('listarSucursales/(:num)', 'DepartamentosController::listarSucursales/$1');
     });
 });
 
 /**
  * Gestión de comentarios
- * Las rutas aquí permiten listar y guardar comentarios en una denuncia
  */
 $routes->group('comentarios', function ($routes) {
     $routes->get('listar/(:num)', 'ComentariosController::listar/$1');
     $routes->get('listar-cliente/(:num)', 'ComentariosController::listarCliente/$1');
     $routes->post('guardar', 'ComentariosController::guardar');
-    $routes->post('eliminar/(:num)', 'ComentariosController::eliminar/$1'); // ← Nueva ruta para eliminar comentario
+    $routes->post('eliminar/(:num)', 'ComentariosController::eliminar/$1');
 });
 
 // Rutas para funcionalidad de IA en denuncias
@@ -275,21 +269,21 @@ $routes->group('api/denuncias', ['namespace' => 'App\Controllers'], function ($r
     // Evaluar sugerencia de IA
     $routes->post('sugerencia-ia/evaluar', 'DenunciasController::evaluarSugerenciaIA');
 
-    // Obtener estadísticas de uso de IA
+    // Guardar edición del agente (texto en sugerencia_agente)
+    $routes->post('sugerencia-ia/guardar-edicion', 'DenunciasController::guardarEdicionSugerencia');
+
+    // Publicar / retirar la sugerencia para el cliente final
+    $routes->post('sugerencia-ia/publicar', 'DenunciasController::publicarSugerencia');
+
+    // Estadísticas de uso de IA
     $routes->get('estadisticas-ia', 'DenunciasController::estadisticasIA');
 });
 
 // Rutas adicionales para administración de IA (solo para administradores)
 $routes->group('admin/ia', ['namespace' => 'App\Controllers', 'filter' => 'auth'], function ($routes) {
-
-    // Dashboard de estadísticas de IA
     $routes->get('dashboard', 'IAAdminController::dashboard');
-
-    // Configuración del servicio de IA
     $routes->get('configuracion', 'IAAdminController::configuracion');
     $routes->post('configuracion', 'IAAdminController::guardarConfiguracion');
-
-    // Logs y monitoreo
     $routes->get('logs', 'IAAdminController::logs');
     $routes->get('costos', 'IAAdminController::reporteCostos');
 });
@@ -297,7 +291,6 @@ $routes->group('admin/ia', ['namespace' => 'App\Controllers', 'filter' => 'auth'
 
 /**
  * Cargar rutas adicionales basadas en el entorno
- * Estas rutas dependen del ambiente de desarrollo o producción
  */
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';

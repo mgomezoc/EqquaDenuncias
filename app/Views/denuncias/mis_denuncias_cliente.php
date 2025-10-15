@@ -58,14 +58,11 @@
     </div>
 </template>
 
-
 <template id="tplDetalleTabla">
     <div class="">
-        <!-- Formulario para editar la denuncia -->
         <form id="formEditarDenuncia-{{id}}" action="<?= base_url('denuncias/guardar') ?>" method="post" class="formEditarDenuncia card custom-card card-body mb-4">
             <input type="hidden" name="id" value="{{id}}">
             <div class="row g-3">
-                <!-- Información General -->
                 <div class="col-md-4">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
                     <select class="form-select select2" id="id_cliente-{{id}}" name="id_cliente" required>
@@ -129,7 +126,6 @@
                     </div>
                 </div>
 
-                <!-- Botón de Actualizar -->
                 <div class="mt-5">
                     <button type="submit" class="btn btn-primary btn-actualizar-denuncia">
                         <i class="fa fa-save"></i> Actualizar
@@ -138,12 +134,10 @@
             </div>
         </form>
 
-        <!-- Formulario para actualizar imágenes -->
         <form id="formActualizarAnexos-{{id}}" class="formActualizarAnexos card custom-card" enctype="multipart/form-data">
             <input type="hidden" name="id" value="{{id}}">
             <div class="card-body">
                 <div class="row g-4">
-                    <!-- Sección de Archivos Existentes -->
                     <div class="col-md-6">
                         <div class="card border-light mb-3">
                             <div class="card-header text-center bg-light">
@@ -156,7 +150,20 @@
                                             {{#ifCond tipo '==' 'application/pdf'}}
                                                 <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="pdf-{{id}}" data-title="{{nombre_archivo}}" class="pdf-viewer">{{nombre_archivo}}</a>
                                 {{else}}
+                                    {{#ifCond tipo '==' 'audio/mpeg'}}
+                                        <div class="w-100">
+                                            <div class="small mb-2">{{nombre_archivo}}</div>
+                                            <audio controls preload="none" style="width: 100%;">
+                                                <source src="<?= base_url('/') ?>{{ruta_archivo}}" type="audio/mpeg">
+                                                Tu navegador no soporta audio HTML5.
+                                            </audio>
+                                            <div class="mt-1">
+                                                <a href="<?= base_url('/') ?>{{ruta_archivo}}" download class="small">Descargar</a>
+                                            </div>
+                                        </div>
+                                {{else}}
                                     <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="image-{{id}}" data-title="{{nombre_archivo}}">{{nombre_archivo}}</a>
+                                    {{/ifCond}}
                                             {{/ifCond}}
                                             <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
                                                 <i class="fa fa-trash"></i> Eliminar
@@ -169,7 +176,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Sección para Subir Nuevos Archivos -->
+
                     <div class="col-md-6">
                         <div class="card border-light mb-3">
                             <div class="card-header text-center bg-light">
@@ -194,7 +201,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
-<!-- Modal para Ver Detalle -->
 <div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-labelledby="modalVerDetalleLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -202,9 +208,7 @@
                 <h5 class="modal-title" id="modalVerDetalleLabel">Detalle de Denuncia</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <!-- Aquí se inyectará el contenido del detalle de la denuncia -->
-            </div>
+            <div class="modal-body"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
@@ -212,7 +216,6 @@
     </div>
 </div>
 
-<!-- Modal para comentarios -->
 <div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="comentariosModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -223,9 +226,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="comentariosContainer" class="overflow-auto" style="max-height: 300px;">
-                    <!-- Aquí se insertan los comentarios -->
-                </div>
+                <div id="comentariosContainer" class="overflow-auto" style="max-height: 300px;"></div>
                 <form id="formAgregarComentario" class="mt-4" enctype="multipart/form-data">
                     <input type="hidden" name="id_denuncia" id="id_denuncia">
 
@@ -236,7 +237,12 @@
 
                     <div class="form-group mb-3">
                         <label for="archivoComentario" class="form-label">Adjuntar archivo (opcional)</label>
-                        <input type="file" class="form-control" name="archivo_comentario" id="archivoComentario" accept="*/*">
+                        <input
+                            type="file"
+                            class="form-control"
+                            name="archivo_comentario"
+                            id="archivoComentario"
+                            accept="image/*,.pdf,audio/mpeg,.mp3">
                     </div>
 
                     <div class="d-flex justify-content-end">
@@ -251,7 +257,6 @@
     </div>
 </div>
 
-<!-- Modal Cambiar Estado -->
 <div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -259,9 +264,7 @@
                 <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estatus de Denuncia</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <!-- Aquí se inyectará el formulario para cambiar el estado -->
-            </div>
+            <div class="modal-body"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary">Guardar</button>
@@ -270,8 +273,6 @@
     </div>
 </div>
 
-
-<!-- Modal Crear Denuncia Mejorado -->
 <div class="modal fade" id="modalCrearDenuncia" tabindex="-1" aria-labelledby="modalCrearDenunciaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -283,7 +284,6 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-4">
-                        <!-- Sección 1: Información del Cliente -->
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>
                             <input type="hidden" name="id_cliente" value="<?= $cliente['id'] ?>">
@@ -296,7 +296,6 @@
                             </select>
                         </div>
 
-                        <!-- Sección 2: Detalles de la Denuncia -->
                         <div class="col-md-6">
                             <label for="tipo_denunciante" class="form-label">Tipo de Denunciante</label>
                             <select id="tipo_denunciante" name="tipo_denunciante" class="form-select select2" required>
@@ -341,7 +340,6 @@
                             </select>
                         </div>
 
-                        <!-- Sección 3: Detalles Adicionales -->
                         <div class="col-md-6">
                             <label for="area_incidente" class="form-label">Área del Incidente</label>
                             <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
@@ -355,26 +353,20 @@
                             <textarea class="form-control" id="descripcion" name="descripcion" rows="14" required placeholder="Describa la denuncia"></textarea>
                         </div>
 
-                        <!-- Sección 4: Opciones de Denuncia -->
                         <div class="col-md-6">
                             <label class="form-label">Anónimo</label>
                             <div class="d-flex gap-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" required checked>
-                                    <label class="form-check-label" for="anonimo-si">
-                                        Sí
-                                    </label>
+                                    <label class="form-check-label" for="anonimo-si">Sí</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
-                                    <label class="form-check-label" for="anonimo-no">
-                                        No
-                                    </label>
+                                    <label class="form-check-label" for="anonimo-no">No</label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Sección 5: Archivos Adjuntos -->
                         <div class="col-md-12">
                             <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
                             <div id="dropzoneArchivos" class="dropzone"></div>

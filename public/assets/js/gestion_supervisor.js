@@ -25,7 +25,6 @@ $(function () {
         'click .remove': function (e, value, row, index) {
             confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
                 if (result.isConfirmed) {
-                    // Si se confirma, proceder con la eliminación
                     $.ajax({
                         url: `${Server}denuncias/eliminar/${row.id}`,
                         method: 'POST',
@@ -45,6 +44,114 @@ $(function () {
         'click .view-detail': function (e, value, row, index) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
+                const fechaIncidente = typeof operateFormatterFecha === 'function' ? operateFormatterFecha(data.fecha_incidente) : data.fecha_incidente || '';
+
+                // Icono por extensión (para documentos no imagen/ni audio)
+                const getFileIcon = filename => {
+                    const ext = (filename || '').split('.').pop().toLowerCase();
+                    const icons = {
+                        pdf: 'fa-file-pdf text-danger',
+                        doc: 'fa-file-word text-primary',
+                        docx: 'fa-file-word text-primary',
+                        xls: 'fa-file-excel text-success',
+                        xlsx: 'fa-file-excel text-success',
+                        zip: 'fa-file-zipper text-warning',
+                        rar: 'fa-file-zipper text-warning',
+                        txt: 'fa-file-lines text-secondary',
+                        csv: 'fa-file-csv text-info',
+                        mp3: 'fa-file-audio text-info',
+                        wav: 'fa-file-audio text-info',
+                        ogg: 'fa-file-audio text-info'
+                    };
+                    return icons[ext] || 'fa-file text-secondary';
+                };
+
+                // Renderizar archivos anexos (imágenes -> Lightbox, audio -> <audio>, otros -> link con icono)
+                let archivosHtml = '';
+                if (data.archivos && data.archivos.length > 0) {
+                    archivosHtml += `
+                        <div class="col-12 mt-3">
+                            <h5 class="mb-3">
+                                <i class="fas fa-paperclip me-2"></i>Archivos Adjuntos
+                                <span class="badge bg-secondary ms-2">${data.archivos.length}</span>
+                            </h5>
+                            <div class="row g-3">
+                    `;
+
+                    data.archivos.forEach((archivo, idx) => {
+                        const url = `${Server}${archivo.ruta_archivo}`;
+                        const nombre = archivo.nombre_archivo || '';
+                        const ext = nombre.split('.').pop().toLowerCase();
+                        const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+                        const esAudio = ['mp3', 'mpeg', 'ogg', 'wav'].includes(ext);
+                        const nombreCorto = nombre.length > 28 ? nombre.substring(0, 24) + '….' + ext : nombre;
+
+                        if (esImagen) {
+                            archivosHtml += `
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <div class="card shadow-sm h-100">
+                                        <a href="${url}"
+                                           data-lightbox="denuncia-${data.id}"
+                                           data-title="${nombre}">
+                                            <img src="${url}" alt="${nombre}" class="card-img-top" loading="lazy">
+                                        </a>
+                                        <div class="card-body p-2">
+                                            <p class="card-text text-center small mb-0" title="${nombre}">
+                                                <i class="fas fa-image text-primary me-1"></i>${nombreCorto}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (esAudio || (archivo.tipo && archivo.tipo.startsWith('audio/'))) {
+                            // Determinar mime preferido
+                            let mime = 'audio/mpeg';
+                            if (ext === 'ogg') mime = 'audio/ogg';
+                            if (ext === 'wav') mime = 'audio/wav';
+
+                            archivosHtml += `
+                                <div class="col-12 col-md-6">
+                                    <div class="card shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-file-audio text-info me-2"></i>
+                                                <span class="small" title="${nombre}">${nombreCorto}</span>
+                                            </div>
+                                            <audio controls preload="none" style="width:100%;">
+                                                <source src="${url}" type="${mime}">
+                                                Tu navegador no soporta audio HTML5.
+                                            </audio>
+                                            <div class="mt-2 text-end">
+                                                <a class="small" href="${url}" download>Descargar</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            archivosHtml += `
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <div class="card shadow-sm h-100">
+                                        <a href="${url}" target="_blank" class="text-decoration-none">
+                                            <div class="card-body text-center py-4">
+                                                <i class="fas ${getFileIcon(nombre)} fa-2x mb-3"></i>
+                                                <p class="card-text small mb-0 text-dark" title="${nombre}">
+                                                    ${nombreCorto}
+                                                </p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    archivosHtml += `
+                            </div>
+                        </div>
+                    `;
+                }
+
                 const contenido = `
         <div class="container-fluid">
             <div class="row">
@@ -60,7 +167,7 @@ $(function () {
                 <div class="col-md-6">
                     <p><strong>Departamento:</strong> ${data.departamento_nombre || 'N/A'}</p>
                     <p><strong>Estatus:</strong> ${data.estado_nombre}</p>
-                    <p><strong>Fecha del Incidente:</strong> ${data.fecha_incidente}</p>
+                    <p><strong>Fecha del Incidente:</strong> ${fechaIncidente}</p>
                     <p><strong>Área del Incidente:</strong> ${data.area_incidente || 'N/A'}</p>
                     <p><strong>¿Cómo se Enteró?:</strong> ${data.como_se_entero || 'N/A'}</p>
                     <p><strong>Denunciar a Alguien:</strong> ${data.denunciar_a_alguien || 'N/A'}</p>
@@ -69,6 +176,7 @@ $(function () {
                     <p><strong>Descripción:</strong></p>
                     <p>${data.descripcion || 'N/A'}</p>
                 </div>
+                ${archivosHtml}
                 <div class="col-12 mt-3">
                     <h5>Historial de Seguimiento</h5>
                     <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
@@ -85,14 +193,14 @@ $(function () {
                             ${data.seguimientos
                                 .map(
                                     seg => `
-                                    <tr>
-                                        <td>${seg.fecha}</td>
-                                        <td>${seg.estado_anterior_nombre}</td>
-                                        <td>${seg.estado_nuevo_nombre}</td>
-                                        <td>${seg.comentario || 'N/A'}</td>
-                                        <td>${seg.usuario_nombre}</td>
-                                    </tr>
-                                `
+                                <tr>
+                                    <td>${typeof formatoFechaHora === 'function' ? formatoFechaHora(seg.fecha) : seg.fecha}</td>
+                                    <td>${seg.estado_anterior_nombre}</td>
+                                    <td>${seg.estado_nuevo_nombre}</td>
+                                    <td>${seg.comentario || 'N/A'}</td>
+                                    <td>${seg.usuario_nombre}</td>
+                                </tr>
+                            `
                                 )
                                 .join('')}
                         </tbody>
@@ -104,6 +212,7 @@ $(function () {
 
                 $('#modalVerDetalle .modal-body').html(contenido);
                 modal.show();
+                // Lightbox2 se auto-inicializa con data-lightbox (no requiere código extra)
             });
         },
 
@@ -111,10 +220,9 @@ $(function () {
         'click .change-status': function (e, value, row, index) {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
                 let opciones = '';
-                const estadosPermitidos = ['1', '2', '3', '4']; // IDs de los estados "Recepción", "Clasificada" y "Revisada por Calidad"
+                const estadosPermitidos = ['1', '2', '3', '4']; // Recepción, Clasificada, Revisada por Calidad, Liberada al Cliente
 
                 estados.forEach(estado => {
-                    // Verificar si el estado está en los permitidos para calidad
                     if (estadosPermitidos.includes(estado.id)) {
                         const selected = estado.id === row.estado_actual ? 'selected' : '';
                         opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
@@ -140,14 +248,14 @@ $(function () {
                     .off('click')
                     .on('click', function () {
                         const estadoNuevo = $('#estado_nuevo').val();
-                        const comentario = $('#comentario').val(); // Obtener el comentario
+                        const comentario = $('#comentario').val();
 
                         $.post(
                             `${Server}denuncias/cambiarEstado`,
                             {
                                 id: row.id,
                                 estado_nuevo: estadoNuevo,
-                                comentario: comentario // Enviar el comentario al servidor
+                                comentario: comentario
                             },
                             function () {
                                 showToast('Estatus actualizado correctamente.', 'success');
@@ -163,14 +271,9 @@ $(function () {
         },
 
         'click .view-comments': function (e, value, row, index) {
-            // Cargar comentarios de la denuncia
             cargarComentarios(row.id);
-
-            // Establecer la ID de la denuncia en el formulario
             $('#id_denuncia').val(row.id);
             $('#folioDenuncia').html(row.folio);
-
-            // Mostrar el modal
             $('#modalVerComentarios').modal('show');
         }
     };
@@ -189,66 +292,19 @@ $(function () {
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
         url: `${Server}denuncias/listar-denuncias-calidad`,
         columns: [
-            {
-                field: 'id',
-                title: 'ID'
-            },
-            {
-                field: 'folio',
-                title: 'Folio'
-            },
-            {
-                field: 'cliente_nombre',
-                title: 'Cliente'
-            },
-            {
-                field: 'sucursal_nombre',
-                title: 'Sucursal'
-            },
-            {
-                field: 'tipo_denunciante',
-                title: 'Tipo Denunciante'
-            },
-            {
-                field: 'categoria_nombre',
-                title: 'Categoría'
-            },
-            {
-                field: 'subcategoria_nombre',
-                title: 'Subcategoría'
-            },
-            {
-                field: 'departamento_nombre',
-                title: 'Departamento'
-            },
-            {
-                field: 'estado_nombre',
-                title: 'Estado',
-                formatter: operateFormatterEstado
-            },
-            {
-                field: 'medio_recepcion',
-                title: 'Canal de Recepcion'
-            },
-            {
-                field: 'fecha_hora_reporte',
-                title: 'Fecha',
-                formatter: operateFormatterFecha
-            },
-            {
-                field: 'sexo_nombre',
-                title: 'Sexo',
-                visible: false
-            },
-            {
-                field: 'operate',
-                title: 'Acciones',
-                align: 'center',
-                valign: 'middle',
-                clickToSelect: false,
-                formatter: operateFormatter,
-                events: operateEvents
-            }
+            { field: 'id', title: 'ID' },
+            { field: 'folio', title: 'Folio' },
+            { field: 'cliente_nombre', title: 'Cliente' },
+            { field: 'sucursal_nombre', title: 'Sucursal' },
+            { field: 'tipo_denunciante', title: 'Tipo Denunciante' },
+            { field: 'categoria_nombre', title: 'Categoría' },
+            { field: 'subcategoria_nombre', title: 'Subcategoría' },
+            { field: 'departamento_nombre', title: 'Departamento' },
+            { field: 'estado_nombre', title: 'Estado', formatter: operateFormatterEstado },
+            { field: 'medio_recepcion', title: 'Canal de Recepcion' },
+            { field: 'fecha_hora_reporte', title: 'Fecha', formatter: operateFormatterFecha },
+            { field: 'sexo_nombre', title: 'Sexo', visible: false },
+            { field: 'operate', title: 'Acciones', align: 'center', valign: 'middle', clickToSelect: false, formatter: operateFormatter, events: operateEvents }
         ],
         showColumns: true,
         detailView: true,
@@ -277,50 +333,27 @@ $(function () {
                 { id: '3', name: 'Otro' }
             ];
 
-            // Construimos dinámicamente las solicitudes AJAX
             const requests = [$.get(`${Server}clientes/listar`), $.get(`${Server}categorias/listarCategorias`), $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), $.get(`${Server}denuncias/detalle/${row.id}`), $.get(`${Server}denuncias/obtenerEstados`), $.get(`${Server}denuncias/obtenerAnexos/${row.id}`)];
 
-            // Solo agregar la llamada a listarSubcategorias si row.categoria no está vacío
             if (row.categoria) {
                 requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
             }
 
-            // Ejecutamos todas las solicitudes en paralelo
             $.when(...requests).done(function (...responses) {
-                // Desestructuramos las respuestas
-                const [
-                    clientes,
-                    categorias,
-                    sucursales,
-                    denunciaDetallesXHR,
-                    estados,
-                    anexos,
-                    subcategorias = [{ 0: [] }] // Respuesta por defecto si no se llamó listarSubcategorias
-                ] = responses;
+                const [clientes, categorias, sucursales, denunciaDetallesXHR, estados, anexos, subcategorias = [{ 0: [] }]] = responses;
 
-                // Parseamos detalles de la denuncia
                 const denunciaDetalles = denunciaDetallesXHR[0];
-
-                // Determinamos si la denuncia es editable
                 const estatusEditables = ['Recepción', 'Clasificada', 'Revisada por Calidad'];
                 const esEditable = estatusEditables.indexOf(denunciaDetalles.estado_nombre) !== -1;
-
-                // Verificamos si es anónimo
                 const esAnonimo = denunciaDetalles.anonimo === '0';
 
-                // Mapeamos los datos para renderizarlos en el template
                 const data = {
                     id: row.id,
-                    clientes: clientes[0].map(cliente => ({ id: cliente.id, name: cliente.nombre_empresa })),
-                    categorias: categorias[0].map(categoria => ({ id: categoria.id, name: categoria.nombre })),
-                    subcategorias: Array.isArray(subcategorias[0])
-                        ? subcategorias[0].map(subcategoria => ({
-                              id: subcategoria.id,
-                              name: subcategoria.nombre
-                          }))
-                        : [], // Array vacío si no se realizó la llamada
-                    sucursales: sucursales[0].map(sucursal => ({ id: sucursal.id, name: sucursal.nombre })),
-                    estados: estados[0].map(estado => ({ id: estado.id, name: estado.nombre })),
+                    clientes: clientes[0].map(c => ({ id: c.id, name: c.nombre_empresa })),
+                    categorias: categorias[0].map(c => ({ id: c.id, name: c.nombre })),
+                    subcategorias: Array.isArray(subcategorias[0]) ? subcategorias[0].map(s => ({ id: s.id, name: s.nombre })) : [],
+                    sucursales: sucursales[0].map(s => ({ id: s.id, name: s.nombre })),
+                    estados: estados[0].map(e => ({ id: e.id, name: e.nombre })),
                     anexos: anexos[0],
                     id_cliente: row.id_cliente,
                     id_sucursal: row.id_sucursal,
@@ -339,31 +372,23 @@ $(function () {
                     area_incidente: denunciaDetalles.area_incidente,
                     denunciar_a_alguien: denunciaDetalles.denunciar_a_alguien,
                     medio_recepcion: denunciaDetalles.medio_recepcion,
-                    comboComoSeEntero: comboComoSeEntero,
-                    comboMedioRecepcion: comboMedioRecepcion,
-                    comboSexo: comboSexo,
+                    comboComoSeEntero,
+                    comboMedioRecepcion,
+                    comboSexo,
                     id_sexo: row.id_sexo,
-                    esEditable: esEditable
+                    esEditable
                 };
 
-                console.log(data);
-
-                // Renderizamos los datos usando Handlebars
                 const renderData = Handlebars.compile(tplDetalleTabla)(data);
                 $detail.html(renderData);
 
-                // Si no es editable, deshabilitamos todos los campos y botones
                 if (!esEditable) {
                     $detail.find('input, select, textarea, button').prop('disabled', true);
                 }
 
-                // Inicializamos select2 para selectores dinámicos
                 $detail.find('select').select2();
-
-                // Inicializamos flatpickr para los campos de fecha
                 initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
 
-                // Validamos el formulario
                 $detail.find('.formEditarDenuncia').validate({
                     errorClass: 'is-invalid',
                     validClass: 'is-valid',
@@ -413,12 +438,11 @@ $(function () {
 
                         loadingFormXHR($frm, true);
 
-                        // Enviamos la solicitud para actualizar la denuncia
                         $.ajax({
                             url: `${Server}denuncias/guardar`,
                             method: 'POST',
                             data: formData,
-                            success: function (data) {
+                            success: function () {
                                 loadingFormXHR($frm, false);
                                 $tablaDenuncias.bootstrapTable('refresh');
                                 showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
@@ -434,7 +458,6 @@ $(function () {
                     }
                 });
 
-                // Eventos adicionales
                 $detail.find(`#categoria-${row.id}`).change(function () {
                     const categoriaId = $(this).val();
                     loadSubcategorias(categoriaId, `#subcategoria-${row.id}`);
@@ -445,6 +468,7 @@ $(function () {
                     loadSucursales(clienteId, `#id_sucursal-${row.id}`);
                 });
 
+                // Dropzone con soporte de audio (mp3/ogg/wav)
                 initializeDropzone(`dropzoneArchivos-${row.id}`, `formActualizarAnexos-${row.id}`);
 
                 $detail.on('click', '.delete-anexo', function () {
@@ -469,15 +493,14 @@ $(function () {
         const $submitButton = $frm.find('button[type="submit"]');
         const formData = $frm.serialize();
 
-        // Deshabilitar el textarea y el botón, y cambiar el texto del botón
         $textarea.prop('disabled', true);
         $submitButton.prop('disabled', true);
         $submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
 
-        $.post(`${Server}comentarios/guardar`, formData, function (response) {
-            cargarComentarios($('#id_denuncia').val()); // Recargar los comentarios
+        $.post(`${Server}comentarios/guardar`, formData, function () {
+            cargarComentarios($('#id_denuncia').val());
             showToast('Comentario agregado exitosamente.', 'success');
-            $textarea.val(''); // Limpiar el campo de texto
+            $textarea.val('');
             $frm[0].reset();
         })
             .fail(function (err) {
@@ -485,7 +508,6 @@ $(function () {
                 showToast(message, 'error');
             })
             .always(function () {
-                // Rehabilitar el textarea y el botón, y restaurar el texto del botón original
                 $textarea.prop('disabled', false);
                 $submitButton.prop('disabled', false);
                 $submitButton.html('<i class="fas fa-paper-plane"></i> Enviar');
@@ -501,7 +523,8 @@ function initializeDropzone(elementId, formId) {
     const myDropzone = new Dropzone(`#${elementId}`, {
         url: `${Server}denuncias/subirAnexo`,
         maxFiles: 5,
-        acceptedFiles: 'image/*,application/pdf',
+        // ACEPTA imágenes, PDF y audios (mp3/ogg/wav)
+        acceptedFiles: 'image/*,application/pdf,audio/mpeg,.mp3,audio/ogg,.ogg,audio/wav,.wav,audio/*',
         addRemoveLinks: true,
         dictDefaultMessage: 'Arrastra los archivos aquí para subirlos',
         dictRemoveFile: 'Eliminar archivo',
@@ -510,7 +533,7 @@ function initializeDropzone(elementId, formId) {
                 formElement.append(`<input type="hidden" name="archivos[]" value="assets/denuncias/${response.filename}">`);
             });
             this.on('removedfile', function (file) {
-                const name = file.upload.filename;
+                const name = file.upload && file.upload.filename ? file.upload.filename : file.name || '';
                 formElement.find(`input[value="assets/denuncias/${name}"]`).remove();
             });
         }
@@ -521,19 +544,16 @@ function initializeDropzone(elementId, formId) {
 
 // Función para eliminar un anexo con confirmación usando SweetAlert2
 function eliminarAnexo(anexoId, denunciaId) {
-    // Llamar a la función de confirmación
     confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
-        // Si el usuario confirma la acción
         if (result.isConfirmed) {
-            // Proceder con la eliminación
             $.ajax({
                 url: `${Server}denuncias/anexos/eliminar/${anexoId}`,
                 method: 'POST',
-                success: function (response) {
+                success: function () {
                     showToast('Anexo eliminado correctamente.', 'success');
                     $(`#formActualizarAnexos-${denunciaId}`).find(`.delete-anexo[data-id="${anexoId}"]`).closest('.card').remove();
                 },
-                error: function (xhr) {
+                error: function () {
                     showToast('Error al eliminar el anexo.', 'error');
                 }
             });
@@ -551,12 +571,12 @@ function actualizarAnexos(formData, denunciaId) {
         data: formData,
         processData: false,
         contentType: false,
-        success: function (response) {
+        success: function () {
             loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
             showToast('Archivos actualizados correctamente.', 'success');
             $tablaDenuncias.bootstrapTable('refresh');
         },
-        error: function (xhr) {
+        error: function () {
             loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), false);
             showToast('Error al actualizar los archivos.', 'error');
         }
@@ -636,25 +656,25 @@ function operateFormatterEstado(value, row, index) {
 
     switch (estado) {
         case 'Recepción':
-            badgeClass = 'bg-yellow'; // Amarillo (#f4b400)
+            badgeClass = 'bg-yellow';
             break;
         case 'Clasificada':
-            badgeClass = 'bg-purple'; // Púrpura (#4285f4)
+            badgeClass = 'bg-purple';
             break;
         case 'Revisada por Calidad':
-            badgeClass = 'bg-teal'; // Verde Azulado (#0f9d58)
+            badgeClass = 'bg-teal';
             break;
         case 'Liberada al Cliente':
-            badgeClass = 'bg-red'; // Rojo (#db4437)
+            badgeClass = 'bg-red';
             break;
         case 'En Revisión por Cliente':
-            badgeClass = 'bg-light-purple'; // Púrpura Claro
+            badgeClass = 'bg-light-purple';
             break;
         case 'Cerrada':
-            badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+            badgeClass = 'bg-dark-teal';
             break;
         default:
-            badgeClass = 'bg-light text-dark'; // Para estados no reconocidos
+            badgeClass = 'bg-light text-dark';
     }
 
     return `<span class="badge ${badgeClass}">${estado}</span>`;
@@ -665,31 +685,29 @@ function cargarComentarios(denunciaId) {
         let comentariosHtml = '';
         if (data.length > 0) {
             data.forEach(comentario => {
-                let iniciales = comentario.nombre_usuario.charAt(0).toUpperCase();
                 let badgeClass = '';
 
-                // Asignar el color correspondiente según el estado
                 switch (comentario.estado_nombre) {
                     case 'Recepción':
-                        badgeClass = 'bg-yellow'; // Amarillo
+                        badgeClass = 'bg-yellow';
                         break;
                     case 'Clasificada':
-                        badgeClass = 'bg-purple'; // Púrpura
+                        badgeClass = 'bg-purple';
                         break;
                     case 'Revisada por Calidad':
-                        badgeClass = 'bg-teal'; // Verde Azulado
+                        badgeClass = 'bg-teal';
                         break;
                     case 'Liberada al Cliente':
-                        badgeClass = 'bg-red'; // Rojo
+                        badgeClass = 'bg-red';
                         break;
                     case 'En Revisión por Cliente':
-                        badgeClass = 'bg-light-purple'; // Púrpura Claro
+                        badgeClass = 'bg-light-purple';
                         break;
                     case 'Cerrada':
-                        badgeClass = 'bg-dark-teal'; // Verde Azulado Oscuro
+                        badgeClass = 'bg-dark-teal';
                         break;
                     default:
-                        badgeClass = 'bg-light text-dark'; // Estado no reconocido
+                        badgeClass = 'bg-light text-dark';
                 }
 
                 comentariosHtml += `

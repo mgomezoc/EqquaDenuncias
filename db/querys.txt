@@ -1,0 +1,17 @@
+CREATE TABLE
+IF NOT EXISTS usuarios_permisos_denunciante
+(
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  tipo_denunciante VARCHAR
+(50) NOT NULL,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_upd_usuario FOREIGN KEY
+(id_usuario) REFERENCES usuarios
+(id) ON
+DELETE CASCADE,
+  CONSTRAINT uq_usuario_tipo UNIQUE
+(id_usuario, tipo_denunciante)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE usuarios_permisos_denunciante ADD COLUMN updated_at DATETIME NULL DEFAULT NULL;

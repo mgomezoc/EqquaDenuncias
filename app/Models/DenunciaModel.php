@@ -46,19 +46,13 @@ class DenunciaModel extends Model
 
     protected function generateFolio(array $data): array
     {
-        // Obtener la fecha en formato "ymd" (240901)
-        $date = date('ymd'); // 'y' proporciona los últimos dos dígitos del año
-
-        // Buscar la última denuncia que tenga un folio que empiece con la fecha actual
+        $date = date('ymd');
         $lastDenuncia = $this->select('folio')
             ->like('folio', "$date-", 'after')
             ->orderBy('id', 'DESC')
             ->first();
 
-        // Determinar el nuevo número de secuencia
         $newFolio = $lastDenuncia ? (int)substr($lastDenuncia['folio'], -4) + 1 : 1;
-
-        // Formatear el número de secuencia a 4 dígitos (e.g., 0003)
         $data['data']['folio'] = "$date-" . str_pad($newFolio, 4, '0', STR_PAD_LEFT);
 
         return $data;
@@ -67,7 +61,7 @@ class DenunciaModel extends Model
     protected function setDefaultValues(array $data): array
     {
         $data['data']['fecha_hora_reporte'] = date('Y-m-d H:i:s');
-        $data['data']['estado_actual'] = 1; // Estado inicial 'Recepción'
+        $data['data']['estado_actual'] = 1;
         return $data;
     }
 
@@ -76,6 +70,29 @@ class DenunciaModel extends Model
         $data['data']['updated_at'] = date('Y-m-d H:i:s');
         return $data;
     }
+
+    /** Tipos de denunciante permitidos para el usuario cliente actual */
+    private function tiposPermitidosUsuarioActual(): array
+    {
+        // En tu sesión viene rol_slug=CLIENTE (y rol_nombre=Cliente)
+        $rolSlug = strtoupper((string) (session()->get('rol_slug') ?? ''));
+        $rolNombre = strtoupper((string) (session()->get('rol_nombre') ?? ''));
+
+        // Sólo aplicar el filtro si el usuario es CLIENTE
+        if ($rolSlug !== 'CLIENTE' && $rolNombre !== 'CLIENTE') {
+            return [];
+        }
+
+        $userId = (int) (session()->get('id') ?? 0);
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $permModel = new \App\Models\UsuarioPermisoDenuncianteModel();
+        // Debe devolver un arreglo simple con los nombres/ids que guardas en denuncias.tipo_denunciante
+        return $permModel->getTiposByUsuario($userId);
+    }
+
 
     public function getDenuncias(): array
     {
@@ -94,12 +111,10 @@ class DenunciaModel extends Model
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
             ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left')
-            ->where('denuncias.estado_actual !=', 7) // Excluir "Desechada"
+            ->where('denuncias.estado_actual !=', 7)
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
-
-
 
     public function getDenunciaById(int $id): ?array
     {
@@ -122,87 +137,73 @@ class DenunciaModel extends Model
             ->first();
     }
 
-
     public function cambiarEstado(int $id, int $estadoNuevo): bool
     {
         $data = ['estado_actual' => $estadoNuevo];
-
         if ($estadoNuevo === 6) {
-            $data['fecha_cierre'] = date('Y-m-d H:i:s'); // Guardar fecha de cierre
+            $data['fecha_cierre'] = date('Y-m-d H:i:s');
         }
-
         return $this->update($id, $data);
     }
 
-
     public function getDenunciasByCliente($clienteId)
     {
-        $estadosPermitidos = [4, 5]; // Estados que el cliente puede ver
+        $estadosPermitidos = [4, 5];
 
-        return $this->select('denuncias.*, 
+        $builder = $this->select('denuncias.*, 
                           sucursales.nombre AS sucursal_nombre, 
                           categorias_denuncias.nombre AS categoria_nombre, 
                           subcategorias_denuncias.nombre AS subcategoria_nombre, 
                           departamentos.nombre AS departamento_nombre, 
                           estados_denuncias.nombre AS estado_nombre,
-                          sexos_denunciante.nombre AS sexo_nombre') // <-- Campo nuevo
+                          sexos_denunciante.nombre AS sexo_nombre')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
             ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
             ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
-            ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left') // <-- JOIN agregado
+            ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left')
             ->where('denuncias.id_cliente', $clienteId)
-            ->whereIn('denuncias.estado_actual', $estadosPermitidos)
-            ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
-            ->findAll();
+            ->whereIn('denuncias.estado_actual', $estadosPermitidos);
+
+        $tiposPermitidos = $this->tiposPermitidosUsuarioActual();
+        if (!empty($tiposPermitidos)) {
+            $builder->whereIn('denuncias.tipo_denunciante', $tiposPermitidos);
+        }
+
+        return $builder->orderBy('denuncias.fecha_hora_reporte', 'DESC')->findAll();
     }
-
-
 
     public function eliminarDenuncia(int $id): bool
     {
-        // Iniciar una transacción para asegurar la consistencia de los datos
         $this->db->transStart();
 
         try {
-            // Obtener los anexos relacionados con la denuncia
             $anexosModel = new \App\Models\AnexoDenunciaModel();
             $anexos = $anexosModel->where('id_denuncia', $id)->findAll();
-
-            // Intentar eliminar los archivos anexos del sistema de archivos
             foreach ($anexos as $anexo) {
                 $rutaArchivo = WRITEPATH . '../public/' . $anexo['ruta_archivo'];
                 if (file_exists($rutaArchivo)) {
-                    unlink($rutaArchivo); // Eliminar el archivo físico
+                    unlink($rutaArchivo);
                 }
             }
-
-            // Eliminar los registros de anexos relacionados con la denuncia
             $anexosModel->where('id_denuncia', $id)->delete();
 
-            // Eliminar los registros de comentarios relacionados con la denuncia
             $comentariosModel = new \App\Models\ComentarioDenunciaModel();
             $comentariosModel->where('id_denuncia', $id)->delete();
 
-            // Eliminar los registros de seguimiento de la denuncia
             $seguimientoModel = new \App\Models\SeguimientoDenunciaModel();
             $seguimientoModel->where('id_denuncia', $id)->delete();
 
-            // Finalmente, eliminar la denuncia
             $this->delete($id);
 
-            // Finalizar la transacción
             $this->db->transComplete();
-
-            // Verificar si la transacción fue exitosa
-            if ($this->db->transStatus() === FALSE) {
+            if ($this->db->transStatus() === false) {
                 throw new \Exception('Error al eliminar la denuncia.');
             }
 
             return true;
         } catch (\Exception $e) {
-            // Si ocurre un error, revertir la transacción
             $this->db->transRollback();
             log_message('error', $e->getMessage());
             return false;
@@ -218,23 +219,21 @@ class DenunciaModel extends Model
                           subcategorias_denuncias.nombre AS subcategoria_nombre, 
                           departamentos.nombre AS departamento_nombre, 
                           estados_denuncias.nombre AS estado_nombre,
-                          sexos_denunciante.nombre AS sexo_nombre') // <-- Nuevo campo
+                          sexos_denunciante.nombre AS sexo_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
             ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
             ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
-            ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left') // <-- JOIN agregado
+            ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left')
             ->whereIn('denuncias.estado_actual', [1, 2])
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
 
-
     public function getDenunciasParaCalidad()
     {
-        // Estados que el supervisor de calidad puede ver
         $estadosRelevantes = [1, 2, 3, 4, 5, 6];
 
         return $this->select('denuncias.*, 
@@ -244,27 +243,23 @@ class DenunciaModel extends Model
                           subcategorias_denuncias.nombre AS subcategoria_nombre, 
                           departamentos.nombre AS departamento_nombre, 
                           estados_denuncias.nombre AS estado_nombre,
-                          sexos_denunciante.nombre AS sexo_nombre') // <-- Nuevo campo
+                          sexos_denunciante.nombre AS sexo_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
             ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
             ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
             ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
             ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual', 'left')
-            ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left') // <-- JOIN agregado
+            ->join('sexos_denunciante', 'sexos_denunciante.id = denuncias.id_sexo', 'left')
             ->whereIn('denuncias.estado_actual', $estadosRelevantes)
             ->orderBy('denuncias.fecha_hora_reporte', 'DESC')
             ->findAll();
     }
 
-
-
     public function filtrarDenuncias($limit, $offset, array $filters, $sort = '', $order = 'asc')
     {
-        // Construir la consulta principal
         $builder = $this->db->table($this->table);
 
-        // Selección de campos y unión con otras tablas
         $builder->select('denuncias.*, 
                   clientes.nombre_empresa AS cliente_nombre, 
                   sucursales.nombre AS sucursal_nombre, 
@@ -274,7 +269,6 @@ class DenunciaModel extends Model
                   subcategorias_denuncias.nombre AS subcategoria_nombre,
                   categorias_denuncias.nombre AS categoria_nombre');
 
-        // Uniones con las tablas relacionadas
         $builder->join('clientes', 'clientes.id = denuncias.id_cliente', 'left');
         $builder->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left');
         $builder->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left');
@@ -283,43 +277,35 @@ class DenunciaModel extends Model
         $builder->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left');
         $builder->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left');
 
-        // Aplicar filtros de fechas si están presentes
         if (!empty($filters['fecha_inicio']) && !empty($filters['fecha_fin'])) {
             $builder->where('denuncias.fecha_hora_reporte >=', $filters['fecha_inicio'] . ' 00:00:00');
             $builder->where('denuncias.fecha_hora_reporte <=', $filters['fecha_fin'] . ' 23:59:59');
         }
 
-        // Aplicar filtro de cliente si no es "todos"
         if (!empty($filters['id_cliente']) && $filters['id_cliente'] !== 'todos') {
             $builder->where('denuncias.id_cliente', $filters['id_cliente']);
         }
 
-        // Aplicar filtro de sucursal si está presente
         if (!empty($filters['id_sucursal'])) {
             $builder->where('denuncias.id_sucursal', $filters['id_sucursal']);
         }
 
-        // Aplicar filtro de departamento si está presente
         if (!empty($filters['id_departamento'])) {
             $builder->where('denuncias.id_departamento', $filters['id_departamento']);
         }
 
-        // Aplicar filtro de medio de recepción si está presente
         if (!empty($filters['medio_recepcion'])) {
             $builder->where('denuncias.medio_recepcion', $filters['medio_recepcion']);
         }
 
-        // Aplicar filtro de estado actual si está presente
         if (!empty($filters['estado_actual'])) {
             $builder->where('denuncias.estado_actual', $filters['estado_actual']);
         }
 
-        // Aplicar filtro de creador si está presente
         if (!empty($filters['id_creador'])) {
             $builder->where('denuncias.id_creador', $filters['id_creador']);
         }
 
-        // Aplicar búsqueda en múltiples columnas si se envió el parámetro 'search'
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $builder->groupStart()
@@ -335,13 +321,9 @@ class DenunciaModel extends Model
                 ->groupEnd();
         }
 
-        // Clonar el builder antes de aplicar los límites para obtener el total
         $countBuilder = clone $builder;
+        $total = $countBuilder->countAllResults(false);
 
-        // Obtener el total de registros que cumplen con los filtros (sin aplicar los límites)
-        $total = $countBuilder->countAllResults(false); // El false evita que se resetee el builder
-
-        // Ordenar por la columna solicitada, si está presente
         $validColumns = [
             'folio',
             'cliente_nombre',
@@ -360,27 +342,19 @@ class DenunciaModel extends Model
             $builder->orderBy('denuncias.fecha_hora_reporte', 'desc');
         }
 
-        // Aplicar los límites para la paginación
         $builder->limit($limit, $offset);
-
-        // Obtener los resultados con paginación
         $result = $builder->get()->getResultArray();
 
-        // Devolver el total y las filas paginadas
         return [
-            'total' => $total,  // Total de registros antes de la paginación
-            'rows' => $result   // Registros paginados
+            'total' => $total,
+            'rows'  => $result
         ];
     }
-
-
-
 
     public function filtrarDenunciasParaCliente($clienteId, $limit, $offset, array $filters, $sort = '', $order = 'asc')
     {
         $builder = $this->db->table($this->table);
 
-        // Selección de campos con las uniones necesarias
         $builder->select('denuncias.*, 
                   clientes.nombre_empresa AS cliente_nombre, 
                   sucursales.nombre AS sucursal_nombre, 
@@ -397,25 +371,26 @@ class DenunciaModel extends Model
         $builder->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left');
         $builder->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left');
 
-        // Filtro obligatorio para que el cliente solo vea sus propias denuncias
         $builder->where('denuncias.id_cliente', $clienteId);
 
-        // Filtrar siempre por estados 4, 5 y 6 (visible para el cliente)
         $estadosVisibles = [4, 5, 6];
         $builder->whereIn('denuncias.estado_actual', $estadosVisibles);
 
-        // Aplicar filtro de estado si está dentro de los estados permitidos
+        // Filtro por tipos permitidos si el usuario cliente tiene permisos configurados
+        $tiposPermitidos = $this->tiposPermitidosUsuarioActual();
+        if (!empty($tiposPermitidos)) {
+            $builder->whereIn('denuncias.tipo_denunciante', $tiposPermitidos);
+        }
+
         if (!empty($filters['estado_actual']) && in_array($filters['estado_actual'], $estadosVisibles)) {
             $builder->where('denuncias.estado_actual', $filters['estado_actual']);
         }
 
-        // Filtrar por fecha de reporte si está presente
         if (!empty($filters['fecha_inicio']) && !empty($filters['fecha_fin'])) {
             $builder->where('denuncias.fecha_hora_reporte >=', $filters['fecha_inicio'] . ' 00:00:00');
             $builder->where('denuncias.fecha_hora_reporte <=', $filters['fecha_fin'] . ' 23:59:59');
         }
 
-        // Otros filtros opcionales
         if (!empty($filters['id_sucursal'])) {
             $builder->where('denuncias.id_sucursal', $filters['id_sucursal']);
         }
@@ -432,7 +407,6 @@ class DenunciaModel extends Model
             $builder->where('denuncias.id_creador', $filters['id_creador']);
         }
 
-        // Aplicar búsqueda en múltiples columnas si se envió el parámetro 'search'
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $builder->groupStart()
@@ -448,7 +422,6 @@ class DenunciaModel extends Model
                 ->groupEnd();
         }
 
-        // Ordenar por la columna solicitada, si está presente
         $validColumns = [
             'folio',
             'sucursal_nombre',
@@ -466,20 +439,15 @@ class DenunciaModel extends Model
             $builder->orderBy('denuncias.fecha_hora_reporte', 'desc');
         }
 
-        // Clonar el builder para contar el total sin aplicar el límite
         $countQuery = clone $builder;
-        $total = $countQuery->countAllResults(false);  // Evita que la consulta se resetee
+        $total = $countQuery->countAllResults(false);
 
-        // Aplicar el límite y el offset para la paginación
         $builder->limit($limit, $offset);
-
-        // Obtener los resultados paginados
         $result = $builder->get()->getResultArray();
 
-        // Retornar el total y los resultados
         return [
-            'total' => $total,   // El total de registros sin paginación
-            'rows' => $result    // Los registros actuales, según el límite y el offset
+            'total' => $total,
+            'rows'  => $result
         ];
     }
 
@@ -519,12 +487,10 @@ class DenunciaModel extends Model
     {
         $builder = $this->db->table('denuncias d');
 
-        // SELECT con total de denuncias y total de subcategorías distintas
         $builder->select('cd.id, cd.nombre AS categoria, COUNT(d.id) AS total_denuncias, COUNT(DISTINCT sd.id) AS total_subcategorias');
         $builder->join('categorias_denuncias cd', 'cd.id = d.categoria', 'left');
         $builder->join('subcategorias_denuncias sd', 'sd.id = d.subcategoria', 'left');
 
-        // Aplicar filtros
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $builder->where('d.fecha_hora_reporte >=', $filters['start_date'] . ' 00:00:00');
             $builder->where('d.fecha_hora_reporte <=', $filters['end_date'] . ' 23:59:59');

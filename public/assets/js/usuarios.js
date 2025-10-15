@@ -32,52 +32,46 @@ $(function () {
     tplDetalleTabla = $('#tplDetalleTabla').html();
     $modalCrearUsuario = $('#modalCrearUsuario');
 
-    $('.select2ModalCrearUsuario').select2({
+    // Selects del modal Crear
+    $('#rol_id').select2({
         placeholder: 'Seleccione una opción',
         allowClear: true,
-        dropdownParent: $('#modalCrearUsuario'),
+        dropdownParent: $modalCrearUsuario,
         data: optionsRoles
     });
 
+    $('#id_cliente').select2({
+        placeholder: 'Seleccione una opción',
+        allowClear: true,
+        dropdownParent: $modalCrearUsuario
+    });
+
+    $('#tipos_denunciante').select2({
+        placeholder: 'Seleccione uno o varios',
+        allowClear: true,
+        dropdownParent: $modalCrearUsuario
+    });
+
     $('#rol_id').on('change', function () {
-        handleRoleChange($(this).val(), '#clienteContainer', '#id_cliente', '#soloLecturaContainer');
+        handleRoleChange($(this).val(), '#clienteContainer', '#id_cliente', '#soloLecturaContainer', '#tiposDenuncianteContainer', '#tipos_denunciante');
     });
 
     $tablaUsuarios = $('#tablaUsuarios').bootstrapTable({
         url: `${Server}usuarios/listar`,
         columns: [
-            {
-                field: 'id',
-                title: 'ID'
-            },
-            {
-                field: 'nombre_usuario',
-                title: 'Nombre'
-            },
-            {
-                field: 'correo_electronico',
-                title: 'Correo'
-            },
-            {
-                field: 'ultima_conexion',
-                title: 'Última Conexión'
-            },
-            {
-                field: 'rol_nombre',
-                title: 'Rol'
-            },
-            {
-                field: 'cliente_nombre',
-                title: 'Cliente'
-            },
+            { field: 'id', title: 'ID' },
+            { field: 'nombre_usuario', title: 'Nombre' },
+            { field: 'correo_electronico', title: 'Correo' },
+            { field: 'ultima_conexion', title: 'Última Conexión' },
+            { field: 'rol_nombre', title: 'Rol' },
+            { field: 'cliente_nombre', title: 'Cliente' },
             {
                 field: 'recibe_notificaciones',
                 title: 'Notificaciones',
-                formatter: function (value, row) {
+                formatter: function (value) {
                     return value === '1' ? 'Sí' : 'No';
                 }
             },
-
             {
                 field: 'operate',
                 title: 'Acciones',
@@ -98,23 +92,30 @@ $(function () {
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
 
-            // Inicializar select2 y validación para el formulario de edición
-            $detail.find('select').select2();
-            const rolSelect = $detail.find('[name="rol_id"]');
-            rolSelect.on('change', function () {
-                handleRoleChange($(this).val(), '#clienteContainer-' + row.id, '[name="id_cliente"]', '#soloLecturaContainer-' + row.id);
+            // Selects de edición
+            $detail.find(`#rol_id-${row.id}`).select2({ dropdownParent: $detail });
+            $detail.find(`#id_cliente-${row.id}`).select2({ dropdownParent: $detail });
+            $detail.find(`#tipos_denunciante-${row.id}`).select2({
+                placeholder: 'Seleccione uno o varios',
+                allowClear: true,
+                dropdownParent: $detail
             });
 
+            const rolSelect = $detail.find('[name="rol_id"]');
+            rolSelect.on('change', function () {
+                handleRoleChange($(this).val(), '#clienteContainer-' + row.id, '[name="id_cliente"]', '#soloLecturaContainer-' + row.id, '#tiposDenuncianteContainer-' + row.id, '#tipos_denunciante-' + row.id);
+            });
             rolSelect.trigger('change');
 
+            // Precarga de permisos por tipo_denunciante cuando es Cliente
             if (row.rol_id == 4) {
-                // Si es Cliente
-                $('#soloLecturaContainer-' + row.id).show();
-            } else {
-                $('#soloLecturaContainer-' + row.id).hide();
-                $('#solo_lectura-' + row.id).prop('checked', false);
+                $.getJSON(`${Server}usuarios/${row.id}/tipos-denunciante`, function (tipos) {
+                    const $sel = $detail.find('#tipos_denunciante-' + row.id);
+                    $sel.val(tipos).trigger('change'); // vacío => ver todos
+                });
             }
 
+            // Validación
             $detail.find('.formEditarUsuario').validate({
                 rules: {
                     nombre_usuario: {
@@ -149,15 +150,12 @@ $(function () {
                             }
                         }
                     },
-                    contrasena: {
-                        minlength: 5
-                    },
-                    rol_id: {
-                        required: true
-                    },
+                    contrasena: { minlength: 5 },
+                    rol_id: { required: true },
                     id_cliente: {
                         required: function () {
-                            return $detail.find('[name="rol_id"]').val() == 4 || $detail.find('[name="rol_id"]').val() == 5; // Verifica si el rol es Agente o Supervisor de Calidad
+                            const v = $detail.find('[name="rol_id"]').val();
+                            return v == 4 || v == 5;
                         }
                     }
                 },
@@ -172,36 +170,28 @@ $(function () {
                         email: 'Por favor ingrese un correo electrónico válido',
                         remote: 'El correo electrónico ya está en uso'
                     },
-                    contrasena: {
-                        minlength: 'La contraseña debe tener al menos 5 caracteres'
-                    },
-                    rol_id: {
-                        required: 'Por favor seleccione un rol'
-                    },
-                    id_cliente: {
-                        required: 'Por favor seleccione un cliente'
-                    }
+                    contrasena: { minlength: 'La contraseña debe tener al menos 5 caracteres' },
+                    rol_id: { required: 'Por favor seleccione un rol' },
+                    id_cliente: { required: 'Por favor seleccione un cliente' }
                 }
             });
 
-            // Evento para checkbox de notificaciones
+            // Checkbox notificaciones (edición)
             const $checkbox = $detail.find(`#recibe_notificaciones-${row.id}`);
             const $correoContainer = $detail.find(`#correoNotificacionesContainer-${row.id}`);
-
             $checkbox.on('change', function () {
                 if ($(this).is(':checked')) {
                     $correoContainer.show();
                 } else {
                     $correoContainer.hide();
-                    $correoContainer.find('input').val(''); // Limpia el campo si se desactiva
+                    $correoContainer.find('input').val('');
                 }
             });
-
-            // Disparar el evento en la carga si el checkbox está activo
             $checkbox.trigger('change');
         }
     });
 
+    // Checkbox notificaciones (crear)
     $('#recibe_notificaciones').on('change', function () {
         if ($(this).is(':checked')) {
             $('#correoNotificacionesContainer').show();
@@ -211,6 +201,7 @@ $(function () {
         }
     });
 
+    // Validación crear
     $('#formCrearUsuario').validate({
         rules: {
             nombre_usuario: {
@@ -243,13 +234,11 @@ $(function () {
                 required: true,
                 minlength: 5
             },
-            rol_id: {
-                required: true
-            },
+            rol_id: { required: true },
             id_cliente: {
                 required: function () {
                     const selectedRole = $('#formCrearUsuario [name="rol_id"]').val();
-                    return selectedRole == 4 || selectedRole == 5; // Agente o Supervisor de Calidad
+                    return selectedRole == 4 || selectedRole == 5;
                 }
             }
         },
@@ -268,12 +257,8 @@ $(function () {
                 required: 'Por favor ingrese la contraseña',
                 minlength: 'La contraseña debe tener al menos 5 caracteres'
             },
-            rol_id: {
-                required: 'Por favor seleccione un rol'
-            },
-            id_cliente: {
-                required: 'Por favor seleccione un cliente'
-            }
+            rol_id: { required: 'Por favor seleccione un rol' },
+            id_cliente: { required: 'Por favor seleccione un cliente' }
         },
         errorPlacement: function (error, element) {
             error.addClass('invalid-feedback');
@@ -283,10 +268,10 @@ $(function () {
                 error.insertAfter(element);
             }
         },
-        highlight: function (element, errorClass, validClass) {
+        highlight: function (element) {
             $(element).addClass('is-invalid').removeClass('is-valid');
         },
-        unhighlight: function (element, errorClass, validClass) {
+        unhighlight: function (element) {
             $(element).addClass('is-valid').removeClass('is-invalid');
         },
         submitHandler: function (form) {
@@ -299,13 +284,18 @@ $(function () {
                 url: `${Server}usuarios/guardar`,
                 method: 'POST',
                 data: formData,
-                success: function (data) {
+                success: function () {
                     loadingFormXHR($frm, false);
                     $modalCrearUsuario.modal('hide');
                     $tablaUsuarios.bootstrapTable('refresh');
                     showToast('¡Listo!, se creó correctamente el usuario.', 'success');
                     $frm[0].reset();
                     $frm.find('.is-valid').removeClass('is-valid');
+                    // Reset selects y contenedores
+                    $('#tipos_denunciante').val(null).trigger('change');
+                    $('#tiposDenuncianteContainer').hide();
+                    $('#clienteContainer').hide();
+                    $('#soloLecturaContainer').hide();
                 },
                 error: function (xhr) {
                     loadingFormXHR($frm, false);
@@ -322,9 +312,7 @@ $(function () {
         e.preventDefault();
 
         const $frm = $(this);
-        if (!$frm.valid()) {
-            return false;
-        }
+        if (!$frm.valid()) return false;
 
         const formData = $frm.serializeObject();
 
@@ -334,7 +322,7 @@ $(function () {
             url: `${Server}usuarios/guardar`,
             method: 'POST',
             data: formData,
-            success: function (data) {
+            success: function () {
                 loadingFormXHR($frm, false);
                 $tablaUsuarios.bootstrapTable('refresh');
                 showToast('¡Listo!, se actualizó correctamente el usuario.', 'success');
@@ -354,19 +342,21 @@ $(function () {
         $form[0].reset();
         $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
         $form.validate().resetForm();
+        // Limpia selects múltiples
+        $('#tipos_denunciante').val(null).trigger('change');
     });
 });
 
 window.operateEvents = {
-    'click .edit': function (e, value, row, index) {
+    'click .edit': function (e, value, row) {
         editarUsuario(row.id);
     },
-    'click .remove': function (e, value, row, index) {
+    'click .remove': function (e, value, row) {
         eliminarUsuario(row.id);
     }
 };
 
-function operateFormatter(value, row, index) {
+function operateFormatter(value, row) {
     const renderData = Handlebars.compile(tplAccionesTabla)(row);
     return renderData;
 }
@@ -386,21 +376,25 @@ async function eliminarUsuario(id) {
 }
 
 /**
- * Muestra u oculta el contenedor de selección de cliente según el rol seleccionado
- * @param {number} rolId - ID del rol seleccionado
- * @param {string} clienteContainerSelector - Selector del contenedor del campo de cliente
- * @param {string} clienteFieldSelector - Selector del campo de cliente
+ * Muestra/oculta cliente, solo lectura y el multiselect de tipos_denunciante según el rol.
+ * @param {number} rolId
+ * @param {string} clienteContainerSelector
+ * @param {string} clienteFieldSelector
+ * @param {string} soloLecturaContainerSelector
+ * @param {string} tiposContainerSelector
+ * @param {string} tiposSelectSelector
  */
-function handleRoleChange(rolId, clienteContainerSelector, clienteFieldSelector, soloLecturaContainerSelector) {
+function handleRoleChange(rolId, clienteContainerSelector, clienteFieldSelector, soloLecturaContainerSelector, tiposContainerSelector, tiposSelectSelector) {
     if (rolId == 4) {
-        // Cliente
         $(clienteContainerSelector).show();
         $(clienteFieldSelector).prop('required', true);
-        $(soloLecturaContainerSelector).show(); // Muestra solo lectura
+        $(soloLecturaContainerSelector).show();
+        if (tiposContainerSelector) $(tiposContainerSelector).show();
     } else {
         $(clienteContainerSelector).hide();
         $(clienteFieldSelector).prop('required', false);
-        $(soloLecturaContainerSelector).hide(); // Oculta solo lectura
-        $(soloLecturaContainerSelector).find('input').prop('checked', false);
+        $(soloLecturaContainerSelector).hide().find('input').prop('checked', false);
+        if (tiposContainerSelector) $(tiposContainerSelector).hide();
+        if (tiposSelectSelector) $(tiposSelectSelector).val(null).trigger('change');
     }
 }

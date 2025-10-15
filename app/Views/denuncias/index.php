@@ -187,31 +187,51 @@
                                 <span class="me-2 d-none"><strong>ID Sug:</strong> <span class="ia-id" id="iaId-{{id}}"></span></span>
                             </div>
 
-                            <!-- Resultado actual (lectura) -->
-                            <div id="iaResult-{{id}}" class="ia-result small text-muted border bg-white p-3 rounded" style="min-height: 80px;">
-                                No hay sugerencia generada aún.
-                            </div>
+                            <div class="row g-3">
+                                <!-- Original IA -->
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Sugerencia original (IA)</label>
+                                    <div id="iaResult-{{id}}" class="ia-result small text-muted border bg-white p-3 rounded" style="min-height: 120px;">
+                                        No hay sugerencia generada aún.
+                                    </div>
+                                </div>
 
-                            <!-- Editor de agente (oculto hasta presionar Editar) -->
-                            <div class="mt-2 d-none" id="iaEditorWrap-{{id}}">
-                                <label class="form-label small text-muted">Edición del agente</label>
-                                <textarea id="iaEdit-{{id}}" class="form-control" rows="8" placeholder="Ajusta aquí la sugerencia antes de publicarla al cliente..."></textarea>
-                            </div>
+                                <!-- Versión cliente (edición del agente) -->
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <label class="form-label small text-muted mb-0">Versión para cliente (edición del agente)</label>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm d-none btn-editar-ia" data-id="{{id}}">
+                                                <i class="fa fa-pen me-1"></i> Editar
+                                            </button>
+                                            <button type="button" class="btn btn-success btn-sm d-none btn-guardar-edicion-ia" data-id="{{id}}">
+                                                <i class="fa fa-save me-1"></i> Guardar edición
+                                            </button>
+                                        </div>
+                                    </div>
 
-                            <!-- Acciones de edición / publicación -->
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm d-none btn-editar-ia" data-id="{{id}}">
-                                    <i class="fa fa-pen me-1"></i> Editar
-                                </button>
-                                <button type="button" class="btn btn-success btn-sm d-none btn-guardar-edicion-ia" data-id="{{id}}">
-                                    <i class="fa fa-save me-1"></i> Guardar edición
-                                </button>
-                                <button type="button" class="btn btn-outline-success btn-sm d-none btn-publicar-ia" data-id="{{id}}" data-publicar="1">
-                                    <i class="fa fa-upload me-1"></i> Publicar al cliente
-                                </button>
-                                <button type="button" class="btn btn-outline-warning btn-sm d-none btn-retirar-ia" data-id="{{id}}" data-publicar="0">
-                                    <i class="fa fa-eye-slash me-1"></i> Retirar de cliente
-                                </button>
+                                    <!-- Editor -->
+                                    <div class="mt-2 d-none" id="iaEditorWrap-{{id}}">
+                                        <textarea id="iaEdit-{{id}}" class="form-control" rows="8" placeholder="Ajusta aquí la sugerencia antes de publicarla al cliente..."></textarea>
+                                    </div>
+
+                                    <!-- Vista previa -->
+                                    <div class="mt-2" id="iaCliente-{{id}}">
+                                        <div class="small text-muted border bg-white p-3 rounded" style="min-height: 120px;">
+                                            Sin edición del agente todavía.
+                                        </div>
+                                    </div>
+
+                                    <!-- Acciones publicación -->
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <button type="button" class="btn btn-outline-success btn-sm d-none btn-publicar-ia" data-id="{{id}}" data-publicar="1">
+                                            <i class="fa fa-upload me-1"></i> Publicar al cliente
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm d-none btn-retirar-ia" data-id="{{id}}" data-publicar="0">
+                                            <i class="fa fa-eye-slash me-1"></i> Retirar de cliente
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -276,7 +296,20 @@
                                                 {{#ifCond tipo '==' 'application/pdf'}}
                                                     <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="pdf-{{id}}" data-title="{{nombre_archivo}}" class="pdf-viewer">{{nombre_archivo}}</a>
                                     {{else}}
+                                        {{#ifCond tipo '==' 'audio/mpeg'}}
+                                            <div class="w-100">
+                                                <div class="small mb-2">{{nombre_archivo}}</div>
+                                                <audio controls preload="none" style="width: 100%;">
+                                                    <source src="<?= base_url('/') ?>{{ruta_archivo}}" type="audio/mpeg">
+                                                    Tu navegador no soporta audio HTML5.
+                                                </audio>
+                                                <div class="mt-1">
+                                                    <a href="<?= base_url('/') ?>{{ruta_archivo}}" download class="small">Descargar</a>
+                                                </div>
+                                            </div>
+                                    {{else}}
                                         <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-fancybox="gallery" data-caption="{{nombre_archivo}}">{{nombre_archivo}}</a>
+                                        {{/ifCond}}
                                                 {{/ifCond}}
                                                 <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
                                                     <i class="fa fa-trash"></i> Eliminar
@@ -312,6 +345,7 @@
         </div>
     </div>
 </template>
+
 
 <?= $this->endSection() ?>
 
@@ -574,6 +608,24 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4/dist/fancybox.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/akottr/dragtable@master/dragtable.css">
+<style>
+    /* overlay para estados de IA */
+    .ia-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, .6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        border-radius: .5rem;
+        z-index: 2;
+    }
+
+    #tplDetalleTabla .border.rounded.p-3.bg-light {
+        position: relative;
+    }
+</style>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -593,7 +645,6 @@
 <script>
     /* Helpers UI mínimos para el modal de prompt (el resto va en assets/js/denuncias.js) */
     document.addEventListener('click', function(e) {
-        // Copiar prompt
         if (e.target && e.target.id === 'btnCopiarPrompt') {
             const pre = document.getElementById('promptIAContent');
             if (!pre) return;

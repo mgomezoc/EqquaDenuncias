@@ -30,8 +30,8 @@
             </table>
         </div>
     </div>
-
 </div>
+
 <template id="tplAccionesTabla">
     <button class="btn btn-sm btn-danger remove">
         <i class="fa fa-trash"></i>
@@ -57,34 +57,42 @@
                         {{{selectOptions roles rol_id}}}
                     </select>
                 </div>
-                <div class="col-md-4" id="clienteContainer-{{id}}" style="display: none;">
+
+                <div class="col-md-4" id="clienteContainer-{{id}}" style="display:none;">
                     <label for="id_cliente-{{id}}" class="form-label">Cliente</label>
                     <select class="form-select" id="id_cliente-{{id}}" name="id_cliente">
                         <option value="">Seleccionar Cliente</option>
                         {{{selectOptions clientes id_cliente}}}
                     </select>
                 </div>
-                <div class="col-md-12" id="soloLecturaContainer-{{id}}" style="display: none;">
+
+                <div class="col-md-12" id="soloLecturaContainer-{{id}}" style="display:none;">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox"
-                            id="solo_lectura-{{id}}"
-                            name="solo_lectura"
-                            value="1" {{solo_lectura_checked}}>
+                        <input class="form-check-input" type="checkbox" id="solo_lectura-{{id}}" name="solo_lectura" value="1" {{solo_lectura_checked}}>
                         <label class="form-check-label" for="solo_lectura-{{id}}">Usuario de Solo Lectura</label>
                     </div>
                 </div>
 
+                <!-- Permisos por tipo de denunciante (solo rol Cliente) -->
+                <div class="col-md-12" id="tiposDenuncianteContainer-{{id}}" style="display:none;">
+                    <label class="form-label">Tipos de denunciante visibles</label>
+                    <select class="form-select" id="tipos_denunciante-{{id}}" name="tipos_denunciante[]" multiple>
+                        <option value="Colaborador">Colaborador</option>
+                        <option value="Proveedor">Proveedor</option>
+                        <option value="Cliente">Cliente</option>
+                        <option value="No se">No se</option>
+                    </select>
+                    <small class="text-muted">Déjalo vacío para que el usuario vea <b>todos</b> los tipos.</small>
+                </div>
+                <!-- /Permisos por tipo de denunciante -->
 
                 <div class="col-md-12">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox"
-                            id="recibe_notificaciones-{{id}}"
-                            name="recibe_notificaciones"
-                            value="1" {{recibe_notificaciones_checked}}>
+                        <input class="form-check-input" type="checkbox" id="recibe_notificaciones-{{id}}" name="recibe_notificaciones" value="1" {{recibe_notificaciones_checked}}>
                         <label class="form-check-label" for="recibe_notificaciones-{{id}}">Recibir notificaciones del sistema</label>
                     </div>
                 </div>
-                <div class="col-md-4" id="correoNotificacionesContainer-{{id}}" style="display: none;">
+                <div class="col-md-4" id="correoNotificacionesContainer-{{id}}" style="display:none;">
                     <label for="correo_notificaciones-{{id}}" class="form-label">Correo para Notificaciones</label>
                     <input type="email" class="form-control" id="correo_notificaciones-{{id}}" name="correo_notificaciones" value="{{correo_notificaciones}}">
                 </div>
@@ -102,7 +110,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
-<!-- Modal Crear Usuario -->
 <div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -130,7 +137,8 @@
                             <option value="" selected disabled>Selecciona una opción</option>
                         </select>
                     </div>
-                    <div class="mb-3" id="clienteContainer" style="display: none;">
+
+                    <div class="mb-3" id="clienteContainer" style="display:none;">
                         <label for="id_cliente" class="form-label">Cliente</label>
                         <select class="form-select select2ModalCrearUsuario" id="id_cliente" name="id_cliente">
                             <option value="">Seleccionar Cliente</option>
@@ -139,12 +147,26 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-3" id="soloLecturaContainer" style="display: none;">
+
+                    <div class="mb-3" id="soloLecturaContainer" style="display:none;">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="solo_lectura" name="solo_lectura" value="1">
                             <label class="form-check-label" for="solo_lectura">Usuario de Solo Lectura</label>
                         </div>
                     </div>
+
+                    <!-- Permisos por tipo de denunciante (solo rol Cliente) -->
+                    <div class="mb-3" id="tiposDenuncianteContainer" style="display:none;">
+                        <label class="form-label">Tipos de denunciante visibles</label>
+                        <select class="form-select select2ModalCrearUsuario" id="tipos_denunciante" name="tipos_denunciante[]" multiple>
+                            <option value="Colaborador">Colaborador</option>
+                            <option value="Proveedor">Proveedor</option>
+                            <option value="Cliente">Cliente</option>
+                            <option value="No se">No se</option>
+                        </select>
+                        <small class="text-muted">Déjalo vacío para que el usuario vea <b>todos</b> los tipos.</small>
+                    </div>
+                    <!-- /Permisos por tipo de denunciante -->
 
                     <div class="mb-3">
                         <div class="form-check">
@@ -152,11 +174,10 @@
                             <label class="form-check-label" for="recibe_notificaciones">Recibir notificaciones del sistema</label>
                         </div>
                     </div>
-                    <div class="mb-3" id="correoNotificacionesContainer" style="display: none;">
+                    <div class="mb-3" id="correoNotificacionesContainer" style="display:none;">
                         <label for="correo_notificaciones" class="form-label">Correo para Notificaciones</label>
                         <input type="email" class="form-control" id="correo_notificaciones" name="correo_notificaciones" placeholder="Opcional, si no se repite el correo principal">
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -166,7 +187,6 @@
         </div>
     </div>
 </div>
-
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -182,11 +202,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/localization/messages_es.min.js"></script>
 <script>
-    let roles = '<?= json_encode($roles) ?>';
-    let clientes = '<?= json_encode($clientes) ?>';
-
-    roles = JSON.parse(roles);
-    clientes = JSON.parse(clientes);
+    let roles = JSON.parse('<?= json_encode($roles) ?>');
+    let clientes = JSON.parse('<?= json_encode($clientes) ?>');
 </script>
 <script src="<?= base_url('assets/js/usuarios.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

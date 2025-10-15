@@ -28,10 +28,10 @@ class IAService
             throw new Exception('API Key de OpenAI no configurada');
         }
 
-        // Lee configuración desde .env con defaults orientados a respuesta breve y natural
+        // Lee configuración desde .env con defaults razonables
         $this->modelo      = (string) (getenv('IA_MODELO_USADO') ?: 'gpt-4o');
-        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 350); // antes 800
-        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.6); // antes 0.4
+        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 800);
+        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.4);
         $this->timeout     = (int)    (getenv('IA_TIMEOUT_SEGUNDOS') ?: 30);
 
         // Flags de logging
@@ -49,27 +49,35 @@ class IAService
         try {
             $prompt = $this->construirPrompt($denunciaData);
 
+            // Armamos el payload base
             $postData = [
                 'model' => $this->modelo,
                 'messages' => [
                     [
                         'role'    => 'system',
-                        // Tono conversacional y práctico; evita burocracia y listas largas
-                        'content' => 'Eres un asistente empático y claro. Das consejos breves, prácticos y realistas en un tono humano y respetuoso. Evitas listas largas, jerga y lenguaje burocrático. Prefieres 1–2 párrafos y, si aporta, hasta 3 ideas puntuales.'
+                        'content' => 'Eres un consultor amigable y experimentado en recursos humanos. Das consejos prácticos y naturales sobre cómo resolver situaciones laborales. Tu estilo es personal, comprensivo y directo, como un amigo con experiencia que da buenos consejos.'
                     ],
                     [
                         'role'    => 'user',
                         'content' => $prompt
                     ]
                 ],
-                'max_tokens'  => $this->maxTokens,
                 'temperature' => $this->temperature,
             ];
+
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            // MODELOS NUEVOS (gpt-5*, o1/o3) usan max_completion_tokens en vez de max_tokens
+            if ($this->usaMaxCompletionTokens($this->modelo)) {
+                $postData['max_completion_tokens'] = $this->maxTokens;
+            } else {
+                $postData['max_tokens'] = $this->maxTokens;
+            }
+            // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
             if ($this->logRequests) {
                 log_message(
                     'debug',
-                    '[IAService] Enviando a OpenAI: model:{m} max_tokens:{mt} temp:{t}',
+                    '[IAService] Enviando a OpenAI: model:{m} maxtok:{mt} temp:{t}',
                     ['m' => $this->modelo, 'mt' => $this->maxTokens, 't' => $this->temperature]
                 );
             }
@@ -89,7 +97,13 @@ class IAService
 
             if ($response && isset($response['choices'][0]['message']['content'])) {
                 $sugerencia   = trim((string) $response['choices'][0]['message']['content']);
-                $tokensUsados = (int) ($response['usage']['total_tokens'] ?? 0);
+                // usage puede variar por modelo; intentamos mapear robusto
+                $tokensUsados = (int) (
+                    $response['usage']['total_tokens']
+                    ?? $response['usage']['output_tokens']
+                    ?? $response['usage']['completion_tokens']
+                    ?? 0
+                );
 
                 log_message('debug', '[IAService] OK tokens:{t} len:{l}', [
                     't' => $tokensUsados,
@@ -113,72 +127,70 @@ class IAService
     }
 
     /**
-     * Prompt conversacional: pide consejo breve y natural (no plan ni secciones).
+     * Construye un prompt natural y personal para sugerencias de solución
      */
     private function construirPrompt(array $d): string
     {
-        // Inferencia simple de tipología para dar contexto, con mapeo ampliado
+        // Inferencia simple de tipología para contexto
         $desc = mb_strtolower($d['descripcion'] ?? '');
         $tipologia = 'situación laboral';
         $map = [
             'nalgad' => 'acoso físico',
-            'tocó'   => 'contacto inapropiado',
-            'toque'  => 'contacto inapropiado',
+            'tocó' => 'contacto inapropiado',
+            'toque' => 'contacto inapropiado',
             'manose' => 'acoso físico',
-            'golpe'  => 'agresión',
-            'empuj'  => 'agresión',
-            'insult' => 'trato irrespetuoso',
-            'grit'   => 'trato irrespetuoso',
+            'golpe' => 'agresión',
+            'empuj' => 'agresión',
+            'insult' => 'acoso verbal',
+            'grit' => 'trato irrespetuoso',
             'amenaz' => 'intimidación',
             'celular' => 'falta de atención al cliente',
-            'jugando' => 'distracción en el trabajo',
-            'no me hacia caso' => 'falta de atención al cliente',
-            'no me hacía caso' => 'falta de atención al cliente',
+            'jugando' => 'distracción en el trabajo'
         ];
         foreach ($map as $needle => $label) {
-            if ($needle !== '' && mb_strpos($desc, $needle) !== false) {
+            if (mb_strpos($desc, $needle) !== false) {
                 $tipologia = $label;
                 break;
             }
         }
 
         // Campos con fallback legible
-        $folio       = $d['folio']               ?? 'Sin folio';
-        $tipoDen     = $d['tipo_denunciante']    ?? 'No especificado';
-        $cat         = $d['categoria_nombre']    ?? 'Sin categorizar';
-        $subcat      = $d['subcategoria_nombre'] ?? 'N/A';
-        $depto       = $d['departamento_nombre'] ?? 'No especificado';
-        $sucursal    = $d['sucursal_nombre']     ?? 'No especificada';
-        $area        = $d['area_incidente']      ?? 'área no especificada';
-        $fechaInc    = $d['fecha_incidente']     ?? 'fecha no especificada';
-        $comoEnt     = $d['como_se_entero']      ?? 'no especificado';
-        $denunciado  = $d['denunciar_a_alguien'] ?? 'persona no identificada';
-        $descripcion = $d['descripcion']         ?? 'Sin descripción';
+        $folio         = $d['folio']               ?? 'Sin folio';
+        $tipoDen       = $d['tipo_denunciante']    ?? 'No especificado';
+        $catNom        = $d['categoria_nombre']    ?? 'Sin categorizar';
+        $subcatNom     = $d['subcategoria_nombre'] ?? 'N/A';
+        $deptoNom      = $d['departamento_nombre'] ?? 'No especificado';
+        $sucursalNom   = $d['sucursal_nombre']     ?? 'No especificada';
+        $area          = $d['area_incidente']      ?? 'área no especificada';
+        $fechaInc      = $d['fecha_incidente']     ?? 'fecha no especificada';
+        $comoEnt       = $d['como_se_entero']      ?? 'no especificado';
+        $denunciado    = $d['denunciar_a_alguien'] ?? 'persona no identificada';
+        $descripcion   = $d['descripcion']         ?? 'Sin descripción';
 
-        // Prompt natural y personal. Permite (opcional) hasta 3 bullets cortos si aporta.
-        $prompt = <<<TXT
-Te pido un consejo breve y natural (no un plan formal) sobre un caso real del trabajo. 
-Piensa como un compañero con experiencia que quiere ayudar sin burocracia.
+        // Prompt natural y personal
+        $prompt = "Hola, necesito tu consejo sobre una situación que pasó en el trabajo. ";
+        $prompt .= "Es el caso {$folio} y se trata de {$tipologia}.\n\n";
 
-Contexto:
-- Folio: {$folio}
-- Denunciante: {$tipoDen}
-- Sucursal/Área: {$sucursal} / {$area}
-- Departamento: {$depto}
-- Categoría/Subcategoría: {$cat} / {$subcat}
-- Fecha del incidente: {$fechaInc}
-- Cómo se enteró: {$comoEnt}
-- Persona involucrada: {$denunciado}
-- Tipología aproximada: {$tipologia}
-- Descripción de la persona: "{$descripcion}"
+        $prompt .= "**Los detalles son:**\n";
+        $prompt .= "• Quién reporta: {$tipoDen}\n";
+        $prompt .= "• Dónde pasó: {$deptoNom} - {$sucursalNom}, en {$area}\n";
+        $prompt .= "• Cuándo: {$fechaInc}\n";
+        $prompt .= "• Cómo se enteró: {$comoEnt}\n";
+        $prompt .= "• Persona involucrada: {$denunciado}\n";
+        $prompt .= "• Lo que pasó: \"{$descripcion}\"\n\n";
 
-Qué necesito exactamente:
-- Una sola respuesta, en tono humano y empático.
-- 1–2 párrafos claros con una sugerencia realista de qué podría hacerse.
-- Si agrega valor, incluye hasta 3 ideas puntuales como viñetas (máximo 3 bullets).
-- Evita pasos cronológicos, KPIs, secciones numeradas o lenguaje legal/burocrático.
-- Mantente breve (~160–220 palabras), español neutro.
-TXT;
+        $prompt .= "**¿Qué me recomiendas hacer?**\n";
+        $prompt .= "Dame una sugerencia práctica y natural de cómo manejar esto. ";
+        $prompt .= "No necesito un plan formal con pasos numerados, sino más bien un consejo amigable ";
+        $prompt .= "sobre qué sería lo más sensato hacer en esta situación. ";
+        $prompt .= "Habla como si fueras un compañero de trabajo con experiencia dando un buen consejo.\n\n";
+
+        $prompt .= "**Mantén tu respuesta:**\n";
+        $prompt .= "- Natural y conversacional\n";
+        $prompt .= "- Práctica y aplicable\n";
+        $prompt .= "- Entre 200-300 palabras\n";
+        $prompt .= "- En español neutro\n";
+        $prompt .= "- Sin listas numeradas o bullets formales\n";
 
         return $prompt;
     }
@@ -252,6 +264,19 @@ TXT;
     }
 
     // ========= Helpers =========
+
+    private function usaMaxCompletionTokens(string $model): bool
+    {
+        // Modelos que actualmente requieren max_completion_tokens en Chat Completions
+        $m = strtolower($model);
+        return (
+            str_starts_with($m, 'gpt-5') ||   // gpt-5, gpt-5-nano, etc.
+            str_starts_with($m, 'o1')    ||   // o1, o1-mini...
+            str_starts_with($m, 'o3')    ||   // o3, o3-mini...
+            str_contains($m, '4.1')      ||   // gpt-4.1 familias recientes
+            str_contains($m, '4o-mini')       // minis recientes
+        );
+    }
 
     private function boolEnv(string $key, bool $default = false): bool
     {

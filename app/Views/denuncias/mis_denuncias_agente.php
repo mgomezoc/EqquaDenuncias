@@ -187,15 +187,75 @@
                             <div class="card-body">
                                 {{#each anexos}}
                                     <div class="card mb-3">
-                                        <div class="card-body d-flex justify-content-between align-items-center">
+                                        <div class="card-body">
+                                            <!-- PDF -->
                                             {{#ifCond tipo '==' 'application/pdf'}}
-                                                <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="pdf-{{id}}" data-title="{{nombre_archivo}}" class="pdf-viewer">{{nombre_archivo}}</a>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="pdf-{{id}}" data-title="{{nombre_archivo}}" class="pdf-viewer">
+                                                        {{nombre_archivo}}
+                                                    </a>
+                                                    <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
+                                                        <i class="fa fa-trash"></i> Eliminar
+                                                    </button>
+                                                </div>
+
+                                                <!-- Audio (mp3/mpeg, ogg, wav) -->
+                                {{else ifCond tipo '==' 'audio/mpeg'}}
+                                    <div class="mb-2 small">
+                                        <i class="fas fa-file-audio text-info me-1"></i>{{nombre_archivo}}
+                                    </div>
+                                    <audio controls preload="none" style="width: 100%;">
+                                        <source src="<?= base_url('/') ?>{{ruta_archivo}}" type="audio/mpeg">
+                                        Tu navegador no soporta audio HTML5.
+                                    </audio>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <a href="<?= base_url('/') ?>{{ruta_archivo}}" download class="small">Descargar</a>
+                                        <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
+                                            <i class="fa fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
+
+                                {{else ifCond tipo '==' 'audio/ogg'}}
+                                    <div class="mb-2 small">
+                                        <i class="fas fa-file-audio text-info me-1"></i>{{nombre_archivo}}
+                                    </div>
+                                    <audio controls preload="none" style="width: 100%;">
+                                        <source src="<?= base_url('/') ?>{{ruta_archivo}}" type="audio/ogg">
+                                        Tu navegador no soporta audio HTML5.
+                                    </audio>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <a href="<?= base_url('/') ?>{{ruta_archivo}}" download class="small">Descargar</a>
+                                        <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
+                                            <i class="fa fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
+
+                                {{else ifCond tipo '==' 'audio/wav'}}
+                                    <div class="mb-2 small">
+                                        <i class="fas fa-file-audio text-info me-1"></i>{{nombre_archivo}}
+                                    </div>
+                                    <audio controls preload="none" style="width: 100%;">
+                                        <source src="<?= base_url('/') ?>{{ruta_archivo}}" type="audio/wav">
+                                        Tu navegador no soporta audio HTML5.
+                                    </audio>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <a href="<?= base_url('/') ?>{{ruta_archivo}}" download class="small">Descargar</a>
+                                        <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
+                                            <i class="fa fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
+
+                                    <!-- Por defecto (imágenes u otros) -->
                                 {{else}}
-                                    <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="image-{{id}}" data-title="{{nombre_archivo}}">{{nombre_archivo}}</a>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="image-{{id}}" data-title="{{nombre_archivo}}">
+                                            {{nombre_archivo}}
+                                        </a>
+                                        <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
+                                            <i class="fa fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
                                             {{/ifCond}}
-                                            <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
-                                                <i class="fa fa-trash"></i> Eliminar
-                                            </button>
                                         </div>
                                     </div>
                                 {{else}}
@@ -212,7 +272,9 @@
                             </div>
                             <div class="card-body text-center">
                                 <div id="dropzoneArchivos-{{id}}" class="dropzone mb-3"></div>
-                                <small class="text-muted d-block">Solo si adjuntas nuevos archivos, estos se agregarán a la denuncia.</small>
+                                <small class="text-muted d-block">
+                                    Se permiten imágenes, PDF y audios (MP3/OGG/WAV). Los nuevos archivos se agregarán a la denuncia.
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -446,6 +508,9 @@
                         <div class="col-md-12">
                             <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
                             <div id="dropzoneArchivos" class="dropzone"></div>
+                            <small class="text-muted d-block mt-2">
+                                Se permiten imágenes, PDF y audios (MP3/OGG/WAV).
+                            </small>
                         </div>
                     </div>
                 </div>

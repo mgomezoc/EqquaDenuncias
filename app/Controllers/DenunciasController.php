@@ -688,7 +688,8 @@ class DenunciasController extends Controller
                 return $this->response->setJSON(['success' => false, 'message' => 'Datos incompletos']);
             }
 
-            $ok = $sugerenciaModel->guardarEdicionAgente($idSugerencia, $texto, $this->currentUserId());
+            // ⬇️ nombre correcto del método del modelo
+            $ok = $sugerenciaModel->actualizarEdicionAgente($idSugerencia, $texto, $this->currentUserId());
             return $this->response->setJSON(['success' => (bool)$ok]);
         } catch (\Exception $e) {
             log_message('error', 'Error en guardarEdicionSugerencia: ' . $e->getMessage());
