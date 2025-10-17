@@ -1,6 +1,5 @@
 /**
- * DENUNCIAS (vista cliente)
- * - Soporta visualización de MP3/audio en detalle de denuncia y en comentarios.
+ * DENUNCIAS
  */
 let tplAccionesTabla;
 let tplDetalleTabla;
@@ -13,13 +12,14 @@ $(function () {
     tplAccionesTabla = $('#tplAccionesTabla').html();
     tplDetalleTabla = $('#tplDetalleTabla').html();
 
+    // Funcionalidades para los botones de la tabla
     window.operateEvents = {
         // Ver detalle
         'click .view-detail': function (e, value, row) {
             $.get(`${Server}denuncias/detalle/${row.id}`, function (data) {
                 const modal = new bootstrap.Modal($('#modalVerDetalle'));
 
-                // Anexos
+                // Obtener anexos
                 $.get(`${Server}denuncias/obtenerAnexos/${row.id}`, function (anexos) {
                     let anexosHtml = '';
 
@@ -27,47 +27,27 @@ $(function () {
                         anexosHtml = anexos
                             .map(anexo => {
                                 const ruta = `${Server}${anexo.ruta_archivo}`;
-                                const nombre = anexo.nombre_archivo || '';
                                 const tipo = (anexo.tipo || '').toLowerCase();
-                                const ext = nombre.split('.').pop()?.toLowerCase() || '';
 
-                                // PDF
-                                if (tipo === 'application/pdf' || ext === 'pdf') {
+                                // PDFs
+                                if (tipo === 'application/pdf') {
                                     return `
                                     <div class="card mb-3">
                                         <div class="card-body d-flex justify-content-between align-items-center">
-                                            <a href="${ruta}" data-fancybox="pdf-${anexo.id}" data-caption="${nombre}" class="pdf-viewer">
-                                                ${nombre}
+                                            <a href="${ruta}" data-fancybox="pdf-${anexo.id}" data-caption="${anexo.nombre_archivo}" class="pdf-viewer">
+                                                <i class="far fa-file-pdf me-2"></i>${anexo.nombre_archivo}
                                             </a>
                                         </div>
                                     </div>`;
                                 }
 
-                                // AUDIO (mp3 / audio/*)
-                                if (tipo.startsWith('audio/') || ext === 'mp3') {
-                                    // usar audio/mpeg como type por compatibilidad básica
-                                    return `
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <div class="small mb-2"><i class="fas fa-file-audio me-1"></i>${nombre}</div>
-                                            <audio controls preload="none" style="width: 100%;">
-                                                <source src="${ruta}" type="${tipo || 'audio/mpeg'}">
-                                                Tu navegador no soporta audio HTML5.
-                                            </audio>
-                                            <div class="mt-1">
-                                                <a href="${ruta}" download class="small">Descargar</a>
-                                            </div>
-                                        </div>
-                                    </div>`;
-                                }
-
-                                // VIDEO (webm)
-                                if (tipo === 'video/webm' || ext === 'webm') {
+                                // Videos WebM
+                                if (tipo === 'video/webm') {
                                     return `
                                     <div class="card mb-3">
                                         <div class="card-body d-flex justify-content-between align-items-center">
-                                            <a href="${ruta}" data-fancybox="video-${anexo.id}" data-caption="${nombre}">
-                                                <video controls style="max-width: 120px;">
+                                            <a href="${ruta}" data-fancybox="video-${anexo.id}" data-caption="${anexo.nombre_archivo}">
+                                                <video controls style="max-width: 180px;">
                                                     <source src="${ruta}" type="video/webm">
                                                     Tu navegador no soporta el formato WebM.
                                                 </video>
@@ -76,12 +56,33 @@ $(function () {
                                     </div>`;
                                 }
 
-                                // Imagen (fallback)
+                                // NUEVO: Audio (mp3, wav, ogg…)
+                                if (tipo.startsWith('audio/')) {
+                                    // normalizamos algunos tipos comunes
+                                    const mime = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'].includes(tipo) ? tipo : 'audio/mpeg';
+                                    return `
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <audio controls preload="none" style="width: 100%;">
+                                                    <source src="${ruta}" type="${mime}">
+                                                    Tu navegador no soporta reproducción de audio.
+                                                </audio>
+                                            </div>
+                                            <div class="mt-2 small">
+                                                <i class="fa fa-music me-1"></i>${anexo.nombre_archivo}
+                                                · <a href="${ruta}" download>Descargar</a>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                }
+
+                                // Imágenes u otros
                                 return `
                                 <div class="card mb-3">
                                     <div class="card-body d-flex justify-content-between align-items-center">
-                                        <a href="${ruta}" data-fancybox="image-${anexo.id}" data-caption="${nombre}">
-                                            <img src="${ruta}" alt="${nombre}" class="img-thumbnail" style="max-width: 120px;">
+                                        <a href="${ruta}" data-fancybox="image-${anexo.id}" data-caption="${anexo.nombre_archivo}">
+                                            <img src="${ruta}" alt="${anexo.nombre_archivo}" class="img-thumbnail" style="max-width: 100px;">
                                         </a>
                                     </div>
                                 </div>`;
@@ -91,16 +92,13 @@ $(function () {
                         anexosHtml = '<p class="text-center">No hay archivos adjuntos.</p>';
                     }
 
-                    // Denunciante
-                    let denuncianteHtml = '';
-                    if (data.anonimo === '0') {
-                        denuncianteHtml = `
-                            <p><strong>Denunciante:</strong> ${data.nombre_completo || 'N/A'}</p>
-                            <p><strong>Correo Electrónico:</strong> ${data.correo_electronico || 'N/A'}</p>
-                            <p><strong>Teléfono:</strong> ${data.telefono || 'N/A'}</p>`;
-                    } else {
-                        denuncianteHtml = '<p><strong>Denunciante:</strong> Anónimo</p>';
-                    }
+                    // Datos del denunciante
+                    let denuncianteHtml =
+                        data.anonimo === '0'
+                            ? `<p><strong>Denunciante:</strong> ${data.nombre_completo || 'N/A'}</p>
+                           <p><strong>Correo Electrónico:</strong> ${data.correo_electronico || 'N/A'}</p>
+                           <p><strong>Teléfono:</strong> ${data.telefono || 'N/A'}</p>`
+                            : '<p><strong>Denunciante:</strong> Anónimo</p>';
 
                     const contenido = `
                         <div class="container-fluid">
@@ -145,22 +143,20 @@ $(function () {
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
                 let opciones = '';
                 const estadosPermitidos = [];
-
                 switch (parseInt(row.estado_actual)) {
                     case 4:
                         estadosPermitidos.push(5);
-                        break; // Liberada -> En Revisión por Cliente
+                        break;
                     case 5:
                         estadosPermitidos.push(6);
-                        break; // En Revisión -> Cerrada
+                        break;
                     case 6:
                         estadosPermitidos.push(4, 5, 6);
-                        break; // Cerrada -> (mostrar todos los visibles)
+                        break;
                     default:
                         estadosPermitidos.push(parseInt(row.estado_actual));
                         break;
                 }
-
                 estados.forEach(estado => {
                     if (estadosPermitidos.includes(parseInt(estado.id))) {
                         const selected = estado.id === row.estado_actual ? 'selected' : '';
@@ -181,14 +177,22 @@ $(function () {
                         </div>
                     </form>`);
 
-                $('#modalCambiarEstado .modal-footer .btn-primary')
+                $('#modalCambiarEstado .btn-primary')
                     .off('click')
                     .on('click', function () {
-                        $.post(`${Server}denuncias/cambiarEstado`, { id: row.id, estado_nuevo: $('#estado_nuevo').val(), comentario: $('#comentario').val() }, function () {
-                            showToast('Estatus actualizado correctamente.', 'success');
-                            $tablaDenuncias.bootstrapTable('refresh');
-                            modal.hide();
-                        }).fail(() => showToast('Error al actualizar el estatus.', 'error'));
+                        $.post(
+                            `${Server}denuncias/cambiarEstado`,
+                            {
+                                id: row.id,
+                                estado_nuevo: $('#estado_nuevo').val(),
+                                comentario: $('#comentario').val()
+                            },
+                            function () {
+                                showToast('Estatus actualizado correctamente.', 'success');
+                                $tablaDenuncias.bootstrapTable('refresh');
+                                modal.hide();
+                            }
+                        ).fail(() => showToast('Error al actualizar el estatus.', 'error'));
                     });
                 modal.show();
             });
@@ -200,10 +204,52 @@ $(function () {
             $('#id_denuncia').val(row.id);
             $('#folioDenuncia').html(row.folio);
             $('#modalVerComentarios').modal('show');
+        },
+
+        // Ver sugerencia IA publicada
+        'click .view-ia-suggestion': function (e, value, row) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal($('#modalSugerenciaIA'));
+            const $box = $('#iaContenidoCliente');
+            const $meta = $('#iaMetaCliente');
+
+            $box.html('<div class="text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Cargando sugerencia…</div>');
+            $meta.hide();
+
+            $.get(`${Server}api/denuncias/${row.id}/sugerencia-ia`)
+                .done(resp => {
+                    const sug = resp?.sugerencia || resp;
+                    if (!sug || Number(sug.publicado) !== 1) {
+                        $box.html(`
+                            <div class="alert alert-info" role="alert">
+                                Aún no hay una sugerencia disponible para esta denuncia.
+                                El equipo puede generarla y publicarla desde la administración.
+                            </div>`);
+                        modal.show();
+                        return;
+                    }
+
+                    const texto = (sug.sugerencia_agente || sug.sugerencia_generada || '').toString().replace(/\n/g, '<br>');
+                    $box.html(`<div class="bg-white p-3 rounded">${texto || 'Sin contenido.'}</div>`);
+
+                    $('#iaModeloCliente').text(sug.modelo_ia_usado || sug.modelo || '-');
+                    $('#iaTokensCliente').text(sug.tokens_utilizados || sug.tokens_usados || 0);
+                    $('#iaTiempoCliente').text(sug.tiempo_generacion || '0.000');
+                    //$meta.show();
+
+                    modal.show();
+                })
+                .fail(() => {
+                    $box.html(`
+                        <div class="alert alert-danger" role="alert">
+                            Ocurrió un error al intentar obtener la sugerencia. Intenta nuevamente más tarde.
+                        </div>`);
+                    modal.show();
+                });
         }
     };
 
-    // Tabla
+    // Inicialización de la tabla
     $tablaDenuncias = $('#tablaDenuncias').bootstrapTable({
         url: `${Server}denuncias/listarDenunciasCliente`,
         columns: [
@@ -221,11 +267,19 @@ $(function () {
             { field: 'estado_nombre', title: 'Estatus', formatter: operateFormatterEstado },
             { field: 'fecha_hora_reporte', title: 'Fecha', formatter: operateFormatterFecha },
             { field: 'sexo_nombre', title: 'Sexo' },
-            { field: 'operate', title: 'Acciones', align: 'center', valign: 'middle', clickToSelect: false, formatter: operateFormatter, events: operateEvents }
+            {
+                field: 'operate',
+                title: 'Acciones',
+                align: 'center',
+                valign: 'middle',
+                clickToSelect: false,
+                formatter: operateFormatter,
+                events: operateEvents
+            }
         ]
     });
 
-    // Enviar comentario (con adjunto opcional)
+    // Envío de comentario
     $('#formAgregarComentario').submit(function (e) {
         e.preventDefault();
         const $frm = $(this);
@@ -241,82 +295,90 @@ $(function () {
             method: 'POST',
             data: formData,
             processData: false,
-            contentType: false
-        })
-            .done(() => {
+            contentType: false,
+            success: function () {
                 cargarComentarios($('#id_denuncia').val());
                 showToast('Comentario agregado exitosamente.', 'success');
                 $frm[0].reset();
-            })
-            .fail(err => showToast(err.responseJSON?.message || 'Error al enviar el comentario', 'error'))
-            .always(() => {
+            },
+            error: function (err) {
+                const message = err.responseJSON?.message || 'Error al enviar el comentario';
+                showToast(message, 'error');
+            },
+            complete: function () {
                 $textarea.prop('disabled', false);
                 $submitButton.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Enviar');
-            });
+            }
+        });
     });
 });
 
-// Subcategorías
+// Helpers
 function loadSubcategorias(categoriaId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
-    $.get(`${Server}categorias/listarSubcategorias`, { id_categoria: categoriaId })
-        .done(data => {
+    $.ajax({
+        url: `${Server}categorias/listarSubcategorias`,
+        method: 'GET',
+        data: { id_categoria: categoriaId },
+        success: function (data) {
             let options = '<option value="">Seleccione una subcategoría</option>';
-            data.forEach(sc => {
-                options += `<option value="${sc.id}">${sc.nombre}</option>`;
+            data.forEach(function (subcategoria) {
+                options += `<option value="${subcategoria.id}">${subcategoria.nombre}</option>`;
             });
             $(selectSelector).html(options);
-        })
-        .fail(() => {
+        },
+        error: function () {
             $(selectSelector).html('');
             console.error('Error loading subcategories.');
-        });
+        }
+    });
 }
 
-// Sucursales
 function loadSucursales(clienteId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
-    $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${clienteId}`)
-        .done(data => {
+    $.ajax({
+        url: `${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${clienteId}`,
+        method: 'GET',
+        success: function (data) {
             let options = '<option value="">Seleccione una sucursal</option>';
-            data.forEach(s => {
-                options += `<option value="${s.id}">${s.nombre}</option>`;
+            data.forEach(function (sucursal) {
+                options += `<option value="${sucursal.id}">${sucursal.nombre}</option>`;
             });
             $(selectSelector).html(options);
-        })
-        .fail(() => {
+        },
+        error: function () {
             $(selectSelector).html('');
             console.error('Error loading branches.');
-        });
+        }
+    });
 }
 
-// Departamentos
 function loadDepartamentos(sucursalId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
-    $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`)
-        .done(data => {
+    $.ajax({
+        url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
+        method: 'GET',
+        success: function (data) {
             let options = '<option value="">Seleccione un departamento</option>';
-            data.forEach(d => {
-                options += `<option value="${d.id}">${d.nombre}</option>`;
+            data.forEach(function (departamento) {
+                options += `<option value="${departamento.id}">${departamento.nombre}</option>`;
             });
             $(selectSelector).html(options);
-        })
-        .fail(() => {
+        },
+        error: function () {
             $(selectSelector).html('');
             console.error('Error al cargar los departamentos.');
-        });
+        }
+    });
 }
 
-// Render acciones
 function operateFormatter(value, row) {
     return Handlebars.compile(tplAccionesTabla)(row);
 }
 
-// Badges estados visibles al cliente
 function operateFormatterEstado(value, row) {
     let estado = row.estado_nombre;
     let badgeClass = '';
-
     switch (estado) {
         case 'Liberada al Cliente':
             estado = 'Nueva';
@@ -332,41 +394,43 @@ function operateFormatterEstado(value, row) {
     return `<span class="badge ${badgeClass}">${estado}</span>`;
 }
 
-// Comentarios (con soporte de imágenes y audio)
 function cargarComentarios(denunciaId) {
     $.get(`${Server}comentarios/listar-cliente/${denunciaId}`, function (data) {
         let comentariosHtml = '';
 
         if (data.length > 0) {
-            data.forEach(c => {
+            data.forEach(comentario => {
+                // Renderizar archivos
                 let archivosHtml = '';
-                if (c.archivos && c.archivos.length > 0) {
-                    archivosHtml += '<div class="mt-2"><strong>Archivos:</strong><ul class="list-unstyled d-flex flex-wrap gap-3">';
+                if (comentario.archivos && comentario.archivos.length > 0) {
+                    archivosHtml += '<div class="mt-2"><strong>Archivos:</strong><ul class="list-unstyled d-flex flex-column gap-3">';
 
-                    c.archivos.forEach(a => {
-                        const ruta = `${Server}${a.ruta_archivo}`;
-                        const tipo = (a.tipo_mime || '').toLowerCase();
-                        const ext = (a.nombre_archivo || '').split('.').pop()?.toLowerCase() || '';
+                    comentario.archivos.forEach(archivo => {
+                        const ruta = `${Server}${archivo.ruta_archivo}`;
+                        const mime = (archivo.tipo_mime || '').toLowerCase();
 
-                        if (tipo.startsWith('image/')) {
+                        if (mime.startsWith('image/')) {
                             archivosHtml += `
                                 <li>
-                                    <a href="${ruta}" data-fancybox="comentario-${c.id}" data-caption="${a.nombre_archivo}">
-                                        <img src="${ruta}" class="img-thumbnail" style="max-width: 100px;">
+                                    <a href="${ruta}" data-fancybox="comentario-${comentario.id}" data-caption="${archivo.nombre_archivo}">
+                                        <img src="${ruta}" class="img-thumbnail" style="max-width: 120px;">
                                     </a>
                                 </li>`;
-                        } else if (tipo.startsWith('audio/') || ext === 'mp3') {
+                        } else if (mime.startsWith('audio/')) {
+                            const tipoAudio = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'].includes(mime) ? mime : 'audio/mpeg';
                             archivosHtml += `
-                                <li class="w-100">
-                                    <div class="small mb-1"><i class="fas fa-file-audio me-1"></i>${a.nombre_archivo}</div>
-                                    <audio controls preload="none" style="width: 100%;">
-                                        <source src="${ruta}" type="${tipo || 'audio/mpeg'}">
-                                        Tu navegador no soporta audio HTML5.
-                                    </audio>
-                                    <div><a href="${ruta}" download class="small">Descargar</a></div>
+                                <li>
+                                    <div class="card card-body">
+                                        <div class="mb-1"><i class="fa fa-music me-1"></i>${archivo.nombre_archivo}</div>
+                                        <audio controls preload="none" style="width:100%;">
+                                            <source src="${ruta}" type="${tipoAudio}">
+                                            Tu navegador no soporta reproducción de audio.
+                                        </audio>
+                                        <div class="mt-1 small"><a href="${ruta}" download>Descargar</a></div>
+                                    </div>
                                 </li>`;
                         } else {
-                            archivosHtml += `<li><a href="${ruta}" target="_blank">${a.nombre_archivo}</a></li>`;
+                            archivosHtml += `<li><a href="${ruta}" target="_blank">${archivo.nombre_archivo}</a></li>`;
                         }
                     });
 
@@ -377,10 +441,10 @@ function cargarComentarios(denunciaId) {
                     <div class="comentario-item d-flex mb-3">
                         <div class="contenido flex-grow-1">
                             <div class="d-flex justify-content-between">
-                                <h6 class="mb-1">${c.nombre_usuario}</h6>
-                                <small class="text-muted">${c.fecha_comentario}</small>
-                            </div>
-                            <p class="mb-0">${c.contenido}</p>
+                                <h6 class="mb-1">${comentario.nombre_usuario}</h6>
+                                <small class="text-muted">${comentario.fecha_comentario}</small>
+                            </div>                            
+                            <p class="mb-0">${comentario.contenido}</p>
                             ${archivosHtml}
                         </div>
                     </div>

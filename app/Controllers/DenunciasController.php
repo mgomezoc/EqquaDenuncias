@@ -172,6 +172,9 @@ class DenunciasController extends Controller
      * =============================== */
     public function guardar()
     {
+        // Agregar logs para debugging
+        log_message('debug', 'Datos recibidos: ' . json_encode($this->request->getVar()));
+
         $denunciaModel = new DenunciaModel();
         $anexoModel    = new AnexoDenunciaModel();
         $id            = $this->request->getVar('id');
@@ -183,28 +186,38 @@ class DenunciasController extends Controller
 
         $esNueva = empty($id);
 
-        $data = array_filter([
-            'id_cliente'        => $this->request->getVar('id_cliente'),
-            'id_sucursal'       => $this->request->getVar('id_sucursal'),
-            'tipo_denunciante'  => $this->request->getVar('tipo_denunciante'),
-            'categoria'         => $this->request->getVar('categoria'),
-            'subcategoria'      => $this->request->getVar('subcategoria'),
+        // PROBLEMA POTENCIAL: array_filter puede eliminar valores válidos como 0
+        // Mejor construir el array manualmente
+        $data = [
+            'id_cliente'        => $this->request->getVar('id_cliente') ?: null,
+            'id_sucursal'       => $this->request->getVar('id_sucursal') ?: null,
+            'tipo_denunciante'  => $this->request->getVar('tipo_denunciante') ?: null,
+            'categoria'         => $this->request->getVar('categoria') ?: null,
+            'subcategoria'      => $this->request->getVar('subcategoria') ?: null,
             'id_departamento'   => $this->request->getVar('id_departamento') ?: null,
-            'anonimo'           => $this->request->getVar('anonimo'),
-            'fecha_incidente'   => $this->request->getVar('fecha_incidente'),
-            'como_se_entero'    => $this->request->getVar('como_se_entero'),
-            'denunciar_a_alguien' => $this->request->getVar('denunciar_a_alguien'),
-            'area_incidente'    => $this->request->getVar('area_incidente'),
-            'descripcion'       => $this->request->getVar('descripcion'),
-            'estado_actual'     => $this->request->getVar('estado_actual'),
-            'medio_recepcion'   => $this->request->getVar('medio_recepcion'),
-            'nombre_completo'   => $this->request->getVar('nombre_completo'),
-            'correo_electronico' => $this->request->getVar('correo_electronico'),
-            'telefono'          => $this->request->getVar('telefono'),
+            'anonimo'           => $this->request->getVar('anonimo') ?: 0, // Valor por defecto
+            'fecha_incidente'   => $this->request->getVar('fecha_incidente') ?: null,
+            'como_se_entero'    => $this->request->getVar('como_se_entero') ?: null,
+            'denunciar_a_alguien' => $this->request->getVar('denunciar_a_alguien') ?: null,
+            'area_incidente'    => $this->request->getVar('area_incidente') ?: null,
+            'descripcion'       => $this->request->getVar('descripcion') ?: null,
+            'estado_actual'     => $this->request->getVar('estado_actual') ?: 1, // Estado inicial por defecto
+            'medio_recepcion'   => $this->request->getVar('medio_recepcion') ?: null,
+            'nombre_completo'   => $this->request->getVar('nombre_completo') ?: null,
+            'correo_electronico' => $this->request->getVar('correo_electronico') ?: null,
+            'telefono'          => $this->request->getVar('telefono') ?: null,
             'id_creador'        => $idCreador,
-            'id_sexo'           => $this->request->getVar('id_sexo'),
-            'created_at'        => $this->request->getVar('created_at'),
-        ], fn($v) => $v !== null && $v !== '');
+            'id_sexo'           => $this->request->getVar('id_sexo') ?: null,
+            'created_at'        => $this->request->getVar('created_at') ?: date('Y-m-d H:i:s'),
+        ];
+
+        // Eliminar valores null si es necesario
+        $data = array_filter($data, function ($value) {
+            return $value !== null;
+        });
+
+        // Log para verificar los datos antes de guardar
+        log_message('debug', 'Datos a guardar: ' . json_encode($data));
 
         $db = \Config\Database::connect();
         $db->transStart();
@@ -212,40 +225,60 @@ class DenunciasController extends Controller
         try {
             if ($id) {
                 if (!$denunciaModel->update($id, $data)) {
-                    throw new \RuntimeException('Error al actualizar la denuncia.');
+                    // Obtener errores del modelo
+                    $errors = $denunciaModel->errors();
+                    log_message('error', 'Errores del modelo al actualizar: ' . json_encode($errors));
+                    throw new \RuntimeException('Error al actualizar la denuncia: ' . json_encode($errors));
                 }
                 registrarAccion($idCreador, 'Actualización de denuncia', 'ID: ' . $id);
             } else {
                 if (!$denunciaModel->save($data)) {
-                    throw new \RuntimeException('Error al guardar la denuncia.');
+                    // Obtener errores del modelo
+                    $errors = $denunciaModel->errors();
+                    log_message('error', 'Errores del modelo al guardar: ' . json_encode($errors));
+                    throw new \RuntimeException('Error al guardar la denuncia: ' . json_encode($errors));
                 }
                 $id = $denunciaModel->insertID();
                 registrarAccion($idCreador, 'Creación de denuncia', 'ID: ' . $id);
             }
 
+            // Manejo de anexos
             $anexos = $this->request->getVar('archivos');
             if ($anexos && is_array($anexos)) {
                 foreach ($anexos as $rutaArchivo) {
                     $nombreArchivo = basename($rutaArchivo);
-                    if (!$anexoModel->save([
+                    $dataAnexo = [
                         'id_denuncia'   => $id,
                         'nombre_archivo' => $nombreArchivo,
                         'ruta_archivo'  => $rutaArchivo,
                         'tipo'          => @mime_content_type(WRITEPATH . '../public/' . $rutaArchivo) ?: 'application/octet-stream',
-                    ])) {
-                        throw new \RuntimeException('Error al guardar el anexo.');
+                    ];
+
+                    log_message('debug', 'Guardando anexo: ' . json_encode($dataAnexo));
+
+                    if (!$anexoModel->save($dataAnexo)) {
+                        $errorsAnexo = $anexoModel->errors();
+                        log_message('error', 'Error al guardar anexo: ' . json_encode($errorsAnexo));
+                        throw new \RuntimeException('Error al guardar el anexo: ' . json_encode($errorsAnexo));
                     }
                 }
             }
 
             $db->transComplete();
+
             if ($db->transStatus() === false) {
                 throw new \RuntimeException('Fallo al completar la transacción.');
             }
         } catch (\Exception $e) {
             $db->transRollback();
-            log_message('error', $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON(['message' => 'Ocurrió un error al guardar la denuncia y los archivos adjuntos. Error: ' . $e->getMessage()]);
+            log_message('error', 'Excepción en guardar: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'message' => 'Error al guardar la denuncia',
+                'error' => $e->getMessage(),
+                'debug' => ENVIRONMENT === 'development' ? $e->getTraceAsString() : null
+            ]);
         }
 
         if ($esNueva && !empty($id)) {

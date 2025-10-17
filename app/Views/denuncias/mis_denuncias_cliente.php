@@ -42,6 +42,12 @@
                     <i class="fas fa-eye me-2"></i> Ver Detalle
                 </a>
             </li>
+            <!-- NUEVO: Ver sugerencia IA -->
+            <li>
+                <a class="dropdown-item view-ia-suggestion" href="#">
+                    <i class="fa fa-robot me-2"></i> Ver sugerencia (IA)
+                </a>
+            </li>
             <?php if ($solo_lectura == 0): ?>
                 <li>
                     <a class="dropdown-item view-comments" href="#">
@@ -150,20 +156,7 @@
                                             {{#ifCond tipo '==' 'application/pdf'}}
                                                 <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="pdf-{{id}}" data-title="{{nombre_archivo}}" class="pdf-viewer">{{nombre_archivo}}</a>
                                 {{else}}
-                                    {{#ifCond tipo '==' 'audio/mpeg'}}
-                                        <div class="w-100">
-                                            <div class="small mb-2">{{nombre_archivo}}</div>
-                                            <audio controls preload="none" style="width: 100%;">
-                                                <source src="<?= base_url('/') ?>{{ruta_archivo}}" type="audio/mpeg">
-                                                Tu navegador no soporta audio HTML5.
-                                            </audio>
-                                            <div class="mt-1">
-                                                <a href="<?= base_url('/') ?>{{ruta_archivo}}" download class="small">Descargar</a>
-                                            </div>
-                                        </div>
-                                {{else}}
                                     <a href="<?= base_url('/') ?>{{ruta_archivo}}" data-lightbox="image-{{id}}" data-title="{{nombre_archivo}}">{{nombre_archivo}}</a>
-                                    {{/ifCond}}
                                             {{/ifCond}}
                                             <button type="button" class="btn btn-danger btn-sm delete-anexo" data-id="{{id}}">
                                                 <i class="fa fa-trash"></i> Eliminar
@@ -201,6 +194,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
+<!-- Detalle -->
 <div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-labelledby="modalVerDetalleLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -216,6 +210,7 @@
     </div>
 </div>
 
+<!-- Comentarios -->
 <div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="comentariosModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -229,22 +224,14 @@
                 <div id="comentariosContainer" class="overflow-auto" style="max-height: 300px;"></div>
                 <form id="formAgregarComentario" class="mt-4" enctype="multipart/form-data">
                     <input type="hidden" name="id_denuncia" id="id_denuncia">
-
                     <div class="form-group mb-3">
                         <label for="contenidoComentario" class="form-label">Agregar Comentario</label>
                         <textarea name="contenido" id="contenidoComentario" class="form-control" rows="3" placeholder="Escribe tu comentario aquí..." required></textarea>
                     </div>
-
                     <div class="form-group mb-3">
                         <label for="archivoComentario" class="form-label">Adjuntar archivo (opcional)</label>
-                        <input
-                            type="file"
-                            class="form-control"
-                            name="archivo_comentario"
-                            id="archivoComentario"
-                            accept="image/*,.pdf,audio/mpeg,.mp3">
+                        <input type="file" class="form-control" name="archivo_comentario" id="archivoComentario" accept="*/*">
                     </div>
-
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-paper-plane"></i> Enviar
@@ -257,6 +244,7 @@
     </div>
 </div>
 
+<!-- Cambiar estado -->
 <div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -273,111 +261,38 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalCrearDenuncia" tabindex="-1" aria-labelledby="modalCrearDenunciaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- NUEVO: Sugerencia IA para cliente -->
+<div class="modal fade" id="modalSugerenciaIA" tabindex="-1" aria-labelledby="modalSugerenciaIALabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="medio_recepcion" value="Plataforma">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalCrearDenunciaLabel">Agregar Denuncia</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSugerenciaIALabel">
+                    <i class="fa fa-robot me-1"></i> Sugerencia de solución (IA)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning small" role="alert">
+                    <strong>Aviso:</strong> el siguiente texto es una sugerencia generada por un sistema de
+                    <em>Inteligencia Artificial</em>. Úsala solo como guía. Verifica y adapta con tus políticas
+                    y las indicaciones de los responsables del caso.
                 </div>
-                <div class="modal-body">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label for="id_cliente" class="form-label">Cliente</label>
-                            <input type="hidden" name="id_cliente" value="<?= $cliente['id'] ?>">
-                            <input type="text" value="<?= $cliente['nombre_empresa'] ?>" class="form-control" disabled>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="id_sucursal" class="form-label">Sucursal</label>
-                            <select class="form-select select2" id="id_sucursal" name="id_sucursal" required>
-                                <option value="">Seleccione una sucursal</option>
-                            </select>
-                        </div>
 
-                        <div class="col-md-6">
-                            <label for="tipo_denunciante" class="form-label">Tipo de Denunciante</label>
-                            <select id="tipo_denunciante" name="tipo_denunciante" class="form-select select2" required>
-                                <option value="Colaborador">Colaborador</option>
-                                <option value="Proveedor">Proveedor</option>
-                                <option value="Cliente">Cliente</option>
-                                <option value="No se">No se</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="categoria" class="form-label">Categoría</label>
-                            <select class="form-select select2" id="categoria" name="categoria" required>
-                                <option value="">Seleccione una categoría</option>
-                                <?php foreach ($categorias as $categoria) : ?>
-                                    <option value="<?= $categoria['id'] ?>"><?= $categoria['nombre'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="subcategoria" class="form-label">Subcategoría</label>
-                            <select class="form-select select2" id="subcategoria" name="subcategoria" required>
-                                <option value="">Seleccione una subcategoría</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="id_departamento" class="form-label">Departamento</label>
-                            <select class="form-select select2" id="id_departamento" name="id_departamento">
-                                <option value="">Seleccione un departamento</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="fecha_incidente" class="form-label">Fecha del Incidente</label>
-                            <input type="text" class="form-control flatpickr" id="fecha_incidente" name="fecha_incidente" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="como_se_entero" class="form-label">¿Cómo se Enteró?</label>
-                            <select name="como_se_entero" id="como_se_entero" class="form-select select2" required>
-                                <option value="Fui víctima">Fui víctima</option>
-                                <option value="Fui testigo">Fui testigo</option>
-                                <option value="Estaba involucrado">Estaba involucrado</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="area_incidente" class="form-label">Área del Incidente</label>
-                            <input type="text" class="form-control" id="area_incidente" name="area_incidente" required placeholder="Ingrese el área donde sucedió">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="denunciar_a_alguien" class="form-label">Denunciar a Alguien</label>
-                            <textarea class="form-control" id="denunciar_a_alguien" name="denunciar_a_alguien" placeholder="Describa a la persona involucrada"></textarea>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" rows="14" required placeholder="Describa la denuncia"></textarea>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Anónimo</label>
-                            <div class="d-flex gap-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-si" value="1" required checked>
-                                    <label class="form-check-label" for="anonimo-si">Sí</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="anonimo" id="anonimo-no" value="0" required>
-                                    <label class="form-check-label" for="anonimo-no">No</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label for="archivos_adjuntos" class="form-label">Archivos Adjuntos</label>
-                            <div id="dropzoneArchivos" class="dropzone"></div>
-                        </div>
-                    </div>
+                <div id="iaContenidoCliente" class="border rounded p-3 bg-light" style="min-height:120px;">
+                    <div class="text-muted">Cargando sugerencia…</div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+
+                <div class="mt-3 small text-muted" id="iaMetaCliente" style="display:none;">
+                    <i class="fa fa-cube me-1"></i><span id="iaModeloCliente">-</span>
+                    <span class="mx-2">·</span>
+                    <i class="fa fa-coins me-1"></i>Tokens: <span id="iaTokensCliente">0</span>
+                    <span class="mx-2">·</span>
+                    <i class="fa fa-stopwatch me-1"></i>Tiempo: <span id="iaTiempoCliente">0.000</span>s
                 </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
         </div>
     </div>
 </div>
