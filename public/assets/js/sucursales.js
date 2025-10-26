@@ -136,6 +136,40 @@ $(function () {
         }
     });
 
+    // ===== MANEJADOR PARA EDITAR SUCURSAL (ESTE ES EL QUE FALTABA) =====
+    $(document).on('submit', '.formEditarSucursal', function (e) {
+        e.preventDefault();
+
+        const $frm = $(this);
+
+        // Validar el formulario
+        if (!$frm.valid()) {
+            return false;
+        }
+
+        const formData = $frm.serializeObject();
+
+        loadingFormXHR($frm, true);
+
+        ajaxCall({
+            url: `${Server}sucursales/guardar`,
+            method: 'POST',
+            data: formData,
+            success: function (data) {
+                loadingFormXHR($frm, false);
+                $tablaSucursales.bootstrapTable('refresh');
+                showToast('¡Listo!, se actualizó correctamente la sucursal.', 'success');
+            },
+            error: function (xhr) {
+                loadingFormXHR($frm, false);
+                if (xhr.status === 409) {
+                    const response = JSON.parse(xhr.responseText);
+                    showToast(response.message, 'error');
+                }
+            }
+        });
+    });
+
     $modalCrearSucursal.on('hidden.bs.modal', function () {
         const $form = $('#formCrearSucursal');
         $form[0].reset();
