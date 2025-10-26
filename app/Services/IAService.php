@@ -30,8 +30,8 @@ class IAService
 
         // Lee configuración desde .env con defaults razonables
         $this->modelo      = (string) (getenv('IA_MODELO_USADO') ?: 'gpt-4o');
-        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 800);
-        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.4);
+        $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 1000);
+        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.5);
         $this->timeout     = (int)    (getenv('IA_TIMEOUT_SEGUNDOS') ?: 30);
 
         // Flags de logging
@@ -55,7 +55,7 @@ class IAService
                 'messages' => [
                     [
                         'role'    => 'system',
-                        'content' => 'Eres un consultor amigable y experimentado en recursos humanos. Das consejos prácticos y naturales sobre cómo resolver situaciones laborales. Tu estilo es personal, comprensivo y directo, como un amigo con experiencia que da buenos consejos.'
+                        'content' => 'Eres un consultor experto en gestión de recursos humanos y resolución de conflictos laborales. Tu función es asesorar a administradores y supervisores sobre cómo investigar, gestionar y resolver denuncias laborales de manera profesional, justa y efectiva. Proporcionas recomendaciones prácticas, accionables y alineadas con mejores prácticas de RH. Tu lenguaje es profesional pero accesible, enfocado en la acción y los resultados.'
                     ],
                     [
                         'role'    => 'user',
@@ -127,7 +127,8 @@ class IAService
     }
 
     /**
-     * Construye un prompt natural y personal para sugerencias de solución
+     * Construye un prompt profesional orientado al ADMINISTRADOR/AGENTE
+     * que debe resolver la denuncia
      */
     private function construirPrompt(array $d): string
     {
@@ -139,14 +140,22 @@ class IAService
             'tocó' => 'contacto inapropiado',
             'toque' => 'contacto inapropiado',
             'manose' => 'acoso físico',
-            'golpe' => 'agresión',
-            'empuj' => 'agresión',
+            'golpe' => 'agresión física',
+            'empuj' => 'agresión física',
             'insult' => 'acoso verbal',
             'grit' => 'trato irrespetuoso',
             'amenaz' => 'intimidación',
+            'acoso sexual' => 'acoso sexual',
+            'discrimin' => 'discriminación',
             'celular' => 'falta de atención al cliente',
-            'jugando' => 'distracción en el trabajo'
+            'jugando' => 'distracción en el trabajo',
+            'robo' => 'robo o hurto',
+            'fraude' => 'fraude',
+            'soborno' => 'corrupción',
+            'falta' => 'incumplimiento de normas',
+            'ausencia' => 'ausentismo'
         ];
+
         foreach ($map as $needle => $label) {
             if (mb_strpos($desc, $needle) !== false) {
                 $tipologia = $label;
@@ -167,30 +176,51 @@ class IAService
         $denunciado    = $d['denunciar_a_alguien'] ?? 'persona no identificada';
         $descripcion   = $d['descripcion']         ?? 'Sin descripción';
 
-        // Prompt natural y personal
-        $prompt = "Hola, necesito tu consejo sobre una situación que pasó en el trabajo. ";
-        $prompt .= "Es el caso {$folio} y se trata de {$tipologia}.\n\n";
+        // Prompt enfocado para el ADMINISTRADOR/SUPERVISOR/AGENTE que gestiona la denuncia
+        $prompt = "Eres un consultor especializado en resolución de conflictos laborales y gestión de denuncias corporativas. ";
+        $prompt .= "Tu rol es asesorar a administradores, supervisores y personal de RH sobre las mejores acciones para investigar y resolver casos.\n\n";
 
-        $prompt .= "**Los detalles son:**\n";
-        $prompt .= "• Quién reporta: {$tipoDen}\n";
-        $prompt .= "• Dónde pasó: {$deptoNom} - {$sucursalNom}, en {$area}\n";
-        $prompt .= "• Cuándo: {$fechaInc}\n";
-        $prompt .= "• Cómo se enteró: {$comoEnt}\n";
-        $prompt .= "• Persona involucrada: {$denunciado}\n";
-        $prompt .= "• Lo que pasó: \"{$descripcion}\"\n\n";
+        $prompt .= "**DENUNCIA RECIBIDA - FOLIO: {$folio}**\n";
+        $prompt .= "**Tipo de caso identificado:** {$tipologia}\n\n";
 
-        $prompt .= "**¿Qué me recomiendas hacer?**\n";
-        $prompt .= "Dame una sugerencia práctica y natural de cómo manejar esto. ";
-        $prompt .= "No necesito un plan formal con pasos numerados, sino más bien un consejo amigable ";
-        $prompt .= "sobre qué sería lo más sensato hacer en esta situación. ";
-        $prompt .= "Habla como si fueras un compañero de trabajo con experiencia dando un buen consejo.\n\n";
+        $prompt .= "**INFORMACIÓN DEL CASO:**\n";
+        $prompt .= "• **Categoría:** {$catNom}";
+        if ($subcatNom !== 'N/A') {
+            $prompt .= " → {$subcatNom}";
+        }
+        $prompt .= "\n";
+        $prompt .= "• **Reportado por:** {$tipoDen}\n";
+        $prompt .= "• **Ubicación:** {$deptoNom} - {$sucursalNom}\n";
+        $prompt .= "• **Área del incidente:** {$area}\n";
+        $prompt .= "• **Fecha del incidente:** {$fechaInc}\n";
+        $prompt .= "• **Forma de conocimiento:** {$comoEnt}\n";
+        $prompt .= "• **Persona(s) involucrada(s):** {$denunciado}\n\n";
 
-        $prompt .= "**Mantén tu respuesta:**\n";
-        $prompt .= "- Natural y conversacional\n";
-        $prompt .= "- Práctica y aplicable\n";
-        $prompt .= "- Entre 200-300 palabras\n";
-        $prompt .= "- En español neutro\n";
-        $prompt .= "- Sin listas numeradas o bullets formales\n";
+        $prompt .= "**DESCRIPCIÓN COMPLETA DEL INCIDENTE:**\n";
+        $prompt .= "\"{$descripcion}\"\n\n";
+
+        $prompt .= "---\n\n";
+        $prompt .= "**SOLICITUD DE ASESORÍA:**\n";
+        $prompt .= "Como administrador responsable de gestionar esta denuncia, necesito una recomendación profesional y práctica sobre cómo proceder. ";
+        $prompt .= "Por favor, proporciona una sugerencia que incluya:\n\n";
+
+        $prompt .= "1. **Acciones inmediatas:** Primeros pasos que debo tomar en las próximas 24-48 horas\n";
+        $prompt .= "2. **Investigación:** Qué evidencias recabar, testimonios a solicitar, documentos a revisar\n";
+        $prompt .= "3. **Personas/áreas a involucrar:** RH, legal, supervisores directos, comité de ética, etc.\n";
+        $prompt .= "4. **Medidas cautelares:** Si aplican medidas de protección o separación temporal\n";
+        $prompt .= "5. **Marco normativo:** Consideraciones legales, políticas internas o reglamentos aplicables\n";
+        $prompt .= "6. **Plazo estimado:** Tiempo razonable para la resolución del caso\n";
+        $prompt .= "7. **Posibles resoluciones:** Acciones correctivas, disciplinarias o soluciones recomendadas según hallazgos\n";
+        $prompt .= "8. **Comunicación:** Cómo mantener informadas a las partes involucradas respetando confidencialidad\n\n";
+
+        $prompt .= "**FORMATO DE RESPUESTA:**\n";
+        $prompt .= "• Usa un tono profesional, directo y orientado a la acción\n";
+        $prompt .= "• Sé específico y proporciona pasos concretos y accionables\n";
+        $prompt .= "• Prioriza siempre la seguridad, dignidad y derechos de todas las personas involucradas\n";
+        $prompt .= "• Mantén la respuesta entre 300-450 palabras\n";
+        $prompt .= "• Escribe en español neutro y profesional\n";
+        $prompt .= "• Puedes usar formato markdown con **negritas** para destacar puntos críticos\n";
+        $prompt .= "• Estructura la información de forma clara y escaneable\n";
 
         return $prompt;
     }
@@ -247,15 +277,17 @@ class IAService
 
     /**
      * Estimación de costo por tokens (gpt-4o referencia).
+     * Precios aproximados a octubre 2025
      */
     public function calcularCostoEstimado(int $tokens): float
     {
-        $precioInput  = 5.00;   // $/1M tokens
-        $precioOutput = 15.00;  // $/1M tokens
+        // Precios por 1M tokens para gpt-4o (ajustar según modelo)
+        $precioInput  = 2.50;   // $/1M tokens input
+        $precioOutput = 10.00;  // $/1M tokens output
 
-        // Estimación simple 70/30
-        $tokensInput  = $tokens * 0.7;
-        $tokensOutput = $tokens * 0.3;
+        // Estimación simple 60/40 (input/output)
+        $tokensInput  = $tokens * 0.6;
+        $tokensOutput = $tokens * 0.4;
 
         $costoInput  = ($tokensInput / 1_000_000) * $precioInput;
         $costoOutput = ($tokensOutput / 1_000_000) * $precioOutput;
@@ -265,6 +297,9 @@ class IAService
 
     // ========= Helpers =========
 
+    /**
+     * Determina si el modelo requiere max_completion_tokens en lugar de max_tokens
+     */
     private function usaMaxCompletionTokens(string $model): bool
     {
         // Modelos que actualmente requieren max_completion_tokens en Chat Completions
@@ -278,6 +313,9 @@ class IAService
         );
     }
 
+    /**
+     * Convierte valor de env a booleano
+     */
     private function boolEnv(string $key, bool $default = false): bool
     {
         $val = getenv($key);
@@ -288,6 +326,9 @@ class IAService
         return in_array($val, ['1', 'true', 'on', 'yes'], true);
     }
 
+    /**
+     * Trunca texto para logs
+     */
     private function truncateForLog(string $text, int $maxLen = 1000): string
     {
         if (mb_strlen($text) <= $maxLen) {

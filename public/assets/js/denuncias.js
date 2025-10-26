@@ -69,6 +69,7 @@ $(function () {
             if ($help.length) $help.text('Política del cliente: OPCIONAL.');
         }
     }
+
     function cargarPoliticaDeCliente(clienteId) {
         if (!clienteId) return aplicarPoliticaAnonimato(0);
         $.get(`${Server}clientes/obtener/${clienteId}`, c => {
@@ -99,8 +100,22 @@ $(function () {
             if ($(el).hasClass('select2')) $(el).next('.select2-container').find('.select2-selection').removeClass(e).addClass(v);
             else $(el).removeClass(e).addClass(v);
         },
-        rules: { id_cliente: { required: true }, id_sucursal: { required: true }, categoria: { required: true }, subcategoria: { required: true }, fecha_incidente: { required: true, date: true }, descripcion: { required: true } },
-        messages: { id_cliente: { required: 'Por favor seleccione un cliente' }, id_sucursal: { required: 'Por favor seleccione una sucursal' }, categoria: { required: 'Por favor seleccione una categoría' }, subcategoria: { required: 'Por favor seleccione una subcategoría' }, fecha_incidente: { required: 'Por favor ingrese la fecha del incidente', date: 'Ingrese una fecha válida' }, descripcion: { required: 'Por favor ingrese la descripción' } },
+        rules: {
+            id_cliente: { required: true },
+            id_sucursal: { required: true },
+            categoria: { required: true },
+            subcategoria: { required: true },
+            fecha_incidente: { required: true, date: true },
+            descripcion: { required: true }
+        },
+        messages: {
+            id_cliente: { required: 'Por favor seleccione un cliente' },
+            id_sucursal: { required: 'Por favor seleccione una sucursal' },
+            categoria: { required: 'Por favor seleccione una categoría' },
+            subcategoria: { required: 'Por favor seleccione una subcategoría' },
+            fecha_incidente: { required: 'Por favor ingrese la fecha del incidente', date: 'Ingrese una fecha válida' },
+            descripcion: { required: 'Por favor ingrese la descripción' }
+        },
         submitHandler: function (form) {
             const $frm = $(form);
             const formData = new FormData(form);
@@ -131,9 +146,11 @@ $(function () {
             });
         }
     });
+
     $('#modalCrearDenuncia .select2').on('change', function (e, trigger) {
         if (!trigger) $(this).valid();
     });
+
     $modalCrearDenuncia.on('hidden.bs.modal', function () {
         const $form = $('#formCrearDenuncia');
         $form[0].reset();
@@ -146,7 +163,7 @@ $(function () {
         if ($('#politicaHelp').length) $('#politicaHelp').text('');
     });
 
-    // Tabla
+    // Tabla operaciones
     window.operateEvents = {
         'click .remove': function (e, v, row) {
             confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(r => {
@@ -178,6 +195,7 @@ $(function () {
                     };
                     return icons[ext] || 'fa-file text-secondary';
                 };
+
                 let archivosHtml = '';
                 if (data.archivos && data.archivos.length > 0) {
                     archivosHtml += `<div class="mt-4"><h5 class="mb-3"><i class="fas fa-paperclip me-2"></i>Archivos Adjuntos <span class="badge bg-secondary ms-2">${data.archivos.length}</span></h5><div class="row g-3">`;
@@ -187,6 +205,7 @@ $(function () {
                         const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
                         const esAudio = ['mp3'].includes(ext);
                         const nombreCorto = archivo.nombre_archivo.length > 25 ? archivo.nombre_archivo.substring(0, 22) + '...' + ext : archivo.nombre_archivo;
+
                         if (esImagen) {
                             archivosHtml += `
                                 <div class="col-6 col-md-4 col-lg-3 animate__animated animate__fadeIn" style="animation-delay:${idx * 0.1}s">
@@ -203,6 +222,23 @@ $(function () {
                                       </p>
                                     </div>
                                   </div>
+                                </div>`;
+                        } else if (esAudio) {
+                            archivosHtml += `
+                                <div class="col-6 col-md-4 col-lg-3 animate__animated animate__fadeIn" style="animation-delay:${idx * 0.1}s">
+                                    <div class="card shadow-sm h-100 archivo-card">
+                                        <div class="card-body text-center py-3">
+                                            <i class="fas fa-file-audio text-info archivo-icono mb-2"></i>
+                                            <p class="card-text small mb-2 text-dark" title="${archivo.nombre_archivo}">${nombreCorto}</p>
+                                            <audio controls preload="none" style="width:100%">
+                                                <source src="${url}" type="audio/mpeg">
+                                                Tu navegador no soporta audio HTML5.
+                                            </audio>
+                                            <div class="mt-2">
+                                                <a href="${url}" download class="small">Descargar</a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>`;
                         } else {
                             archivosHtml += `
@@ -246,12 +282,54 @@ $(function () {
                                 <p>${data.descripcion || 'N/A'}</p>
                             </div>
                             ${archivosHtml}
+                            ${
+                                data.seguimientos
+                                    ? `
+                            <div class="col-12 mt-3">
+                                <h5>Historial de Seguimiento</h5>
+                                <table class="table table-sm table-striped table-bordered table-eqqua-quaternary">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>De</th>
+                                            <th>A</th>
+                                            <th>Comentario</th>
+                                            <th>Por</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.seguimientos
+                                            .map(
+                                                seg => `
+                                            <tr>
+                                                <td>${formatoFechaHora(seg.fecha)}</td>
+                                                <td>${seg.estado_anterior_nombre}</td>
+                                                <td>${seg.estado_nuevo_nombre}</td>
+                                                <td>${seg.comentario || 'N/A'}</td>
+                                                <td>${seg.usuario_nombre}</td>
+                                            </tr>
+                                        `
+                                            )
+                                            .join('')}
+                                    </tbody>
+                                </table>
+                            </div>`
+                                    : ''
+                            }
                         </div>
                     </div>`;
+
                 $('#modalVerDetalle .modal-body').html(contenido);
                 modal.show();
                 setTimeout(() => {
-                    $(`[data-fancybox="denuncia-${data.id}"]`).fancybox({ buttons: ['zoom', 'share', 'slideShow', 'fullScreen', 'download', 'thumbs', 'close'], loop: true, protect: true, animationEffect: 'zoom-in-out', transitionEffect: 'slide', thumbs: { autoStart: true } });
+                    $(`[data-fancybox="denuncia-${data.id}"]`).fancybox({
+                        buttons: ['zoom', 'share', 'slideShow', 'fullScreen', 'download', 'thumbs', 'close'],
+                        loop: true,
+                        protect: true,
+                        animationEffect: 'zoom-in-out',
+                        transitionEffect: 'slide',
+                        thumbs: { autoStart: true }
+                    });
                 }, 100);
             });
         },
@@ -277,11 +355,19 @@ $(function () {
                 $('#modalCambiarEstado .modal-footer .btn-primary')
                     .off('click')
                     .on('click', function () {
-                        $.post(`${Server}denuncias/cambiarEstado`, { id: row.id, estado_nuevo: $('#estado_nuevo').val(), comentario: $('#comentario').val() }, function () {
-                            showToast('Estatus actualizado correctamente.', 'success');
-                            $tablaDenuncias.bootstrapTable('refresh');
-                            modal.hide();
-                        }).fail(() => showToast('Error al actualizar el estatus.', 'error'));
+                        $.post(
+                            `${Server}denuncias/cambiarEstado`,
+                            {
+                                id: row.id,
+                                estado_nuevo: $('#estado_nuevo').val(),
+                                comentario: $('#comentario').val()
+                            },
+                            function () {
+                                showToast('Estatus actualizado correctamente.', 'success');
+                                $tablaDenuncias.bootstrapTable('refresh');
+                                modal.hide();
+                            }
+                        ).fail(() => showToast('Error al actualizar el estatus.', 'error'));
                     });
                 modal.show();
             });
@@ -295,7 +381,12 @@ $(function () {
     };
 
     // Flatpickr crear
-    $('#fecha_incidente').flatpickr({ dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', maxDate: 'today' });
+    $('#fecha_incidente').flatpickr({
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        maxDate: 'today'
+    });
 
     // Dependencias crear
     $('#categoria').change(function () {
@@ -369,7 +460,10 @@ $(function () {
             ];
 
             const requests = [$.get(`${Server}clientes/listar`), $.get(`${Server}categorias/listarCategorias`), $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${row.id_cliente}`), $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${row.id_sucursal}`), $.get(`${Server}denuncias/detalle/${row.id}`), $.get(`${Server}denuncias/obtenerEstados`), $.get(`${Server}denuncias/obtenerAnexos/${row.id}`)];
-            if (row.categoria) requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
+
+            if (row.categoria) {
+                requests.push($.get(`${Server}categorias/listarSubcategorias`, { id_categoria: row.categoria }));
+            }
 
             $.when(...requests).done(function (...responses) {
                 const [clientes, categorias, sucursales, departamentos, denunciaDetalles, estados, anexos, subcategorias = [{ 0: [] }]] = responses;
@@ -422,36 +516,80 @@ $(function () {
                 initializeFlatpickrForEdit(`#fecha_incidente-${row.id}`);
                 initializeFlatpickrDateTime(`#created_at-${row.id}`);
 
+                // IMPORTANTE: Asegurar que el campo ID esté presente en el formulario
+                // Si no existe, agregarlo como campo oculto
+                if (!$detail.find(`#formEditarDenuncia-${row.id} input[name="id"]`).length) {
+                    $detail.find(`#formEditarDenuncia-${row.id}`).prepend(`<input type="hidden" name="id" value="${row.id}">`);
+                }
+
                 $detail.find('.formEditarDenuncia').validate({
                     errorClass: 'is-invalid',
                     validClass: 'is-valid',
                     errorElement: 'div',
                     errorPlacement: function (error, element) {
-                        if (element.hasClass('select2-hidden-accessible')) error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
-                        else if (element.is(':checkbox,:radio')) error.addClass('invalid-feedback').insertAfter(element.closest('div'));
-                        else error.addClass('invalid-feedback').insertAfter(element);
+                        if (element.hasClass('select2-hidden-accessible')) {
+                            error.addClass('invalid-feedback').insertAfter(element.next('.select2-container'));
+                        } else if (element.is(':checkbox,:radio')) {
+                            error.addClass('invalid-feedback').insertAfter(element.closest('div'));
+                        } else {
+                            error.addClass('invalid-feedback').insertAfter(element);
+                        }
                     },
                     highlight: function (el, e, v) {
-                        if ($(el).hasClass('select2-hidden-accessible')) $(el).next('.select2-container').find('.select2-selection').addClass(e).removeClass(v);
-                        else $(el).addClass(e).removeClass(v);
+                        if ($(el).hasClass('select2-hidden-accessible')) {
+                            $(el).next('.select2-container').find('.select2-selection').addClass(e).removeClass(v);
+                        } else {
+                            $(el).addClass(e).removeClass(v);
+                        }
                     },
                     unhighlight: function (el, e, v) {
-                        if ($(el).hasClass('select2-hidden-accessible')) $(el).next('.select2-container').find('.select2-selection').removeClass(e).addClass(v);
-                        else $(el).removeClass(e).addClass(v);
+                        if ($(el).hasClass('select2-hidden-accessible')) {
+                            $(el).next('.select2-container').find('.select2-selection').removeClass(e).addClass(v);
+                        } else {
+                            $(el).removeClass(e).addClass(v);
+                        }
                     },
-                    rules: { id_cliente: { required: true }, id_sucursal: { required: true }, id_departamento: { required: true }, estado_actual: { required: true }, descripcion: { required: true } },
-                    messages: { id_cliente: { required: 'Por favor seleccione un cliente' }, id_sucursal: { required: 'Por favor seleccione una sucursal' }, id_departamento: { required: 'Por favor seleccione un departamento' }, estado_actual: { required: 'Por favor seleccione un estatus' }, descripcion: { required: 'Por favor ingrese la descripción' } },
+                    rules: {
+                        id_cliente: { required: true },
+                        id_sucursal: { required: true },
+                        id_departamento: { required: true },
+                        estado_actual: { required: true },
+                        descripcion: { required: true }
+                    },
+                    messages: {
+                        id_cliente: { required: 'Por favor seleccione un cliente' },
+                        id_sucursal: { required: 'Por favor seleccione una sucursal' },
+                        id_departamento: { required: 'Por favor seleccione un departamento' },
+                        estado_actual: { required: 'Por favor seleccione un estatus' },
+                        descripcion: { required: 'Por favor ingrese la descripción' }
+                    },
                     submitHandler: function (form) {
                         const $frm = $(form);
+                        const formData = $frm.serializeObject();
+
+                        // CRÍTICO: Asegurar que el ID esté presente
+                        if (!formData.id) {
+                            formData.id = row.id;
+                        }
+
                         loadingFormXHR($frm, true);
-                        $.post(`${Server}denuncias/guardar`, $frm.serializeObject(), function () {
-                            loadingFormXHR($frm, false);
-                            $tablaDenuncias.bootstrapTable('refresh');
-                            showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
-                        }).fail(xhr => {
-                            loadingFormXHR($frm, false);
-                            if (xhr.status === 409) showToast(JSON.parse(xhr.responseText).message, 'error');
-                            else showToast('Ocurrió un error al actualizar la denuncia.', 'error');
+                        $.ajax({
+                            url: `${Server}denuncias/guardar`,
+                            method: 'POST',
+                            data: formData,
+                            success: function () {
+                                loadingFormXHR($frm, false);
+                                $tablaDenuncias.bootstrapTable('refresh');
+                                showToast('¡Listo!, se actualizó correctamente la denuncia.', 'success');
+                            },
+                            error: function (xhr) {
+                                loadingFormXHR($frm, false);
+                                if (xhr.status === 409) {
+                                    showToast(JSON.parse(xhr.responseText).message, 'error');
+                                } else {
+                                    showToast('Ocurrió un error al actualizar la denuncia.', 'error');
+                                }
+                            }
                         });
                     }
                 });
@@ -525,6 +663,7 @@ function eliminarAnexo(anexoId, denunciaId) {
         }
     });
 }
+
 function actualizarAnexos(formData, denunciaId) {
     loadingFormXHR($(`#formActualizarAnexos-${denunciaId}`), true);
     $.ajax({
@@ -560,6 +699,7 @@ function loadSubcategorias(categoriaId, selectSelector) {
         console.error('Error loading subcategories.');
     });
 }
+
 function loadSucursales(clienteId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
     $.get(`${Server}denuncias/sucursales/obtenerSucursalesPorCliente/${clienteId}`, function (data) {
@@ -573,6 +713,7 @@ function loadSucursales(clienteId, selectSelector) {
         console.error('Error loading branches.');
     });
 }
+
 function loadDepartamentos(sucursalId, selectSelector) {
     $(selectSelector).html('<option>Cargando...</option>');
     $.get(`${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`, function (data) {
@@ -590,6 +731,7 @@ function loadDepartamentos(sucursalId, selectSelector) {
 function operateFormatter(value, row) {
     return Handlebars.compile(tplAccionesTabla)(row);
 }
+
 function operateFormatterEstado(value, row) {
     const estado = row.estado_nombre;
     let badgeClass = '';
@@ -660,6 +802,7 @@ function cargarComentarios(denunciaId) {
         $('#comentariosContainer').html(html);
     });
 }
+
 function obtenerBadgeClase(estado) {
     switch (estado) {
         case 'Recepción':
@@ -678,6 +821,7 @@ function obtenerBadgeClase(estado) {
             return 'bg-light text-dark';
     }
 }
+
 $(document).on('click', '.btn-eliminar-comentario', function () {
     const id = $(this).data('id');
     const den = $('#id_denuncia').val();
@@ -695,10 +839,12 @@ $(document).on('click', '.btn-eliminar-comentario', function () {
 function iaShowLoading($box, msg) {
     $box.html(`<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span>${msg || 'Generando sugerencia...'}</span></div>`).removeClass('text-muted');
 }
+
 function iaRenderMarkdown(text) {
     if (!text) return '';
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
+
 function iaSetMeta(id, sug) {
     $('#iaMeta-' + id).removeClass('d-none');
     $('#iaMetaModelo-' + id).text(sug?.modelo || '-');
@@ -706,6 +852,12 @@ function iaSetMeta(id, sug) {
     $('#iaMetaCosto-' + id).text((sug?.costo_estimado ?? 0).toString());
     $('#iaMetaTiempo-' + id).text(sug?.tiempo_generacion ?? '0.000');
     $('#iaId-' + id).text(sug?.id || sug?.id_sugerencia || '');
+
+    const sugId = (sug?.id ?? sug?.id_sugerencia ?? '').toString();
+    $(`.btn-publicar-ia[data-id="${id}"],
+   .btn-retirar-ia[data-id="${id}"],
+   .btn-guardar-edicion-ia[data-id="${id}"]`).data('sugerencia', sugId);
+
     if (sug?.prompt_usado) {
         $(`.btn-ver-prompt-ia[data-id="${id}"]`)
             .removeClass('d-none')
@@ -724,21 +876,19 @@ function iaSetMeta(id, sug) {
         $('.btn-publicar-ia[data-id="' + id + '"]').removeClass('d-none');
     }
 }
+
 function iaRenderResult(id, payload, wasRegenerated = false) {
     const $orig = $(`#iaResult-${id}`);
     const $clientePrev = $(`#iaCliente-${id} > div`);
     const $btnGen = $(`.btn-generar-ia[data-id="${id}"]`);
     const $btnRegen = $(`.btn-regenerar-ia[data-id="${id}"]`);
-    const sug = payload?.sugerencia || payload; // tolerante
+    const sug = payload?.sugerencia || payload;
 
     if (sug) {
-        // original
         const original = sug.sugerencia_generada || sug.sugerencia || '';
         $orig.removeClass('text-muted').html(iaRenderMarkdown(original || ''));
-        // edición agente (si no hay, usamos original como base visual)
         const ed = sug.sugerencia_agente || '';
         $clientePrev.html(iaRenderMarkdown(ed || original || 'Sin edición del agente todavía.'));
-        // botones visibles
         $btnGen.addClass('d-none');
         $btnRegen.removeClass('d-none');
         $('.btn-editar-ia[data-id="' + id + '"], .btn-guardar-edicion-ia[data-id="' + id + '"], .btn-publicar-ia[data-id="' + id + '"]').removeClass('d-none');
@@ -754,7 +904,6 @@ function iaRenderResult(id, payload, wasRegenerated = false) {
     }
 }
 
-/** Carga si existe */
 function iaLoadIfExists(idDenuncia) {
     const $res = $(`#iaResult-${idDenuncia}`);
     iaShowLoading($res, 'Buscando sugerencia existente...');
@@ -766,7 +915,6 @@ function iaLoadIfExists(idDenuncia) {
         .fail(() => iaRenderResult(idDenuncia, null));
 }
 
-/** Generar con IA */
 $(document).on('click', '.btn-generar-ia', function (e) {
     e.preventDefault();
     const id = $(this).data('id');
@@ -775,13 +923,13 @@ $(document).on('click', '.btn-generar-ia', function (e) {
     $.post(`${Server}api/denuncias/${id}/sugerencia-ia`)
         .done(resp => {
             if (resp.success) {
-                // El backend ahora devuelve id_sugerencia y copia sugerencia -> sugerencia_agente
                 iaRenderResult(id, {
                     sugerencia: {
+                        id: resp.id || resp.id_sugerencia,
                         id_sugerencia: resp.id_sugerencia,
                         sugerencia: resp.sugerencia,
                         sugerencia_generada: resp.sugerencia,
-                        sugerencia_agente: resp.sugerencia, // base inicial
+                        sugerencia_agente: resp.sugerencia,
                         tokens_usados: resp.tokens_usados,
                         costo_estimado: resp.costo_estimado,
                         modelo: resp.modelo || 'gpt-4o',
@@ -801,7 +949,6 @@ $(document).on('click', '.btn-generar-ia', function (e) {
         });
 });
 
-/** Regenerar con IA */
 $(document).on('click', '.btn-regenerar-ia', function (e) {
     e.preventDefault();
     const id = $(this).data('id');
@@ -818,10 +965,11 @@ $(document).on('click', '.btn-regenerar-ia', function (e) {
                     id,
                     {
                         sugerencia: {
+                            id: resp.id || resp.id_sugerencia,
                             id_sugerencia: resp.id_sugerencia,
                             sugerencia: resp.sugerencia,
                             sugerencia_generada: resp.sugerencia,
-                            sugerencia_agente: resp.sugerencia, // se vuelve a clonar
+                            sugerencia_agente: resp.sugerencia,
                             tokens_usados: resp.tokens_usados,
                             costo_estimado: resp.costo_estimado,
                             modelo: resp.modelo || 'gpt-4o',
@@ -832,6 +980,8 @@ $(document).on('click', '.btn-regenerar-ia', function (e) {
                     },
                     true
                 );
+                $tablaDenuncias.bootstrapTable('refresh');
+                showToast('Sugerencia regenerada.', 'success');
             } else {
                 Swal.fire('Aviso', resp.message || 'No se pudo regenerar la sugerencia.', 'warning');
                 iaRenderResult(id, null);
@@ -856,6 +1006,7 @@ function iaBusyOn(id, msg) {
         $b.prop('disabled', true).html(`<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${$b.text().trim()}`);
     });
 }
+
 function iaBusyOff(id) {
     $(`#iaBox-${id} .ia-overlay`).remove();
     $(`.btn-generar-ia[data-id="${id}"], .btn-regenerar-ia[data-id="${id}"]`).each(function () {
@@ -866,15 +1017,12 @@ function iaBusyOff(id) {
     });
 }
 
-/** ----- Edición del agente ----- */
 $(document).on('click', '.btn-editar-ia', function () {
     const id = $(this).data('id');
     const $wrap = $(`#iaEditorWrap-${id}`);
     const $ta = $(`#iaEdit-${id}`);
-    // precargar con la vista previa (si está vacía, tomar original)
     const prevHtml = $(`#iaCliente-${id} > div`).html();
     let base = prevHtml && prevHtml.trim() !== 'Sin edición del agente todavía.' ? prevHtml : $(`#iaResult-${id}`).html();
-    // quitar <br> para edición
     const text = $('<div>')
         .html(base)
         .text()
@@ -882,6 +1030,7 @@ $(document).on('click', '.btn-editar-ia', function () {
     if (!$ta.val()) $ta.val(text);
     $wrap.toggleClass('d-none');
 });
+
 $(document).on('click', '.btn-guardar-edicion-ia', function () {
     const id = $(this).data('id');
     const sugId = $('#iaId-' + id).text();
@@ -890,7 +1039,6 @@ $(document).on('click', '.btn-guardar-edicion-ia', function () {
     if (!texto) return Swal.fire('Aviso', 'Escribe algo para guardar.', 'warning');
     $.post(`${Server}api/denuncias/sugerencia-ia/guardar-edicion`, { id_sugerencia: sugId, texto }, function (resp) {
         if (resp.success) {
-            // actualizar preview
             $(`#iaCliente-${id} > div`).html(iaRenderMarkdown(texto));
             $(`#iaEditorWrap-${id}`).addClass('d-none');
             showToast('Edición guardada.', 'success');
@@ -898,7 +1046,6 @@ $(document).on('click', '.btn-guardar-edicion-ia', function () {
     }).fail(() => Swal.fire('Error', 'Error al guardar la edición.', 'error'));
 });
 
-/** Publicar / retirar */
 $(document).on('click', '.btn-publicar-ia, .btn-retirar-ia', function () {
     const id = $(this).data('id');
     const publicar = Number($(this).data('publicar'));
