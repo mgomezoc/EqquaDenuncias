@@ -1,0 +1,156 @@
+-- ============================================
+-- Tabla: reportes_ia_generados
+-- Almacena los reportes generados por IA
+-- ============================================
+
+CREATE TABLE `reportes_ia_generados` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_cliente` int NOT NULL COMMENT 'Cliente al que pertenece el reporte',
+  `tipo_reporte` enum('mensual','trimestral','semestral') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Tipo de periodicidad del reporte',
+  `periodo_nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Ej: Septiembre 2025, Q3 2025, 1H 2025',
+  `fecha_inicio` date NOT NULL COMMENT 'Fecha inicio del periodo analizado',
+  `fecha_fin` date NOT NULL COMMENT 'Fecha fin del periodo analizado',
+  
+  -- Contenido del reporte (estructurado)
+  `resumen_ejecutivo` text COLLATE utf8mb4_unicode_ci COMMENT 'Resumen ejecutivo generado por IA',
+  `hallazgos_principales` text COLLATE utf8mb4_unicode_ci COMMENT 'Hallazgos principales del periodo',
+  `analisis_geografico` text COLLATE utf8mb4_unicode_ci COMMENT 'Análisis por sucursales',
+  `analisis_categorico` text COLLATE utf8mb4_unicode_ci COMMENT 'Análisis por categorías',
+  `eficiencia_operativa` text COLLATE utf8mb4_unicode_ci COMMENT 'Análisis de eficiencia y estatus',
+  `sugerencias_predictivas` text COLLATE utf8mb4_unicode_ci COMMENT 'Sugerencias proactivas y predicciones',
+  `puntuacion_riesgo` tinyint DEFAULT NULL COMMENT 'Puntuación de riesgo del 1 al 10',
+  
+  -- Datos crudos (JSON para referencia)
+  `metricas_json` json COMMENT 'Métricas y datos crudos en formato JSON',
+  
+  -- Metadatos de IA
+  `modelo_ia_usado` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'gpt-4o',
+  `tokens_utilizados` int DEFAULT 0,
+  `costo_estimado` decimal(8,6) DEFAULT 0.000000,
+  `tiempo_generacion` decimal(5,3) DEFAULT NULL COMMENT 'Tiempo en segundos',
+  `prompt_usado` mediumtext COLLATE utf8mb4_unicode_ci COMMENT 'Prompt enviado a la IA',
+  
+  -- Control y auditoría
+  `generado_por` int DEFAULT NULL COMMENT 'ID del usuario que generó el reporte',
+  `fecha_generacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `estado` enum('generado','revisado','publicado','archivado') COLLATE utf8mb4_unicode_ci DEFAULT 'generado',
+  `fecha_publicacion` datetime DEFAULT NULL,
+  `publicado_por` int DEFAULT NULL,
+  
+  -- Archivos generados
+  `ruta_pdf` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Ruta del PDF generado',
+  `hash_pdf` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Hash SHA256 del PDF para verificación',
+  
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (`id`),
+  KEY `idx_cliente` (`id_cliente`),
+  KEY `idx_tipo_reporte` (`tipo_reporte`),
+  KEY `idx_periodo` (`fecha_inicio`,`fecha_fin`),
+  KEY `idx_generado_por` (`generado_por`),
+  KEY `idx_estado` (`estado`),
+  
+  CONSTRAINT `fk_reportes_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_reportes_generado_por` FOREIGN KEY (`generado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_reportes_publicado_por` FOREIGN KEY (`publicado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes periódicos generados con IA';
+
+
+-- ============================================
+-- Tabla: reportes_configuracion
+-- Configuración y plantillas para reportes
+-- ============================================
+
+CREATE TABLE `reportes_configuracion` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tipo_reporte` enum('mensual','trimestral','semestral') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci,
+  
+  -- Configuración del reporte
+  `secciones_incluidas` json COMMENT 'Array de secciones a incluir en el reporte',
+  `metricas_clave` json COMMENT 'Métricas principales a calcular',
+  `template_prompt` mediumtext COLLATE utf8mb4_unicode_ci COMMENT 'Template del prompt para la IA',
+  
+  -- Configuración visual (para PDF)
+  `color_primario` varchar(7) COLLATE utf8mb4_unicode_ci DEFAULT '#FF6B35' COMMENT 'Color principal del reporte',
+  `color_secundario` varchar(7) COLLATE utf8mb4_unicode_ci DEFAULT '#004E89' COMMENT 'Color secundario',
+  `incluir_graficas` tinyint(1) DEFAULT 1,
+  `incluir_tablas` tinyint(1) DEFAULT 1,
+  
+  `activo` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_tipo_reporte` (`tipo_reporte`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuración de tipos de reportes';
+
+-- ============================================
+-- Tabla: reportes_metricas_historicas
+-- Almacena métricas calculadas para comparaciones
+-- ============================================
+
+CREATE TABLE `reportes_metricas_historicas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_reporte` int NOT NULL,
+  `metrica_nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre de la métrica',
+  `metrica_valor` decimal(15,4) DEFAULT NULL COMMENT 'Valor numérico de la métrica',
+  `metrica_texto` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Valor texto de la métrica',
+  `categoria` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Categoría: KPI, geografico, operativo, etc',
+  
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (`id`),
+  KEY `idx_reporte` (`id_reporte`),
+  KEY `idx_metrica_nombre` (`metrica_nombre`),
+  KEY `idx_categoria` (`categoria`),
+  
+  CONSTRAINT `fk_metricas_reporte` FOREIGN KEY (`id_reporte`) REFERENCES `reportes_ia_generados` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Métricas históricas para comparaciones entre reportes';
+
+
+-- ============================================
+-- Configuración inicial de tipos de reportes
+-- ============================================
+
+INSERT INTO `reportes_configuracion` 
+(`tipo_reporte`, `nombre`, `descripcion`, `secciones_incluidas`, `metricas_clave`, `color_primario`, `color_secundario`, `incluir_graficas`, `incluir_tablas`, `activo`) 
+VALUES 
+(
+  'mensual', 
+  'Reporte Mensual de Denuncias',
+  'Reporte táctico y operacional con enfoque mes a mes (MoM) para identificar problemas inmediatos y velocidad de respuesta',
+  '["resumen_ejecutivo", "metricas_clave", "analisis_geografico", "analisis_categorico", "eficiencia_operativa", "sugerencias_predictivas"]',
+  '["total_denuncias", "variacion_mom", "indice_resolucion", "tiempo_promedio_cierre", "denuncias_por_sucursal", "categorias_principales"]',
+  '#FF6B35',
+  '#004E89',
+  1,
+  1,
+  1
+),
+(
+  'trimestral',
+  'Reporte Trimestral de Tendencias',
+  'Reporte de gestión y tendencia con enfoque trimestral (QoQ) para identificar estabilidad y patrones de mediano plazo',
+  '["resumen_ejecutivo", "tendencias_volumen", "efectividad_proceso", "consistencia_riesgo", "canales_confianza"]',
+  '["volumen_trimestral", "variacion_qoq", "tasa_cierre", "top_categorias", "top_sucursales", "distribucion_canales"]',
+  '#FF6B35',
+  '#004E89',
+  1,
+  1,
+  1
+),
+(
+  'semestral',
+  'Reporte Semestral Estratégico',
+  'Reporte estratégico y de auditoría con enfoque semestral (YoY) para identificar riesgos sistémicos y eficacia de gestión',
+  '["resumen_ejecutivo", "riesgo_sistemico", "evaluacion_impacto", "revision_estrategica", "efectividad_recomendaciones"]',
+  '["volumen_semestral", "variacion_yoy", "matriz_dpto_sucursal", "casos_cerrados_hallazgos", "impacto_acciones_correctivas"]',
+  '#FF6B35',
+  '#004E89',
+  1,
+  1,
+  1
+);
