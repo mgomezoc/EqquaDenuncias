@@ -562,16 +562,18 @@ class DenunciasController extends Controller
                 ]);
             }
 
-            // Datos enriquecidos
-            $denuncia = $denunciaModel->select('
-                denuncias.*,
-                categorias_denuncias.nombre      AS categoria_nombre,
-                subcategorias_denuncias.nombre   AS subcategoria_nombre,
-                departamentos.nombre             AS departamento_nombre,
-                sucursales.nombre                AS sucursal_nombre
-            ')
-                ->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left')
-                ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = denuncias.subcategoria', 'left')
+            // Datos enriquecidos (CAST porque denuncias.categoria/subcategoria son VARCHAR)
+            $denuncia = $denunciaModel->select("
+        denuncias.*,
+        clientes.nombre_empresa              AS cliente_nombre,
+        categorias_denuncias.nombre          AS categoria_nombre,
+        subcategorias_denuncias.nombre       AS subcategoria_nombre,
+        departamentos.nombre                 AS departamento_nombre,
+        sucursales.nombre                    AS sucursal_nombre
+    ")
+                ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
+                ->join('categorias_denuncias', 'categorias_denuncias.id = CAST(denuncias.categoria AS UNSIGNED)', 'left')
+                ->join('subcategorias_denuncias', 'subcategorias_denuncias.id = CAST(denuncias.subcategoria AS UNSIGNED)', 'left')
                 ->join('departamentos', 'departamentos.id = denuncias.id_departamento', 'left')
                 ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
                 ->find($idDenuncia);
@@ -592,15 +594,14 @@ class DenunciasController extends Controller
                 $tiempoGeneracion = round($t1 - $t0, 3);
                 $costoEstimado    = $iaService->calcularCostoEstimado($resultado['tokens_usados']);
 
-                // Guardamos incluyendo prompt_usado
                 $sugerenciaData = [
-                    'id_denuncia'      => $idDenuncia,
-                    'sugerencia'       => $resultado['sugerencia'],
-                    'tokens_usados'    => $resultado['tokens_usados'],
+                    'id_denuncia'       => (int)$idDenuncia,
+                    'sugerencia'        => $resultado['sugerencia'],
+                    'tokens_usados'     => (int)$resultado['tokens_usados'],
                     'costo_estimado'    => $costoEstimado,
                     'modelo'            => 'gpt-4o',
                     'tiempo_generacion' => $tiempoGeneracion,
-                    'prompt_usado'            => $resultado['prompt_usado'] ?? null,   // <-- nuevo
+                    'prompt_usado'      => $resultado['prompt_usado'] ?? null,
                 ];
 
                 if ($sugerenciaModel->guardarSugerencia($sugerenciaData)) {
@@ -612,11 +613,9 @@ class DenunciasController extends Controller
                         'costo_estimado'    => number_format($costoEstimado, 6),
                         'tiempo_generacion' => $tiempoGeneracion
                     ]);
-                } else {
-                    log_message('error', 'Sugerencia IA no guardada: {e}', ['e' => json_encode($sugerenciaModel->errors())]);
-                    return $this->response->setJSON(['success' => false, 'message' => 'Error al guardar la sugerencia']);
                 }
 
+                log_message('error', 'Sugerencia IA no guardada: {e}', ['e' => json_encode($sugerenciaModel->errors())]);
                 return $this->response->setJSON(['success' => false, 'message' => 'Error al guardar la sugerencia']);
             }
 
@@ -626,6 +625,7 @@ class DenunciasController extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Error interno del servidor']);
         }
     }
+
 
     public function obtenerSugerenciaIA($idDenuncia)
     {

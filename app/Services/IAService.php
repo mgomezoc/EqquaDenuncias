@@ -31,7 +31,7 @@ class IAService
         // Lee configuración desde .env con defaults razonables
         $this->modelo      = (string) (getenv('IA_MODELO_USADO') ?: 'gpt-4o');
         $this->maxTokens   = (int)    (getenv('IA_MAX_TOKENS') ?: 1000);
-        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.5);
+        $this->temperature = (float)  (getenv('IA_TEMPERATURE') ?: 0.4); // ajuste fino sugerido
         $this->timeout     = (int)    (getenv('IA_TIMEOUT_SEGUNDOS') ?: 30);
 
         // Flags de logging
@@ -55,7 +55,13 @@ class IAService
                 'messages' => [
                     [
                         'role'    => 'system',
-                        'content' => 'Eres un consultor experto en gestión de recursos humanos y resolución de conflictos laborales. Tu función es asesorar a administradores y supervisores sobre cómo investigar, gestionar y resolver denuncias laborales de manera profesional, justa y efectiva. Proporcionas recomendaciones prácticas, accionables y alineadas con mejores prácticas de RH. Tu lenguaje es profesional pero accesible, enfocado en la acción y los resultados.'
+                        'content' => 'Eres un consultor senior en relaciones laborales y cumplimiento (RH/operación) para empresas en México. Tu objetivo es entregar recomendaciones PERSONALIZADAS, basadas estrictamente en los hechos descritos por el denunciante y en los metadatos del caso. 
+- Tono: profesional, empático, no imperativo; evita listas genéricas. 
+- Cita frases breves entre comillas de la descripción (máx. 12 palabras por cita) para fundamentar cada recomendación.
+- Si hay incertidumbre, dilo explícitamente y sugiere cómo resolverla con acciones concretas.
+- No inventes datos. No emitas conclusiones legales; limita “Marco normativo” a consideraciones prácticas de política interna y buenas prácticas.
+- Entrega entre 260–420 palabras en español neutro con subtítulos en **negritas** y viñetas cortas. 
+- Estructura: 1) **Diagnóstico específico** (qué se observa en ESTE caso), 2) **Riesgos y severidad** (por qué importa y a quién impacta), 3) **Acciones inmediatas ancladas al caso** (24–48 h, responsables y evidencias concretas a recabar), 4) **Opciones de resolución** con pros y contras, 5) **SLA recomendado** (tiempos realistas), 6) **Comunicación** (qué decir y a quién), 7) **Aclaraciones pendientes** (solo si faltan datos, en checklist).'
                     ],
                     [
                         'role'    => 'user',
@@ -65,14 +71,12 @@ class IAService
                 'temperature' => $this->temperature,
             ];
 
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             // MODELOS NUEVOS (gpt-5*, o1/o3) usan max_completion_tokens en vez de max_tokens
             if ($this->usaMaxCompletionTokens($this->modelo)) {
                 $postData['max_completion_tokens'] = $this->maxTokens;
             } else {
                 $postData['max_tokens'] = $this->maxTokens;
             }
-            // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
             if ($this->logRequests) {
                 log_message(
@@ -127,100 +131,116 @@ class IAService
     }
 
     /**
-     * Construye un prompt profesional orientado al ADMINISTRADOR/AGENTE
-     * que debe resolver la denuncia
+     * Construye un prompt profesional, anclado al caso específico.
      */
     private function construirPrompt(array $d): string
     {
-        // Inferencia simple de tipología para contexto
-        $desc = mb_strtolower($d['descripcion'] ?? '');
-        $tipologia = 'situación laboral';
-        $map = [
-            'nalgad' => 'acoso físico',
-            'tocó' => 'contacto inapropiado',
-            'toque' => 'contacto inapropiado',
-            'manose' => 'acoso físico',
-            'golpe' => 'agresión física',
-            'empuj' => 'agresión física',
-            'insult' => 'acoso verbal',
-            'grit' => 'trato irrespetuoso',
-            'amenaz' => 'intimidación',
-            'acoso sexual' => 'acoso sexual',
-            'discrimin' => 'discriminación',
-            'celular' => 'falta de atención al cliente',
-            'jugando' => 'distracción en el trabajo',
-            'robo' => 'robo o hurto',
-            'fraude' => 'fraude',
-            'soborno' => 'corrupción',
-            'falta' => 'incumplimiento de normas',
-            'ausencia' => 'ausentismo'
-        ];
+        // Normaliza y recoge campos
+        $descRaw      = (string)($d['descripcion'] ?? '');
+        $desc         = mb_strtolower($descRaw);
+        $folio        = $d['folio']               ?? 'Sin folio';
+        $tipoDen      = $d['tipo_denunciante']    ?? 'No especificado';
+        $catNom       = $d['categoria_nombre']    ?? 'Sin categorizar';
+        $subcatNom    = $d['subcategoria_nombre'] ?? null;
+        $deptoNom     = $d['departamento_nombre'] ?? 'No especificado';
+        $sucursalNom  = $d['sucursal_nombre']     ?? 'No especificada';
+        $area         = $d['area_incidente']      ?? 'Área no especificada';
+        $fechaInc     = $d['fecha_incidente']     ?? 'No especificada';
+        $comoEnt      = $d['como_se_entero']      ?? 'No especificado';
+        $denunciado   = $d['denunciar_a_alguien'] ?? 'No identificado';
+        $clienteNom   = $d['cliente_nombre']      ?? 'N/A';
+        $medio        = $d['medio_recepcion']     ?? 'N/A';
 
-        foreach ($map as $needle => $label) {
-            if (mb_strpos($desc, $needle) !== false) {
-                $tipologia = $label;
-                break;
+        // Tipologías múltiples (buscamos varias coincidencias)
+        $map = [
+            'acoso sexual'              => ['acoso sexual', 'tocó', 'toque', 'manose', 'nalgad'],
+            'acoso verbal'              => ['insult', 'grit', 'hostig'],
+            'trato irrespetuoso'        => ['grit', 'faltas de respeto'],
+            'agresión física'           => ['golpe', 'empuj', 'agresión'],
+            'intimidación'              => ['amenaz', 'represal'],
+            'discriminación'            => ['discrimin'],
+            'fraude/corrupción'         => ['fraude', 'soborno', 'mordida', 'corrup'],
+            'robo/hurto'                => ['robo', 'hurto'],
+            'incumplimiento de normas'  => ['falta', 'procedim', 'política', 'protocolo'],
+            'jornada/horarios/pagos'    => ['jornada', 'turno', 'hora', 'pago', 'salario', 'horas extra'],
+            'seguridad/operación'       => ['equipo', 'herramienta', 'incidente', 'accidente', 'riesgo', 'patio', 'unidad'],
+        ];
+        $tags = [];
+        foreach ($map as $label => $needles) {
+            foreach ($needles as $needle) {
+                if (mb_strpos($desc, $needle) !== false) {
+                    $tags[$label] = true;
+                    break;
+                }
             }
         }
-
-        // Campos con fallback legible
-        $folio         = $d['folio']               ?? 'Sin folio';
-        $tipoDen       = $d['tipo_denunciante']    ?? 'No especificado';
-        $catNom        = $d['categoria_nombre']    ?? 'Sin categorizar';
-        $subcatNom     = $d['subcategoria_nombre'] ?? 'N/A';
-        $deptoNom      = $d['departamento_nombre'] ?? 'No especificado';
-        $sucursalNom   = $d['sucursal_nombre']     ?? 'No especificada';
-        $area          = $d['area_incidente']      ?? 'área no especificada';
-        $fechaInc      = $d['fecha_incidente']     ?? 'fecha no especificada';
-        $comoEnt       = $d['como_se_entero']      ?? 'no especificado';
-        $denunciado    = $d['denunciar_a_alguien'] ?? 'persona no identificada';
-        $descripcion   = $d['descripcion']         ?? 'Sin descripción';
-
-        // Prompt enfocado para el ADMINISTRADOR/SUPERVISOR/AGENTE que gestiona la denuncia
-        $prompt = "Eres un consultor especializado en resolución de conflictos laborales y gestión de denuncias corporativas. ";
-        $prompt .= "Tu rol es asesorar a administradores, supervisores y personal de RH sobre las mejores acciones para investigar y resolver casos.\n\n";
-
-        $prompt .= "**DENUNCIA RECIBIDA - FOLIO: {$folio}**\n";
-        $prompt .= "**Tipo de caso identificado:** {$tipologia}\n\n";
-
-        $prompt .= "**INFORMACIÓN DEL CASO:**\n";
-        $prompt .= "• **Categoría:** {$catNom}";
-        if ($subcatNom !== 'N/A') {
-            $prompt .= " → {$subcatNom}";
+        if (empty($tags)) {
+            $tags['situación laboral'] = true;
         }
-        $prompt .= "\n";
-        $prompt .= "• **Reportado por:** {$tipoDen}\n";
-        $prompt .= "• **Ubicación:** {$deptoNom} - {$sucursalNom}\n";
-        $prompt .= "• **Área del incidente:** {$area}\n";
-        $prompt .= "• **Fecha del incidente:** {$fechaInc}\n";
-        $prompt .= "• **Forma de conocimiento:** {$comoEnt}\n";
-        $prompt .= "• **Persona(s) involucrada(s):** {$denunciado}\n\n";
+        $tipologias = implode(', ', array_keys($tags));
 
-        $prompt .= "**DESCRIPCIÓN COMPLETA DEL INCIDENTE:**\n";
-        $prompt .= "\"{$descripcion}\"\n\n";
+        // Heurística simple de severidad
+        $sev = 'Baja';
+        $sevScore = 0;
+        $buckets = [
+            'Alta' => ['acoso sexual', 'agresión física', 'intimidación', 'fraude/corrupción', 'seguridad/operación'],
+            'Media' => ['acoso verbal', 'robo/hurto', 'jornada/horarios/pagos', 'discriminación'],
+        ];
+        foreach ($buckets['Alta'] as $k) {
+            if (isset($tags[$k])) $sevScore += 2;
+        }
+        foreach ($buckets['Media'] as $k) {
+            if (isset($tags[$k])) $sevScore += 1;
+        }
+        if ($sevScore >= 2) $sev = 'Alta';
+        elseif ($sevScore === 1) $sev = 'Media';
 
-        $prompt .= "---\n\n";
-        $prompt .= "**SOLICITUD DE ASESORÍA:**\n";
-        $prompt .= "Como administrador responsable de gestionar esta denuncia, necesito una recomendación profesional y práctica sobre cómo proceder. ";
-        $prompt .= "Por favor, proporciona una sugerencia que incluya:\n\n";
+        // Extrae 2–4 frases cortas literales (máx. 140 chars por fragmento)
+        $frases = [];
+        foreach (preg_split('/[\r\n]+/', $descRaw) as $p) {
+            $p = trim($p);
+            if (mb_strlen($p) >= 25 && mb_strlen($p) <= 180) {
+                $frases[] = '“' . mb_substr($p, 0, 140) . '”';
+            }
+            if (count($frases) >= 4) break;
+        }
+        if (empty($frases)) {
+            $len = mb_strlen($descRaw);
+            if ($len > 40) {
+                $frases[] = '“' . mb_substr($descRaw, 0, min(120, $len)) . '”';
+            }
+        }
+        $evidencias = empty($frases) ? '“Sin fragmentos literales disponibles.”' : implode("\n• ", $frases);
 
-        $prompt .= "1. **Acciones inmediatas:** Primeros pasos que debo tomar en las próximas 24-48 horas\n";
-        $prompt .= "2. **Investigación:** Qué evidencias recabar, testimonios a solicitar, documentos a revisar\n";
-        $prompt .= "3. **Personas/áreas a involucrar:** RH, legal, supervisores directos, comité de ética, etc.\n";
-        $prompt .= "4. **Medidas cautelares:** Si aplican medidas de protección o separación temporal\n";
-        $prompt .= "5. **Marco normativo:** Consideraciones legales, políticas internas o reglamentos aplicables\n";
-        $prompt .= "6. **Plazo estimado:** Tiempo razonable para la resolución del caso\n";
-        $prompt .= "7. **Posibles resoluciones:** Acciones correctivas, disciplinarias o soluciones recomendadas según hallazgos\n";
-        $prompt .= "8. **Comunicación:** Cómo mantener informadas a las partes involucradas respetando confidencialidad\n\n";
+        // Construcción del prompt (contexto + hechos + solicitud)
+        $prompt  = "## Caso real para asesoría personalizada\n";
+        $prompt .= "**Cliente:** {$clienteNom} | **Folio:** {$folio}\n";
+        $prompt .= "**Tipologías detectadas:** {$tipologias} | **Severidad estimada:** {$sev}\n\n";
 
-        $prompt .= "**FORMATO DE RESPUESTA:**\n";
-        $prompt .= "• Usa un tono profesional, directo y orientado a la acción\n";
-        $prompt .= "• Sé específico y proporciona pasos concretos y accionables\n";
-        $prompt .= "• Prioriza siempre la seguridad, dignidad y derechos de todas las personas involucradas\n";
-        $prompt .= "• Mantén la respuesta entre 300-450 palabras\n";
-        $prompt .= "• Escribe en español neutro y profesional\n";
-        $prompt .= "• Puedes usar formato markdown con **negritas** para destacar puntos críticos\n";
-        $prompt .= "• Estructura la información de forma clara y escaneable\n";
+        $prompt .= "**Metadatos del caso**\n";
+        $prompt .= "• Categoría: {$catNom}" . ($subcatNom ? " → {$subcatNom}" : "") . "\n";
+        $prompt .= "• Denunciante: {$tipoDen} | Medio de recepción: {$medio}\n";
+        $prompt .= "• Ubicación: {$deptoNom} – {$sucursalNom} | Área: {$area}\n";
+        $prompt .= "• Fecha del incidente: {$fechaInc} | Cómo se enteró: {$comoEnt}\n";
+        $prompt .= "• Persona(s) señalada(s): {$denunciado}\n\n";
+
+        $prompt .= "**Descripción del denunciante (resumen literal en fragmentos):**\n";
+        $prompt .= "• {$evidencias}\n\n";
+
+        // Instrucciones enfocadas en ESTE caso (no genéricas)
+        $prompt .= "**Qué necesitamos de ti**\n";
+        $prompt .= "- Entrega una **recomendación específica para este caso**, evitando plantillas genéricas.\n";
+        $prompt .= "- Ancla cada acción a **hechos del relato** o a **metadatos** (cliente/sucursal/área/fecha/personas).\n";
+        $prompt .= "- Si faltan elementos críticos, incluye un bloque final de **Aclaraciones pendientes** (máx. 4 bullets).\n\n";
+
+        $prompt .= "**Formato de respuesta (obligatorio):**\n";
+        $prompt .= "1) **Diagnóstico específico** (qué patrón ves aquí y por qué; cita 1–2 fragmentos breves)\n";
+        $prompt .= "2) **Riesgos y severidad** (impacto en operación/seguridad/reputación)\n";
+        $prompt .= "3) **Acciones inmediatas (24–48 h)** con responsables internos sugeridos y **evidencias concretas a recabar** (documentos, bitácoras, CCTV, testigos, nómina, etc.)\n";
+        $prompt .= "4) **Opciones de resolución** (2–3 rutas) con **pros y contras** y **criterios de decisión**\n";
+        $prompt .= "5) **SLA recomendado** (tiempos realistas por etapa)\n";
+        $prompt .= "6) **Comunicación** (a quién, qué decir; mantener confidencialidad)\n";
+        $prompt .= "7) **Aclaraciones pendientes** (solo si aplican)\n";
 
         return $prompt;
     }
@@ -302,7 +322,6 @@ class IAService
      */
     private function usaMaxCompletionTokens(string $model): bool
     {
-        // Modelos que actualmente requieren max_completion_tokens en Chat Completions
         $m = strtolower($model);
         return (
             str_starts_with($m, 'gpt-5') ||   // gpt-5, gpt-5-nano, etc.
