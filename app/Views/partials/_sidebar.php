@@ -65,6 +65,27 @@
                             <span class="side-menu__label">Reporte</span>
                         </a>
                     </li>
+
+                    <!-- ===== Reportes IA (nuevo bloque) ===== -->
+                    <li class="slide">
+                        <a href="<?= base_url('reportes-ia') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-robot side-menu__icon"></i>
+                            <span class="side-menu__label">Reportes IA</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('reportes-ia/generar') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-wand-magic-sparkles side-menu__icon"></i>
+                            <span class="side-menu__label">Generar Reporte IA</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a href="<?= base_url('reportes-ia/estadisticas') ?>" class="side-menu__item">
+                            <i class="fa-solid fa-chart-line side-menu__icon"></i>
+                            <span class="side-menu__label">Estadísticas IA</span>
+                        </a>
+                    </li>
+                    <!-- ===== /Reportes IA ===== -->
                 <?php endif; ?>
 
 
@@ -100,7 +121,7 @@
                     </li>
                     <li class="slide">
                         <a href="<?= base_url('c/' . session()->get('slug')) ?>" class="side-menu__item" target="_blank">
-                            <i class="fa-solid fa-external-link-alt side-menu__icon"></i> <!-- Ícono para representar un portal o enlace externo -->
+                            <i class="fa-solid fa-external-link-alt side-menu__icon"></i>
                             <span class="side-menu__label">Portal</span>
                         </a>
                     </li>
@@ -126,7 +147,6 @@
                             <span class="side-menu__label">Clientes</span>
                         </a>
                     </li>
-
                 <?php endif; ?>
 
                 <?php if ($rol == 'SUPERVISOR_CALIDAD'): ?>

@@ -172,12 +172,13 @@ class ReporteIAService
 
         // Nombre del cliente
         $cliente = $this->db->table('clientes')
-            ->select('nombre')
+            ->select('nombre_empresa')
             ->where('id', $idCliente)
             ->get()
             ->getRowArray();
 
-        $metricas['cliente'] = $cliente['nombre'] ?? 'Cliente';
+        $metricas['cliente'] = $cliente['nombre_empresa'] ?? 'Cliente';
+
 
         // ========== MÉTRICAS PRINCIPALES ==========
 
@@ -192,12 +193,13 @@ class ReporteIAService
 
         // Denuncias cerradas
         $denunciasCerradas = $this->db->table('denuncias')
-            ->join('estados_denuncias', 'estados_denuncias.id = denuncias.id_estado')
+            ->join('estados_denuncias', 'estados_denuncias.id = denuncias.estado_actual') // <-- antes: id_estado
             ->where('denuncias.id_cliente', $idCliente)
             ->where('denuncias.fecha_hora_reporte >=', $fechaInicio)
             ->where('denuncias.fecha_hora_reporte <=', $fechaFin . ' 23:59:59')
             ->where('estados_denuncias.nombre', 'Cerrada')
             ->countAllResults();
+
 
         $metricas['denuncias_cerradas'] = $denunciasCerradas;
         $metricas['indice_resolucion'] = $totalDenuncias > 0
@@ -209,7 +211,7 @@ class ReporteIAService
             SELECT AVG(TIMESTAMPDIFF(DAY, fecha_hora_reporte, updated_at)) as promedio_dias,
                    STDDEV(TIMESTAMPDIFF(DAY, fecha_hora_reporte, updated_at)) as desviacion
             FROM denuncias 
-            JOIN estados_denuncias ON estados_denuncias.id = denuncias.id_estado
+            JOIN estados_denuncias ON estados_denuncias.id = denuncias.estado_actual
             WHERE denuncias.id_cliente = ?
             AND denuncias.fecha_hora_reporte >= ?
             AND denuncias.fecha_hora_reporte <= ?
@@ -430,7 +432,7 @@ class ReporteIAService
                         AND fecha_hora_reporte >= ? 
                         AND fecha_hora_reporte <= ?)), 1) as porcentaje
             FROM denuncias d
-            JOIN estados_denuncias e ON e.id = d.id_estado
+            JOIN estados_denuncias e ON e.id = d.estado_actual
             WHERE d.id_cliente = ?
             AND d.fecha_hora_reporte >= ?
             AND d.fecha_hora_reporte <= ?
@@ -461,7 +463,7 @@ class ReporteIAService
                    DATEDIFF(?, d.fecha_hora_reporte) as dias_pendiente,
                    e.nombre as estatus
             FROM denuncias d
-            JOIN estados_denuncias e ON e.id = d.id_estado
+            JOIN estados_denuncias e ON e.id = d.estado_actual
             WHERE d.id_cliente = ?
             AND d.fecha_hora_reporte < ?
             AND e.nombre NOT IN ('Cerrada', 'Desechada')

@@ -2,43 +2,28 @@
 
 use CodeIgniter\Router\RouteCollection;
 
-/**
- * @var RouteCollection $routes
- */
+/** @var RouteCollection $routes */
 
-/**
- * Rutas públicas para cualquier usuario
- * Estas rutas no requieren autenticación y son accesibles por cualquier persona
- */
+// Públicas
 $routes->get('send-email', 'MailController::sendEmail');
 
 $routes->group('', function ($routes) {
-    // Rutas para la página pública de denuncias
     $routes->get('c/(:segment)', 'Publico::verCliente/$1');
     $routes->get('c/(:segment)/formulario-denuncia', 'Publico::formularioDenuncia/$1');
     $routes->get('c/(:segment)/seguimiento-denuncia', 'Publico::seguimientoDenuncia/$1');
 
-    // Rutas públicas para obtener categorías y subcategorías
     $routes->get('categorias/listarSubcategorias', 'CategoriasController::listarSubcategorias');
 
-    // Rutas públicas para obtener sucursales y departamentos
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'SucursalesController::obtenerSucursalesPorCliente/$1');
     $routes->get('departamentos/listarDepartamentosPorSucursal/(:num)', 'DepartamentosController::listarDepartamentosPorSucursal/$1');
 
-    // Ruta pública para guardar denuncias
     $routes->post('denuncias/guardar-public', 'Publico::guardarDenunciaPublica');
-
-    // Ruta pública para subir archivos adjuntos usando Dropzone
     $routes->post('denuncias/subir-anexo-public', 'Publico::subirAnexoPublico');
 
-    // Consulta de seguimiento de denuncias
     $routes->get('denuncias/consultar', 'Publico::consultarDenuncia');
 });
 
-
-/**
- * Rutas para la autenticación y gestión de sesión
- */
+// Autenticación
 $routes->get('/', 'Home::index', ['filter' => 'authFilter']);
 $routes->get('/login', 'Auth::login');
 $routes->post('/auth/loginSubmit', 'Auth::loginSubmit');
@@ -52,10 +37,7 @@ $routes->post('/forgot-password-submit', 'Auth::forgotPasswordSubmit');
 $routes->get('/reset-password/(:any)', 'Auth::resetPassword/$1');
 $routes->post('/reset-password-submit', 'Auth::resetPasswordSubmit');
 
-
-/**
- * Rutas para el dashboard
- */
+// Dashboard
 $routes->get('/dashboard', 'DashboardController::index', ['filter' => 'authFilter']);
 $routes->post('/dashboard/filtrar', 'DashboardController::filtrar');
 $routes->post('/dashboard/getDenunciasPorAnio', 'DashboardController::getDenunciasPorAnio');
@@ -63,10 +45,7 @@ $routes->post('dashboard/getSubcategoriasPorCategoria', 'DashboardController::ge
 $routes->post('dashboard/getCategoriasResumen', 'DashboardController::getCategoriasResumen');
 $routes->post('dashboard/getResumenCategoriasConFiltros', 'DashboardController::getResumenCategoriasConFiltros');
 
-
-/**
- * Grupo de rutas accesibles solo por ADMIN y otros roles específicos
- */
+// Grupo general con auth y roles
 $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALIDAD'], function ($routes) {
     // Configuración
     $routes->get('configuracion', 'ConfiguracionController::index', ['filter' => 'authFilter']);
@@ -75,7 +54,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
     // Admin
     $routes->get('/admin', 'Admin::index');
 
-    // Reportes
+    // Reportes (existente)
     $routes->group('reportes', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
         $routes->get('/', 'ReportesController::index');
         $routes->post('listar', 'ReportesController::listar');
@@ -86,6 +65,20 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
         $routes->post('listarParaCliente', 'ReportesController::listarParaCliente');
     });
 
+    // Reportes IA (nuevo)
+    $routes->group('reportes-ia', ['filter' => 'authFilter:ADMIN'], function ($routes) {
+        $routes->get('/', 'ReportesIAController::index');                 // Listado
+        $routes->get('generar', 'ReportesIAController::generar');         // Form generar
+        $routes->post('procesar', 'ReportesIAController::procesarGeneracion'); // AJAX generar
+        $routes->get('ver/(:num)', 'ReportesIAController::ver/$1');       // Detalle
+        $routes->post('cambiar-estado', 'ReportesIAController::cambiarEstado'); // Cambiar estado
+        $routes->get('descargar/(:num)', 'ReportesIAController::descargarPDF/$1'); // PDF
+        $routes->post('eliminar', 'ReportesIAController::eliminar');      // Eliminar
+        $routes->get('estadisticas', 'ReportesIAController::estadisticas'); // Estadísticas
+        $routes->get('periodos', 'ReportesIAController::getPeriodosDisponibles'); // Periodos disponibles
+    });
+
+    // Sucursales helper
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
 
     // Usuarios
@@ -144,9 +137,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
     });
 });
 
-/**
- * Rutas relacionadas con la gestión de denuncias
- */
+// Denuncias (CRUD y vistas)
 $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CALIDAD,CLIENTE'], function ($routes) {
     $routes->get('/', 'DenunciasController::index');
     $routes->get('listar', 'DenunciasController::listar');
@@ -160,42 +151,33 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
     $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
     $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
 
-    // Denuncias del agente
     $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente');
     $routes->get('listar-denuncias-agente', 'DenunciasController::listarDenunciasAgente');
     $routes->get('listar-denuncias-calidad', 'DenunciasController::listarDenunciasCalidad', ['filter' => 'authFilter:SUPERVISOR_CALIDAD']);
     $routes->get('listarDenunciasCliente', 'DenunciasController::listarDenunciasCliente');
 
-    // Gestión de anexos
     $routes->group('anexos', function ($routes) {
         $routes->post('eliminar/(:num)', 'DenunciasController::eliminarAnexo/$1');
     });
 
-    // Supervisor de calidad
     $routes->group('supervision', ['filter' => 'authFilter:SUPERVISOR_CALIDAD'], function ($routes) {
         $routes->get('gestion', 'DenunciasController::gestionSupervisor');
     });
 });
 
-/**
- * Grupo de rutas exclusivas para el CLIENTE autenticado
- */
+// Cliente autenticado
 $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) {
-    // Denuncias del cliente
     $routes->group('denuncias', function ($routes) {
         $routes->get('mis-denuncias-cliente', 'DenunciasController::misDenunciasCliente');
     });
 
     $routes->group('cliente', ['filter' => 'authFilter:CLIENTE'], function ($routes) {
-        // Dashboard
         $routes->get('dashboard', 'DashboardClienteController::index');
         $routes->post('dashboard/filtrar', 'DashboardClienteController::filtrar');
 
-        // Perfil
         $routes->get('perfil', 'PerfilClienteController::perfil');
         $routes->post('perfil/actualizar', 'PerfilClienteController::actualizarPerfil');
 
-        // Usuarios del cliente
         $routes->group('usuarios', function ($routes) {
             $routes->get('/', 'UsuariosClienteController::index');
             $routes->get('listar', 'UsuariosClienteController::listar');
@@ -210,7 +192,6 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) 
         $routes->post('usuarios/eliminar/(:num)', 'UsuariosClienteController::eliminar/$1');
     });
 
-    // Clientes
     $routes->group('clientes', function ($routes) {
         $routes->get('/', 'ClientesController::index');
         $routes->get('listar', 'ClientesController::listar');
@@ -219,7 +200,6 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) 
         $routes->post('eliminar/(:num)', 'ClientesController::eliminar/$1');
     });
 
-    // Sucursales del cliente
     $routes->group('sucursales', function ($routes) {
         $routes->get('/', 'SucursalesController::index');
         $routes->get('listar', 'SucursalesController::listar');
@@ -233,7 +213,6 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) 
         $routes->post('eliminar-imagen', 'SucursalesController::eliminarImagen');
     });
 
-    // Departamentos del cliente
     $routes->group('departamentos', function ($routes) {
         $routes->get('/', 'DepartamentosController::index');
         $routes->get('listar', 'DepartamentosController::listarDepartamentos');
@@ -244,9 +223,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE'], function ($routes) 
     });
 });
 
-/**
- * Gestión de comentarios
- */
+// Comentarios
 $routes->group('comentarios', function ($routes) {
     $routes->get('listar/(:num)', 'ComentariosController::listar/$1');
     $routes->get('listar-cliente/(:num)', 'ComentariosController::listarCliente/$1');
@@ -254,32 +231,18 @@ $routes->group('comentarios', function ($routes) {
     $routes->post('eliminar/(:num)', 'ComentariosController::eliminar/$1');
 });
 
-// Rutas para funcionalidad de IA en denuncias
+// IA en denuncias
 $routes->group('api/denuncias', ['namespace' => 'App\Controllers'], function ($routes) {
-
-    // Generar sugerencia de IA para una denuncia
     $routes->post('(:num)/sugerencia-ia', 'DenunciasController::generarSugerenciaIA/$1');
-
-    // Obtener sugerencia de IA existente
     $routes->get('(:num)/sugerencia-ia', 'DenunciasController::obtenerSugerenciaIA/$1');
-
-    // Regenerar sugerencia de IA
     $routes->put('(:num)/sugerencia-ia/regenerar', 'DenunciasController::regenerarSugerenciaIA/$1');
-
-    // Evaluar sugerencia de IA
     $routes->post('sugerencia-ia/evaluar', 'DenunciasController::evaluarSugerenciaIA');
-
-    // Guardar edición del agente (texto en sugerencia_agente)
     $routes->post('sugerencia-ia/guardar-edicion', 'DenunciasController::guardarEdicionSugerencia');
-
-    // Publicar / retirar la sugerencia para el cliente final
     $routes->post('sugerencia-ia/publicar', 'DenunciasController::publicarSugerencia');
-
-    // Estadísticas de uso de IA
     $routes->get('estadisticas-ia', 'DenunciasController::estadisticasIA');
 });
 
-// Rutas adicionales para administración de IA (solo para administradores)
+// Admin IA
 $routes->group('admin/ia', ['namespace' => 'App\Controllers', 'filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'IAAdminController::dashboard');
     $routes->get('configuracion', 'IAAdminController::configuracion');
@@ -288,10 +251,7 @@ $routes->group('admin/ia', ['namespace' => 'App\Controllers', 'filter' => 'auth'
     $routes->get('costos', 'IAAdminController::reporteCostos');
 });
 
-
-/**
- * Cargar rutas adicionales basadas en el entorno
- */
+// Rutas por entorno
 if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';
 }
