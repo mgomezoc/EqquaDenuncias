@@ -196,29 +196,76 @@ class ReportesIAController extends BaseController
     // GET /reportes-ia/descargar/{id}
     public function descargarPDF(int $idReporte)
     {
-        $reporte = $this->reporteModel->getReporteCompleto($idReporte);
-        if (!$reporte) {
-            return redirect()->to('/reportes-ia')->with('error', 'Reporte no encontrado');
-        }
-
         try {
+            // 1. Verificar que el reporte existe
+            $reporte = $this->reporteModel->getReporteCompleto($idReporte);
+            if (!$reporte) {
+                return redirect()->to('/reportes-ia')
+                    ->with('error', 'Reporte no encontrado');
+            }
+
+            // 2. Si el PDF ya existe, descargarlo directamente
             if (!empty($reporte['ruta_pdf']) && file_exists(FCPATH . $reporte['ruta_pdf'])) {
+                log_message('info', "[ReportesIA] Descargando PDF existente: {$reporte['ruta_pdf']}");
                 return $this->response->download(FCPATH . $reporte['ruta_pdf'], null);
             }
 
-            $pdfService = new \App\Services\PDFReporteService();
-            $rutaPDF    = $pdfService->generarPDF($reporte);
-
-            if ($rutaPDF) {
-                $hashPDF = hash_file('sha256', FCPATH . $rutaPDF);
-                $this->reporteModel->guardarRutaPDF($idReporte, $rutaPDF, $hashPDF);
-                return $this->response->download(FCPATH . $rutaPDF, null);
+            // 3. Verificar que Dompdf esté instalado
+            if (!class_exists('\Dompdf\Dompdf')) {
+                log_message('error', '[ReportesIA] Dompdf no está instalado');
+                return redirect()->back()
+                    ->with('error', 'Error: Dompdf no está instalado. Ejecuta: composer require dompdf/dompdf');
             }
 
-            return redirect()->back()->with('error', 'Error al generar el PDF');
+            // 4. Verificar que PDFReporteService existe
+            if (!class_exists('\App\Services\PDFReporteService')) {
+                log_message('error', '[ReportesIA] PDFReporteService no encontrado');
+                return redirect()->back()
+                    ->with('error', 'Error: Falta el archivo app/Services/PDFReporteService.php');
+            }
+
+            // 5. Generar el PDF
+            log_message('info', "[ReportesIA] Generando nuevo PDF para reporte ID: {$idReporte}");
+
+            $pdfService = new \App\Services\PDFReporteService();
+            $rutaPDF = $pdfService->generarPDF($reporte);
+
+            if (!$rutaPDF) {
+                log_message('error', '[ReportesIA] Error al generar PDF - el servicio retornó false');
+                return redirect()->back()
+                    ->with('error', 'Error al generar el PDF. Revisa los logs para más detalles.');
+            }
+
+            // 6. Verificar que el archivo se generó
+            $rutaCompleta = FCPATH . $rutaPDF;
+            if (!file_exists($rutaCompleta)) {
+                log_message('error', "[ReportesIA] El PDF no existe después de generarse: {$rutaCompleta}");
+                return redirect()->back()
+                    ->with('error', 'Error: El PDF se generó pero no se encuentra en el servidor.');
+            }
+
+            // 7. Guardar la ruta en la base de datos
+            $hashPDF = hash_file('sha256', $rutaCompleta);
+            $this->reporteModel->guardarRutaPDF($idReporte, $rutaPDF, $hashPDF);
+
+            log_message('info', "[ReportesIA] PDF generado exitosamente: {$rutaPDF}");
+
+            // 8. Descargar el PDF
+            return $this->response->download($rutaCompleta, null);
         } catch (\Throwable $e) {
-            log_message('error', 'Error en descargarPDF: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al procesar la descarga');
+            // Log detallado del error
+            log_message('error', '[ReportesIA] Error en descargarPDF: ' . $e->getMessage());
+            log_message('error', '[ReportesIA] Stack trace: ' . $e->getTraceAsString());
+
+            // Mostrar error al usuario
+            $errorMsg = 'Error al procesar la descarga del PDF';
+
+            // En desarrollo, mostrar más detalles
+            if (ENVIRONMENT === 'development') {
+                $errorMsg .= ': ' . $e->getMessage();
+            }
+
+            return redirect()->back()->with('error', $errorMsg);
         }
     }
 
