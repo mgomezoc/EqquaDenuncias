@@ -366,4 +366,22 @@ class ReportesIAController extends BaseController
 
         return $periodos;
     }
+
+    // NUEVO: endpoint para Bootstrap Table (client-side pagination)
+    public function listar()
+    {
+        $filtros = [
+            'tipo_reporte' => $this->request->getGet('tipo_reporte'),
+            'estado'       => $this->request->getGet('estado'),
+            'id_cliente'   => $this->request->getGet('id_cliente'),
+        ];
+        $filtros = array_filter($filtros, static fn($v) => $v !== null && $v !== '');
+
+        $rows = $this->reporteModel->getReportesResumen($filtros) ?? [];
+        return $this->response->setJSON($rows); // arreglo simple para paginación en cliente
+    }
+
+    // (ya existente) cambiarEstado() — no cambies nada aquí,
+    // pero OJO: el frontend debe mandar el parámetro 'estado' (ver JS).
+
 }

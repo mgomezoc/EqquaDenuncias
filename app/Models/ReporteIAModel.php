@@ -214,57 +214,56 @@ class ReporteIAModel extends Model
      */
     public function getEstadisticas(int $idCliente = null): array
     {
-        $builder = $this->db->table($this->table);
-
+        // --- total ---
+        $bTotal = $this->db->table($this->table);
         if ($idCliente) {
-            $builder->where('id_cliente', $idCliente);
+            $bTotal->where('id_cliente', $idCliente);
         }
+        $totalReportes = $bTotal->countAllResults(); // resetea el builder
 
         $stats = [
-            'total_reportes' => $builder->countAllResults(false),
+            'total_reportes' => (int)$totalReportes,
             'por_tipo'       => [],
             'por_estado'     => [],
             'costo_total'    => 0.0,
             'tokens_total'   => 0,
         ];
 
-        // Por tipo
-        $porTipo = $builder->select('tipo_reporte, COUNT(*) AS total')
-            ->groupBy('tipo_reporte')
-            ->get()
-            ->getResultArray();
-
-        foreach ($porTipo as $tipo) {
-            $stats['por_tipo'][$tipo['tipo_reporte']] = (int) $tipo['total'];
+        // --- por tipo ---
+        $bTipo = $this->db->table($this->table)
+            ->select('tipo_reporte, COUNT(*) AS total')
+            ->groupBy('tipo_reporte');
+        if ($idCliente) {
+            $bTipo->where('id_cliente', $idCliente);
+        }
+        foreach ($bTipo->get()->getResultArray() as $row) {
+            $stats['por_tipo'][$row['tipo_reporte'] ?: '—'] = (int)$row['total'];
         }
 
-        // Por estado
-        $porEstado = $this->db->table($this->table)
+        // --- por estado ---
+        $bEstado = $this->db->table($this->table)
             ->select('estado, COUNT(*) AS total')
             ->groupBy('estado');
-
         if ($idCliente) {
-            $porEstado->where('id_cliente', $idCliente);
+            $bEstado->where('id_cliente', $idCliente);
+        }
+        foreach ($bEstado->get()->getResultArray() as $row) {
+            $stats['por_estado'][$row['estado'] ?: '—'] = (int)$row['total'];
         }
 
-        foreach ($porEstado->get()->getResultArray() as $estado) {
-            $stats['por_estado'][$estado['estado']] = (int) $estado['total'];
-        }
-
-        // Costos y tokens
-        $totales = $this->db->table($this->table)
-            ->select('SUM(costo_estimado) AS costo_total, SUM(tokens_utilizados) AS tokens_total');
-
+        // --- totales de costo y tokens ---
+        $bTot = $this->db->table($this->table)
+            ->select('SUM(COALESCE(costo_estimado,0)) AS costo_total, SUM(COALESCE(tokens_utilizados,0)) AS tokens_total');
         if ($idCliente) {
-            $totales->where('id_cliente', $idCliente);
+            $bTot->where('id_cliente', $idCliente);
         }
-
-        $result = $totales->get()->getRowArray();
-        $stats['costo_total']  = (float) ($result['costo_total']  ?? 0);
-        $stats['tokens_total'] = (int)   ($result['tokens_total'] ?? 0);
+        $r = $bTot->get()->getRowArray() ?: [];
+        $stats['costo_total']  = (float)($r['costo_total']  ?? 0);
+        $stats['tokens_total'] = (int)  ($r['tokens_total'] ?? 0);
 
         return $stats;
     }
+
 
     /**
      * Obtiene reportes recientes

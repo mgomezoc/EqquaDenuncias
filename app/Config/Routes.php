@@ -68,6 +68,7 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
     // Reportes IA (nuevo)
     $routes->group('reportes-ia', ['filter' => 'authFilter:ADMIN'], function ($routes) {
         $routes->get('/', 'ReportesIAController::index');                 // Listado
+        $routes->get('listar', 'ReportesIAController::listar');
         $routes->get('generar', 'ReportesIAController::generar');         // Form generar
         $routes->post('procesar', 'ReportesIAController::procesarGeneracion'); // AJAX generar
         $routes->get('ver/(:num)', 'ReportesIAController::ver/$1');       // Detalle
