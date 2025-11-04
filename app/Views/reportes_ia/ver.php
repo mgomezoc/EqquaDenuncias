@@ -2,6 +2,8 @@
 <?= $this->section('title') ?>Reporte IA - <?= esc($reporte['periodo_nombre']) ?><?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?php echo view('partials/_pageHeader', ['controlador' => 'Reportes IA', 'vista' => 'Generar Reporte IA']); ?>
+
 <div class="container-fluid py-3">
     <!-- Encabezado -->
     <div class="d-flex align-items-center mb-3">
