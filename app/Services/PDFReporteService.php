@@ -5,24 +5,10 @@ namespace App\Services;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-/**
- * PDFReporteService
- *
- * Genera PDFs profesionales para reportes IA con Dompdf.
- * - Portada corporativa
- * - Encabezado/pie con numeración
- * - Limpieza/transformación de Markdown a HTML básico
- * - Inserción de logos (cliente / Eqqua) con data:base64
- *
- * @author Cesar
- * @version 2.0
- */
 class PDFReporteService
 {
     private Dompdf $dompdf;
     private string $outputDir;
-    private string $colorPrimario;
-    private string $colorSecundario;
 
     public function __construct()
     {
@@ -31,423 +17,437 @@ class PDFReporteService
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isFontSubsettingEnabled', true);
         $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('defaultMediaType', 'print');
+        $options->set('isCssFloatEnabled', true);
+        $options->set('dpi', 96);
         $options->set('chroot', FCPATH);
-        $options->set('dpi', 120);
 
         $this->dompdf = new Dompdf($options);
-
         $this->outputDir = 'uploads/reportes_ia/pdfs/';
-        $fullPath = FCPATH . $this->outputDir;
-        if (!is_dir($fullPath)) {
-            @mkdir($fullPath, 0755, true);
-        }
 
-        // Paleta desde .env (fallbacks sobrios)
-        $this->colorPrimario  = getenv('IA_PDF_PRIMARY_COLOR')  ?: '#1F3B5B'; // navy
-        $this->colorSecundario = getenv('IA_PDF_SECONDARY_COLOR') ?: '#F2A33A'; // orange
+        $full = FCPATH . $this->outputDir;
+        if (!is_dir($full)) {
+            @mkdir($full, 0755, true);
+        }
     }
 
-    /**
-     * Genera un PDF a partir de un reporte.
-     * @param array $reporte
-     * @return string|false  Ruta relativa del PDF o false si falla
-     */
     public function generarPDF(array $reporte)
     {
         try {
             $html = $this->generarHTML($reporte);
 
-            // Carga y render
-            $this->dompdf->loadHtml($html, 'UTF-8');
+            $this->dompdf->loadHtml($html);
             $this->dompdf->setPaper('letter', 'portrait');
             $this->dompdf->render();
 
-            // Numeración de páginas
-            $this->inyectarNumeracion($reporte);
+            // Numeración real de páginas
+            $this->agregarNumeracionPaginas((string)($reporte['id'] ?? ''));
 
-            // Guardado
-            $filename     = $this->generarNombreArchivo($reporte);
-            $rutaCompleta = FCPATH . $this->outputDir . $filename;
-            file_put_contents($rutaCompleta, $this->dompdf->output());
+            $filename = $this->generarNombreArchivo($reporte);
+            $path = FCPATH . $this->outputDir . $filename;
 
+            file_put_contents($path, $this->dompdf->output());
             return $this->outputDir . $filename;
         } catch (\Throwable $e) {
-            log_message('error', '[PDFReporteService] Error al generar PDF: ' . $e->getMessage());
+            log_message('error', '[PDFReporteService] ' . $e->getMessage());
             return false;
         }
     }
 
-    /* ========================== HTML ========================== */
+    private function agregarNumeracionPaginas(string $id): void
+    {
+        $canvas = $this->dompdf->getCanvas();
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($id) {
+            $left  = "Eqqua · Reporte IA";
+            $center = "ID: " . ($id ?: 'N/D');
+            $right = "Página {$pageNumber} de {$pageCount}";
+
+            $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
+            $size = 8;
+
+            $y = $canvas->get_height() - 28;
+
+            $canvas->text(36, $y, $left, $font, $size, [0.4, 0.4, 0.4]);
+            // centro
+            $wCenter = $fontMetrics->getTextWidth($center, $font, $size);
+            $canvas->text(($canvas->get_width() - $wCenter) / 2, $y, $center, $font, $size, [0.4, 0.4, 0.4]);
+            // derecha
+            $wRight = $fontMetrics->getTextWidth($right, $font, $size);
+            $canvas->text($canvas->get_width() - 36 - $wRight, $y, $right, $font, $size, [0.4, 0.4, 0.4]);
+        });
+    }
+
+    private function generarNombreArchivo(array $reporte): string
+    {
+        $id = $reporte['id'] ?? 'sin-id';
+        $fecha = date('Y-m-d_H-i-s');
+        $periodo = $this->sanitizeFilename($reporte['periodo_nombre'] ?? 'reporte');
+        return "reporte_ia_{$id}_{$periodo}_{$fecha}.pdf";
+    }
+
+    private function sanitizeFilename(string $f): string
+    {
+        $f = strtolower($f);
+        $f = preg_replace('/[^a-z0-9\-_]/', '-', $f);
+        $f = preg_replace('/-+/', '-', $f);
+        return trim(substr($f, 0, 60), '-');
+    }
 
     private function generarHTML(array $reporte): string
     {
-        $cliente          = $reporte['cliente_nombre']   ?? 'Cliente';
-        $periodo          = $reporte['periodo_nombre']   ?? 'Sin periodo';
-        $tipo             = ucfirst($reporte['tipo_reporte'] ?? 'Reporte');
-        $fechaGeneracion  = $this->fmtFecha($reporte['created_at'] ?? 'now');
-        $riesgo           = $reporte['puntuacion_riesgo'] ?? 'N/D';
-        $estado           = strtolower($reporte['estado'] ?? 'generado');
+        $cliente = $reporte['cliente_nombre'] ?? 'Cliente';
+        $periodo = $reporte['periodo_nombre'] ?? 'Sin periodo';
+        $tipo = ucfirst($reporte['tipo_reporte'] ?? 'Reporte');
+        $fechaGeneracion = date('d/m/Y H:i', strtotime($reporte['created_at'] ?? 'now'));
+        $riesgo = $reporte['puntuacion_riesgo'] ?? 'N/D';
+        $estado = $this->formatearEstado($reporte['estado'] ?? 'generado');
 
-        $logoDataUri      = $this->getLogoDataUri($reporte);
-        $badgeRiesgoClass = $this->getRiesgoBadgeClass($riesgo);
-        $badgeEstadoClass = $this->getEstadoBadgeClass($estado);
+        // Colores corporativos
+        $c1 = '#004E89'; // azul
+        $c2 = '#FFB703'; // acento
+        $cTxt = '#2c3e50';
 
-        $resumen          = $this->toHtml($reporte['resumen_ejecutivo'] ?? null);
-        $hallazgos        = $this->toHtml($reporte['hallazgos_principales'] ?? null);
-        $geo              = $this->toHtml($reporte['analisis_geografico'] ?? null);
-        $cat              = $this->toHtml($reporte['analisis_categorico'] ?? null);
-        $efi              = $this->toHtml($reporte['eficiencia_operativa'] ?? null);
-        $sug              = $this->toHtml($reporte['sugerencias_predictivas'] ?? null);
+        $logo = $this->getLogoPath($reporte);
 
-        $css = $this->getCSS($this->colorPrimario, $this->colorSecundario);
+        // Gráficas (opcionales). Estructura esperada:
+        // $reporte['charts'] = [
+        //   'por_sucursal' => ['labels'=>[], 'values'=>[]],
+        //   'por_categoria'=> ['labels'=>[], 'values'=>[]],
+        //   'por_estado'    => ['labels'=>[], 'values'=>[]],
+        //   'medio'         => ['labels'=>[], 'values'=>[]],
+        //   'riesgo'        => ['value'=>6, 'max'=>10]
+        // ];
+        $charts = $reporte['charts'] ?? [];
 
-        return <<<HTML
+        $htmlCharts = $this->renderCharts($charts, $c1, $c2);
+
+        $css = $this->getCSS($c1, $c2, $cTxt);
+
+        $html = <<<HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Reporte IA – {$periodo}</title>
-  <style>{$css}</style>
+<meta charset="UTF-8">
+<title>Reporte IA - {$periodo}</title>
+<style>{$css}</style>
 </head>
 <body>
 
-<!-- ====== PORTADA ====== -->
-<div class="cover">
-  <div class="cover-logo">
-    {$this->imgTag($logoDataUri, 'Logo', 'cover-logo-img')}
-  </div>
-  <h1>Reporte de Análisis de Denuncias</h1>
-  <h2>{$tipo} · {$periodo}</h2>
-  <table class="cover-meta">
+<table class="header">
+  <tr>
+    <td class="logo-cell">{$this->renderLogo($logo)}</td>
+    <td class="title-cell">
+      <div class="title">Reporte de Análisis de Denuncias</div>
+      <div class="subtitle">{$tipo} · {$periodo}</div>
+    </td>
+  </tr>
+</table>
+<div class="divider"></div>
+
+<div class="info">
+  <table class="info-table">
     <tr>
-      <td><strong>Cliente</strong></td><td>{$this->escape($cliente)}</td>
+      <td class="label">Cliente:</td><td class="value">{$cliente}</td>
+      <td class="label">Periodo:</td><td class="value">{$periodo}</td>
     </tr>
     <tr>
-      <td><strong>Generado</strong></td><td>{$this->escape($fechaGeneracion)}</td>
+      <td class="label">Tipo de reporte:</td><td class="value">{$tipo}</td>
+      <td class="label">Nivel de riesgo:</td>
+      <td class="value"><span class="badge {$this->getRiesgoBadgeClass($riesgo)}">{$this->formatRiesgo($riesgo)}</span></td>
     </tr>
     <tr>
-      <td><strong>Riesgo</strong></td>
-      <td><span class="badge {$badgeRiesgoClass}">{$this->escape((is_numeric($riesgo) ?$riesgo . '/10' : 'N/D'))}</span></td>
-    </tr>
-    <tr>
-      <td><strong>Estado</strong></td>
-      <td><span class="badge {$badgeEstadoClass}">{$this->escape(ucfirst($estado))}</span></td>
+      <td class="label">Generado:</td><td class="value">{$fechaGeneracion}</td>
+      <td class="label">Estado:</td><td class="value"><span class="badge estado">{$estado}</span></td>
     </tr>
   </table>
 </div>
 
-<div class="page-break"></div>
+{$this->seccion('Resumen ejecutivo',$reporte['resumen_ejecutivo'] ?? null,$icon = '&#128196;')}
+{$this->seccion('Hallazgos principales',$reporte['hallazgos_principales'] ?? null,$icon = '&#128269;')}
+{$this->seccion('Eficiencia operativa',$reporte['eficiencia_operativa'] ?? null,$icon = '&#9200;')}
 
-<!-- ====== ENCABEZADO FIJO ====== -->
-<div id="header">
-  <div class="header-left">
-    {$this->imgTag($logoDataUri, 'Eqqua', 'header-logo')}
-  </div>
-  <div class="header-right">
-    <div class="hdr-title">{$this->escape($cliente)}</div>
-    <div class="hdr-subtitle">{$this->escape($tipo)} — {$this->escape($periodo)}</div>
-  </div>
-</div>
+{$htmlCharts}
 
-<!-- ====== CONTENIDO ====== -->
-<div id="content">
-
-  <div class="section">
-    <h3 class="section-title">Resumen ejecutivo</h3>
-    <div class="content">{$resumen}</div>
-  </div>
-
-  <div class="section">
-    <h3 class="section-title">Hallazgos principales</h3>
-    <div class="content">{$hallazgos}</div>
-  </div>
-
-  <div class="section">
-    <h3 class="section-title">Análisis geográfico (por sucursales)</h3>
-    <div class="content">{$geo}</div>
-  </div>
-
-  <div class="section">
-    <h3 class="section-title">Análisis por categorías</h3>
-    <div class="content">{$cat}</div>
-  </div>
-
-  <div class="section">
-    <h3 class="section-title">Eficiencia operativa</h3>
-    <div class="content">{$efi}</div>
-  </div>
-
-  <div class="section alert">
-    <h3 class="section-title">Sugerencias proactivas y predictivas</h3>
-    <p class="alert-text">Este contenido fue generado por IA; valide antes de aplicar.</p>
-    <div class="content">{$sug}</div>
-  </div>
-
-</div>
-
-<!-- ====== PIE FIJO ====== -->
-<div id="footer">
-  <div class="f-left">Eqqua · Reporte IA</div>
-  <div class="f-right">ID: {$this->escape((string)($reporte['id'] ?? '—'))} · {PAGE_NUM} / {PAGE_COUNT}</div>
+<div class="section alert">
+  <div class="section-head alert-head">&#9888; Sugerencias proactivas y predictivas</div>
+  <div class="alert-note">Este contenido fue generado por IA (GPT-4o). Revíselo antes de aplicarlo.</div>
+  <div class="section-body">{$this->formatearTexto($reporte['sugerencias_predictivas'] ?? null)}</div>
 </div>
 
 </body>
 </html>
 HTML;
-    }
 
-    /* ========================== UTILIDADES RENDER ========================== */
-
-    private function getCSS(string $c1, string $c2): string
-    {
-        return <<<CSS
-@page {
-  size: letter;
-  margin: 100px 36px 70px 36px; /* top right bottom left */
-}
-* { box-sizing: border-box; }
-body { font-family: 'DejaVu Sans', sans-serif; color:#333; font-size:11pt; line-height:1.55; }
-
-#header {
-  position: fixed; top: -70px; left: 0; right: 0; height: 70px;
-  border-bottom: 2px solid {$c2};
-}
-.header-left { float:left; padding: 10px 0 0 6px; }
-.header-right { float:right; text-align:right; padding: 14px 6px 0 0; }
-.header-logo { height: 42px; }
-.hdr-title { font-weight:700; font-size:12pt; color: {$c1}; }
-.hdr-subtitle { font-size:9.5pt; color:#666; }
-
-#footer {
-  position: fixed; bottom: -50px; left: 0; right: 0; height: 50px;
-  border-top: 1px solid #ddd; color:#666; font-size:9pt;
-}
-.f-left  { float:left; padding:8px 0 0 6px; }
-.f-right { float:right; padding:8px 6px 0 0; }
-
-#content { }
-
-.cover {
-  margin: 0; padding: 80px 36px 60px 36px; text-align:center;
-  border-top: 12px solid {$c1};
-}
-.cover-logo-img { height: 72px; margin-bottom: 18px; }
-.cover h1 { font-size:22pt; color: {$c1}; margin: 6px 0; }
-.cover h2 { font-size:14pt; color: {$c2}; font-weight:600; margin:0 0 18px 0; }
-.cover-meta { margin: 0 auto; border-collapse: collapse; font-size:11pt; }
-.cover-meta td { padding: 6px 10px; border-bottom: 1px solid #eee; text-align:left; }
-.cover-meta td:first-child { width: 120px; color:#666; }
-
-.section { margin: 0 0 22px 0; page-break-inside: avoid; }
-.section-title {
-  background: {$c1}; color:#fff; font-weight:700; padding:10px 12px; border-radius:3px;
-  font-size:13pt; margin:0 0 12px 0;
-}
-.content { padding: 0 6px; text-align: justify; hyphens: auto; }
-
-.alert { background:#fff7e6; border-left:4px solid {$c2}; padding: 14px 10px; }
-.alert .section-title { background: {$c2}; }
-.alert-text { color:#8a6d3b; font-size:9.5pt; margin: 2px 0 8px 0; }
-
-.badge {
-  display:inline-block; padding:4px 10px; border-radius:3px; font-size:9pt; font-weight:700; text-transform:uppercase;
-}
-.badge-success { background:#2e7d32; color:#fff; }
-.badge-warning { background:#ffca28; color:#333; }
-.badge-danger  { background:#c62828; color:#fff; }
-.badge-secondary{ background:#6c757d; color:#fff; }
-.badge-generado { background:#6c757d; color:#fff; }
-.badge-revisado { background:#17a2b8; color:#fff; }
-.badge-publicado{ background:#2e7d32; color:#fff; }
-.badge-archivado{ background:#343a40; color:#fff; }
-
-ul, ol { margin: 0 0 10px 22px; }
-li { margin: 4px 0; }
-p { margin: 0 0 10px 0; }
-
-.page-break { page-break-after: always; }
-CSS;
-    }
-
-    private function toHtml(?string $txt): string
-    {
-        if (!$txt || trim($txt) === '') {
-            return '<p class="text-muted">Sin contenido</p>';
-        }
-
-        // Normalizar saltos
-        $t = str_replace(["\r\n", "\r"], "\n", $txt);
-
-        // Quitar fences de código ```xxx ... ```
-        $t = preg_replace('/```[\s\S]*?```/u', '', $t);
-
-        // Encabezados markdown (#, ##, ###)
-        $t = preg_replace('/^\s*###\s+(.+)$/um', '<h4>$1</h4>', $t);
-        $t = preg_replace('/^\s*##\s+(.+)$/um',  '<h4>$1</h4>', $t);
-        $t = preg_replace('/^\s*#\s+(.+)$/um',   '<h4>$1</h4>', $t);
-
-        // Negritas e itálicas
-        $t = preg_replace('/\*\*(.+?)\*\*/u', '<strong>$1</strong>', $t);
-        $t = preg_replace('/(?<!\*)\*(?!\s)(.+?)(?<!\s)\*(?!\*)/u', '<em>$1</em>', $t);
-
-        // Listas con - o * o 1.
-        $t = preg_replace('/^\s*[-*]\s+(.+)$/um', '<li>$1</li>', $t);
-        $t = preg_replace('/^\s*\d+\.\s+(.+)$/um', '<li>$1</li>', $t);
-        // Agrupar lis consecutivos en <ul>
-        $t = preg_replace('/(?:<li>.*?<\/li>\s*){1,}/us', '<ul>$0</ul>', $t);
-
-        // Escapar lo restante y mantener tags que acabamos de añadir
-        $t = $this->safeHtml($t);
-
-        // Párrafos para líneas sueltas
-        $lines = array_filter(array_map('trim', explode("\n", $t)));
-        $html  = '';
-        foreach ($lines as $line) {
-            if (preg_match('/^<(ul|ol|h4|p|li|strong|em)/i', $line)) {
-                $html .= $line;
-            } else {
-                $html .= '<p>' . $line . '</p>';
-            }
-        }
         return $html;
     }
 
-    private function safeHtml(string $html): string
+    private function getCSS(string $c1, string $c2, string $cTxt): string
     {
-        // Permitimos tags básicos
-        $allowed = '<p><ul><ol><li><strong><em><h4><br>';
-        // Primero escapamos todo
-        $escaped = htmlspecialchars($html, ENT_QUOTES, 'UTF-8');
-        // Revertimos las etiquetas que queremos permitir
-        $escaped = str_replace(
-            ['&lt;p&gt;', '&lt;/p&gt;', '&lt;ul&gt;', '&lt;/ul&gt;', '&lt;ol&gt;', '&lt;/ol&gt;', '&lt;li&gt;', '&lt;/li&gt;', '&lt;strong&gt;', '&lt;/strong&gt;', '&lt;em&gt;', '&lt;/em&gt;', '&lt;h4&gt;', '&lt;/h4&gt;', '&lt;br&gt;', '&lt;br /&gt;'],
-            ['<p>', '</p>', '<ul>', '</ul>', '<ol>', '</ol>', '<li>', '</li>', '<strong>', '</strong>', '<em>', '</em>', '<h4>', '</h4>', '<br>', '<br>'],
-            $escaped
-        );
-        return $escaped;
+        return <<<CSS
+@page { margin: 2cm 1.5cm 2.5cm 1.5cm; }
+
+*{ box-sizing:border-box; }
+body{ font-family:'DejaVu Sans','Arial',sans-serif; font-size:10.5pt; color:{$cTxt}; }
+
+.header{ width:100%; border-collapse:collapse; }
+.logo-cell{ width:160px; vertical-align:middle; }
+.title-cell{ vertical-align:middle; text-align:left; }
+.logo img{ max-width:150px; max-height:60px; }
+.title{ font-size:18pt; color:{$c1}; font-weight:700; line-height:1.2; }
+.subtitle{ font-size:12pt; color:{$c2}; }
+
+.divider{ height:3px; margin:14px 0 20px; background:linear-gradient(90deg, {$c1} 0%, {$c2} 100%); }
+
+.info{ background:#f8f9fa; border-left:4px solid {$c1}; padding:12px 14px; margin-bottom:18px; }
+.info-table{ width:100%; border-collapse:collapse; }
+.info-table .label{ width:22%; color:#6c757d; font-weight:700; padding:6px 10px 6px 0; font-size:9pt; }
+.info-table .value{ width:28%; padding:6px 10px; font-size:9pt; }
+
+.badge{ display:inline-block; padding:4px 10px; border-radius:3px; font-size:8.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.25px; }
+.badge.success{ background:#2fb171; color:#fff; }
+.badge.warning{ background:#ffcf33; color:#000; }
+.badge.danger{ background:#dc3545; color:#fff; }
+.badge.secondary{ background:#6c757d; color:#fff; }
+.badge.estado{ background:#0ea5e9; color:#fff; }
+
+.section{ margin:20px 0; page-break-inside:avoid; }
+.section-head{ background:{$c1}; color:#fff; padding:10px 14px; font-weight:700; border-radius:3px; }
+.section-body{ padding:8px 12px; text-align:justify; }
+.section-body p{ margin:0 0 10px; }
+.section-body ul{ margin:8px 0 8px 18px; }
+.section-body li{ margin-bottom:6px; }
+
+.alert{ background:#fff8e1; border:2px solid {$c2}; }
+.alert-head{ background:{$c2}; color:#000; }
+.alert-note{ background:#fff3cd; color:#7a5b00; padding:8px 12px; font-size:9pt; border-left:4px solid #ffc107; }
+
+.chart-grid{ width:100%; border-collapse:separate; border-spacing:14px; }
+.chart-cell{ width:50%; vertical-align:top; }
+.chart-box{ border:1px solid #eaeaea; border-radius:4px; padding:10px; }
+.chart-title{ font-weight:700; color:{$c1}; margin-bottom:8px; font-size:10pt; }
+
+.center{text-align:center;}
+CSS;
     }
 
-    private function escape(string $s): string
+    private function renderLogo(string $path): string
     {
-        return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+        if ($path && file_exists($path)) {
+            return '<div class="logo"><img src="' . $path . '" alt="Logo"></div>';
+        }
+        // fallback tipográfico
+        return '<div class="logo" style="font-weight:700;color:#004E89;font-size:16pt;">EQQUA</div>';
     }
 
-    private function imgTag(string $dataUri, string $alt, string $class = ''): string
+    private function getLogoPath(array $reporte): string
     {
-        if ($dataUri === '') return '';
-        $alt = $this->escape($alt);
-        $classAttr = $class ? ' class="' . $class . '"' : '';
-        return '<img src="' . $dataUri . '" alt="' . $alt . '"' . $classAttr . '>';
-    }
-
-    /* ========================== LOGOS ========================== */
-
-    private function getLogoDataUri(array $reporte): string
-    {
-        // 1) logo cliente si existe
         if (!empty($reporte['cliente_logo'])) {
             $p = FCPATH . 'uploads/clientes/' . $reporte['cliente_logo'];
-            if (is_file($p)) {
-                return $this->fileToDataUri($p);
-            }
+            if (is_file($p)) return $p;
         }
-
-        // 2) buscar mejor logo de Eqqua en assets/images (nombres variables)
-        $candidatos = [
-            'assets/images/eqqua logos-05.png',
+        // intenta con los que existen en /public/assets/images
+        $candidates = [
             'assets/images/eqqua logos-09.png',
-            'assets/images/eqqua logos-03.png',
+            'assets/images/eqqua logos-05.png',
             'assets/images/logo_blanco.png',
             'assets/images/logo.png',
-            'assets/images/favicon.png',
+            'assets/images/logo_eqqua.png',
         ];
-        // plus: glob por prefijo eqqua*
-        $globs = glob(FCPATH . 'assets/images/eqqua*.*');
-        if ($globs) {
-            // priorizar png
-            usort($globs, fn($a, $b) => (substr($b, -3) === 'png') <=> (substr($a, -3) === 'png'));
-            foreach ($globs as $g) {
-                if (is_file($g)) return $this->fileToDataUri($g);
-            }
-        }
-        foreach ($candidatos as $rel) {
+        foreach ($candidates as $rel) {
             $p = FCPATH . $rel;
-            if (is_file($p)) return $this->fileToDataUri($p);
+            if (is_file($p)) return $p;
         }
         return '';
     }
 
-    private function fileToDataUri(string $path): string
-    {
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $mime = match ($ext) {
-            'png'  => 'image/png',
-            'jpg', 'jpeg' => 'image/jpeg',
-            'svg'  => 'image/svg+xml',
-            default => 'application/octet-stream'
-        };
-        $data = @file_get_contents($path);
-        if ($data === false) return '';
-        return 'data:' . $mime . ';base64,' . base64_encode($data);
-    }
-
-    /* ========================== FORMATO / BADGES ========================== */
-
     private function getRiesgoBadgeClass($riesgo): string
     {
-        if (!is_numeric($riesgo)) return 'secondary';
-        $r = (int)$riesgo;
-        if ($r >= 7)  return 'danger';
-        if ($r >= 4)  return 'warning';
+        if ($riesgo === 'N/D' || !is_numeric($riesgo)) return 'secondary';
+        $r = (float) $riesgo;
+        if ($r >= 7) return 'danger';
+        if ($r >= 4) return 'warning';
         return 'success';
     }
 
-    private function getEstadoBadgeClass(string $estado): string
+    private function formatRiesgo($riesgo): string
     {
-        return match ($estado) {
-            'publicado' => 'badge-publicado',
-            'revisado'  => 'badge-revisado',
-            'archivado' => 'badge-archivado',
-            default     => 'badge-generado'
-        };
+        if (!is_numeric($riesgo)) return 'N/D';
+        return number_format((float)$riesgo, 1) . '/10';
     }
 
-    private function fmtFecha(string $ts): string
+    private function formatearEstado(string $estado): string
     {
-        $t = is_numeric($ts) ? (int)$ts : strtotime($ts);
-        return date('d/m/Y H:i', $t ?: time());
+        $map = ['generado' => 'Generado', 'revisado' => 'Revisado', 'publicado' => 'Publicado', 'archivado' => 'Archivado'];
+        return $map[strtolower($estado)] ?? ucfirst($estado);
     }
 
-    /* ========================== NUMERACIÓN ========================== */
-
-    private function inyectarNumeracion(array $reporte): void
+    private function seccion(string $titulo, ?string $contenido, string $icon = ''): string
     {
-        // Dompdf tiene tokens {PAGE_NUM} y {PAGE_COUNT} en el HTML del footer.
-        // Si quieres tipografía/ubicación custom vía canvas, descomenta:
-        /*
-        $canvas = $this->dompdf->get_canvas();
-        $w = $canvas->get_width();
-        $h = $canvas->get_height();
-        $canvas->page_text($w - 100, $h - 40, "Página {PAGE_NUM} / {PAGE_COUNT}", 'DejaVu Sans', 9, [0.4,0.4,0.4]);
-        */
+        if (!$contenido) return '';
+        $txt = $this->formatearTexto($contenido);
+        return <<<HTML
+<div class="section">
+  <div class="section-head">{$icon} {$titulo}</div>
+  <div class="section-body">{$txt}</div>
+</div>
+HTML;
     }
 
-    /* ========================== ARCHIVOS ========================== */
-
-    private function generarNombreArchivo(array $reporte): string
+    private function formatearTexto(?string $texto): string
     {
-        $id     = $reporte['id'] ?? 'sin-id';
-        $fecha  = date('Y-m-d_H-i-s');
-        $periodo = $this->sanitizeFilename($reporte['periodo_nombre'] ?? 'reporte');
-        return "reporte_ia_{$id}_{$periodo}_{$fecha}.pdf";
+        if (!$texto) return '<p class="text-muted">Sin contenido</p>';
+
+        $t = htmlspecialchars($texto, ENT_QUOTES, 'UTF-8');
+
+        // listas numeradas o con viñetas
+        $t = preg_replace('/^(\d+)\.\s+(.+)$/m', '<li>$2</li>', $t);
+        $t = preg_replace('/^[\-\*•]\s+(.+)$/m', '<li>$1</li>', $t);
+        $t = preg_replace('/(<li>.*?<\/li>(\s*\n\s*)?)+/s', '<ul>$0</ul>', $t);
+
+        // párrafos por doble salto
+        $parts = preg_split('/\n\s*\n/', $t);
+        $out = '';
+        foreach ($parts as $p) {
+            $p = trim($p);
+            if ($p === '') continue;
+            if (preg_match('/<(ul|ol|li|p|div)/', $p)) {
+                $out .= $p;
+            } else {
+                $out .= '<p>' . nl2br($p) . '</p>';
+            }
+        }
+        $out = preg_replace('/<p>\s*<\/p>/', '', $out);
+        return $out ?: '<p class="text-muted">Sin contenido</p>';
     }
 
-    private function sanitizeFilename(string $filename): string
+    /* ====================  GRÁFICAS SVG OPCIONALES  ==================== */
+
+    private function renderCharts(array $charts, string $c1, string $c2): string
     {
-        $filename = strtolower($filename);
-        $filename = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $filename);
-        $filename = preg_replace('/[^a-z0-9\-_]+/', '-', $filename);
-        $filename = preg_replace('/-+/', '-', $filename);
-        return trim($filename, '-');
+        // si no hay ningún set válido, no renderizamos sección
+        $hasAny =
+            $this->hasSeries($charts['por_sucursal'] ?? null) ||
+            $this->hasSeries($charts['por_categoria'] ?? null) ||
+            $this->hasSeries($charts['por_estado'] ?? null) ||
+            $this->hasSeries($charts['medio'] ?? null) ||
+            isset($charts['riesgo']['value']);
+
+        if (!$hasAny) return '';
+
+        $html = '<div class="section"><div class="section-head">Gráficas</div><div class="section-body">';
+        $html .= '<table class="chart-grid"><tr>';
+
+        // primera columna
+        $html .= '<td class="chart-cell">';
+        if ($this->hasSeries($charts['por_sucursal'] ?? null)) {
+            $html .= $this->chartBox('Por sucursal', $this->barSVG($charts['por_sucursal'], $c1));
+        }
+        if ($this->hasSeries($charts['por_categoria'] ?? null)) {
+            $html .= $this->chartBox('Por categoría', $this->barSVG($charts['por_categoria'], $c1));
+        }
+        $html .= '</td>';
+
+        // segunda columna
+        $html .= '<td class="chart-cell">';
+        if ($this->hasSeries($charts['por_estado'] ?? null)) {
+            $html .= $this->chartBox('Por estatus', $this->pieSVG($charts['por_estado'], $c1, $c2));
+        }
+        if ($this->hasSeries($charts['medio'] ?? null)) {
+            $html .= $this->chartBox('Por medio de recepción', $this->pieSVG($charts['medio'], $c1, $c2));
+        }
+        if (isset($charts['riesgo']['value'])) {
+            $html .= $this->chartBox('Riesgo', $this->gaugeSVG((float)$charts['riesgo']['value'], (float)($charts['riesgo']['max'] ?? 10), $c1, $c2));
+        }
+        $html .= '</td>';
+
+        $html .= '</tr></table></div></div>';
+        return $html;
+    }
+
+    private function hasSeries(?array $s): bool
+    {
+        return !empty($s['labels']) && !empty($s['values']) && count($s['labels']) === count($s['values']);
+    }
+
+    private function chartBox(string $title, string $svg): string
+    {
+        return '<div class="chart-box"><div class="chart-title">' . $title . '</div>' . $svg . '</div>';
+    }
+
+    /** Barras horizontales simples en SVG */
+    private function barSVG(array $series, string $color): string
+    {
+        $labels = $series['labels'];
+        $values = array_map('floatval', $series['values']);
+        $w = 520;
+        $h = max(120, 26 * count($values) + 30);
+        $max = max(1, max($values));
+        $x0 = 140;
+        $y0 = 20;
+        $barH = 18;
+        $gap = 8;
+
+        $bars = '';
+        foreach ($values as $i => $v) {
+            $y = $y0 + $i * ($barH + $gap);
+            $bw = ($w - $x0 - 20) * ($v / $max);
+            $label = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
+            $valTxt = number_format($v, 0);
+            $bars .= "<text x='10' y='" . ($y + $barH - 2) . "' font-size='9'>{$label}</text>";
+            $bars .= "<rect x='{$x0}' y='{$y}' width='{$bw}' height='{$barH}' fill='{$color}' opacity='0.9'/>";
+            $bars .= "<text x='" . ($x0 + $bw + 6) . "' y='" . ($y + $barH - 2) . "' font-size='9'>{$valTxt}</text>";
+        }
+        return "<svg width='{$w}' height='{$h}' aria-hidden='true'>{$bars}</svg>";
+    }
+
+    /** Pie/dona simple en SVG */
+    private function pieSVG(array $series, string $c1, string $c2): string
+    {
+        $values = array_map('floatval', $series['values']);
+        $labels = $series['labels'];
+        if (array_sum($values) <= 0) $values = array_fill(0, count($values), 1);
+
+        $w = 240;
+        $h = 180;
+        $r = 60;
+        $cx = 90;
+        $cy = 90;
+        $total = array_sum($values);
+        $angle = -M_PI / 2;
+        $segments = '';
+        $palette = [$c1, $c2, '#6c757d', '#2fb171', '#d9534f', '#9b59b6', '#2aa1d6', '#ff8f00'];
+
+        foreach ($values as $i => $v) {
+            $theta = ($v / $total) * 2 * M_PI;
+            $x1 = $cx + $r * cos($angle);
+            $y1 = $cy + $r * sin($angle);
+            $angle += $theta;
+            $x2 = $cx + $r * cos($angle);
+            $y2 = $cy + $r * sin($angle);
+            $laf = $theta > M_PI ? 1 : 0;
+            $color = $palette[$i % count($palette)];
+            $segments .= "<path d='M {$cx},{$cy} L {$x1},{$y1} A {$r},{$r} 0 {$laf},1 {$x2},{$y2} Z' fill='{$color}' opacity='0.9'/>";
+        }
+        return "<svg width='{$w}' height='{$h}' aria-hidden='true'>{$segments}</svg>";
+    }
+
+    /** Gauge semicircular para riesgo */
+    private function gaugeSVG(float $value, float $max, string $c1, string $c2): string
+    {
+        $value = max(0.0, min($max, $value));
+        $w = 260;
+        $h = 160;
+        $cx = 130;
+        $cy = 130;
+        $r = 90;
+
+        $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='14' />";
+        $ang = M_PI * ($value / $max);
+        $x = $cx - $r * cos($ang);
+        $y = $cy - $r * sin($ang);
+        $fg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 " . ($ang > M_PI ? 1 : 0) . ",1 {$x},{$y}' fill='none' stroke='{$c2}' stroke-width='14' />";
+        $txt = "<text x='{$cx}' y='" . ($cy - 10) . "' text-anchor='middle' font-size='18' font-weight='700' fill='{$c1}'>" . number_format($value, 1) . "/" . number_format($max, 0) . "</text>";
+
+        return "<svg width='{$w}' height='{$h}' aria-hidden='true'>{$bg}{$fg}{$txt}</svg>";
     }
 }
