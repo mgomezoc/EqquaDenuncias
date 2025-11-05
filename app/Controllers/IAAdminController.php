@@ -283,7 +283,8 @@ class IAAdminController extends Controller
     private function getModelosDisponibles(): array
     {
         return [
-            'gpt-4o' => 'GPT-4o (Recomendado)',
+            'o4-mini' => 'o4-mini (Recomendado - Mejor razonamiento)',
+            'gpt-4o' => 'GPT-4o (Estándar)',
             'gpt-4-turbo' => 'GPT-4 Turbo',
             'gpt-3.5-turbo' => 'GPT-3.5 Turbo (Económico)'
         ];

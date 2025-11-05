@@ -23,14 +23,15 @@ class PDFReporteService
         $options->set('chroot', FCPATH);
 
         $this->dompdf = new Dompdf($options);
-        $this->outputDir = 'uploads/reportes_ia/pdfs/';
 
+        $this->outputDir = 'uploads/reportes_ia/pdfs/';
         $full = FCPATH . $this->outputDir;
         if (!is_dir($full)) {
             @mkdir($full, 0755, true);
         }
     }
 
+    /** Genera el PDF y retorna la ruta relativa del archivo */
     public function generarPDF(array $reporte)
     {
         try {
@@ -40,7 +41,7 @@ class PDFReporteService
             $this->dompdf->setPaper('letter', 'portrait');
             $this->dompdf->render();
 
-            // Numeración real de páginas
+            // Numeración real de páginas (corrige {PAGE_NUM}/{PAGE_COUNT})
             $this->agregarNumeracionPaginas((string)($reporte['id'] ?? ''));
 
             $filename = $this->generarNombreArchivo($reporte);
@@ -54,19 +55,20 @@ class PDFReporteService
         }
     }
 
+    /** Footer con numeración de páginas e ID */
     private function agregarNumeracionPaginas(string $id): void
     {
         $canvas = $this->dompdf->getCanvas();
         $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($id) {
-            $left  = "Eqqua · Reporte IA";
+            $left   = "Eqqua · Reporte IA";
             $center = "ID: " . ($id ?: 'N/D');
-            $right = "Página {$pageNumber} de {$pageCount}";
+            $right  = "Página {$pageNumber} de {$pageCount}";
 
             $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
             $size = 8;
+            $y    = $canvas->get_height() - 28;
 
-            $y = $canvas->get_height() - 28;
-
+            // izquierda
             $canvas->text(36, $y, $left, $font, $size, [0.4, 0.4, 0.4]);
             // centro
             $wCenter = $fontMetrics->getTextWidth($center, $font, $size);
@@ -79,8 +81,8 @@ class PDFReporteService
 
     private function generarNombreArchivo(array $reporte): string
     {
-        $id = $reporte['id'] ?? 'sin-id';
-        $fecha = date('Y-m-d_H-i-s');
+        $id     = $reporte['id'] ?? 'sin-id';
+        $fecha  = date('Y-m-d_H-i-s');
         $periodo = $this->sanitizeFilename($reporte['periodo_nombre'] ?? 'reporte');
         return "reporte_ia_{$id}_{$periodo}_{$fecha}.pdf";
     }
@@ -93,32 +95,50 @@ class PDFReporteService
         return trim(substr($f, 0, 60), '-');
     }
 
+    /** Devuelve data URI base64 para una imagen relativa a FCPATH */
+    private function embedImage(string $relativePath): ?string
+    {
+        $full = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relativePath);
+        if (!is_file($full)) return null;
+
+        $data = @file_get_contents($full);
+        if ($data === false) return null;
+
+        $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+        $mime = ($ext === 'svg') ? 'image/svg+xml' : (($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : 'image/png');
+
+        return 'data:' . $mime . ';base64,' . base64_encode($data);
+    }
+
+    /** HTML completo del reporte */
     private function generarHTML(array $reporte): string
     {
-        $cliente = $reporte['cliente_nombre'] ?? 'Cliente';
-        $periodo = $reporte['periodo_nombre'] ?? 'Sin periodo';
-        $tipo = ucfirst($reporte['tipo_reporte'] ?? 'Reporte');
+        $cliente         = $reporte['cliente_nombre'] ?? 'Cliente';
+        $periodo         = $reporte['periodo_nombre'] ?? 'Sin periodo';
+        $tipo            = ucfirst($reporte['tipo_reporte'] ?? 'Reporte');
         $fechaGeneracion = date('d/m/Y H:i', strtotime($reporte['created_at'] ?? 'now'));
-        $riesgo = $reporte['puntuacion_riesgo'] ?? 'N/D';
-        $estado = $this->formatearEstado($reporte['estado'] ?? 'generado');
+        $riesgo          = $reporte['puntuacion_riesgo'] ?? 'N/D';
+        $estado          = $this->formatearEstado($reporte['estado'] ?? 'generado');
 
         // Colores corporativos
-        $c1 = '#004E89'; // azul
-        $c2 = '#FFB703'; // acento
+        $c1   = '#004E89'; // azul principal
+        $c2   = '#FFB703'; // acento
         $cTxt = '#2c3e50';
 
-        $logo = $this->getLogoPath($reporte);
+        // Logo: si existe cliente_logo lo incrustamos, si no; logo Eqqua
+        $logoData = $this->resolveLogoDataUri($reporte);
 
-        // Gráficas (opcionales). Estructura esperada:
-        // $reporte['charts'] = [
-        //   'por_sucursal' => ['labels'=>[], 'values'=>[]],
-        //   'por_categoria'=> ['labels'=>[], 'values'=>[]],
-        //   'por_estado'    => ['labels'=>[], 'values'=>[]],
-        //   'medio'         => ['labels'=>[], 'values'=>[]],
-        //   'riesgo'        => ['value'=>6, 'max'=>10]
-        // ];
-        $charts = $reporte['charts'] ?? [];
+        // Íconos de secciones (base64 para evitar problemas de ruta)
+        $iconResumen    = $this->embedImage('assets/icons/resumen.png');
+        $iconHallazgos  = $this->embedImage('assets/icons/hallazgo.png'); // ajusta al nombre real del archivo
+        $iconEficiencia = $this->embedImage('assets/icons/eficiencia.png');
 
+        $icoResumenHtml    = $iconResumen    ? "<img src=\"{$iconResumen}\" class=\"icon-img\">"    : '';
+        $icoHallazgosHtml  = $iconHallazgos  ? "<img src=\"{$iconHallazgos}\" class=\"icon-img\">"  : '';
+        $icoEficienciaHtml = $iconEficiencia ? "<img src=\"{$iconEficiencia}\" class=\"icon-img\">" : '';
+
+        // Gráficas (opcional)
+        $charts     = $reporte['charts'] ?? [];
         $htmlCharts = $this->renderCharts($charts, $c1, $c2);
 
         $css = $this->getCSS($c1, $c2, $cTxt);
@@ -135,7 +155,7 @@ class PDFReporteService
 
 <table class="header">
   <tr>
-    <td class="logo-cell">{$this->renderLogo($logo)}</td>
+    <td class="logo-cell">{$this->renderLogoData($logoData)}</td>
     <td class="title-cell">
       <div class="title">Reporte de Análisis de Denuncias</div>
       <div class="subtitle">{$tipo} · {$periodo}</div>
@@ -153,7 +173,9 @@ class PDFReporteService
     <tr>
       <td class="label">Tipo de reporte:</td><td class="value">{$tipo}</td>
       <td class="label">Nivel de riesgo:</td>
-      <td class="value"><span class="badge {$this->getRiesgoBadgeClass($riesgo)}">{$this->formatRiesgo($riesgo)}</span></td>
+      <td class="value">
+        <span class="badge {$this->getRiesgoBadgeClass($riesgo)}">{$this->formatRiesgo($riesgo)}</span>
+      </td>
     </tr>
     <tr>
       <td class="label">Generado:</td><td class="value">{$fechaGeneracion}</td>
@@ -162,10 +184,9 @@ class PDFReporteService
   </table>
 </div>
 
-{$this->seccion('Resumen ejecutivo',$reporte['resumen_ejecutivo'] ?? null,$icon = '&#128196;')}
-{$this->seccion('Hallazgos principales',$reporte['hallazgos_principales'] ?? null,$icon = '&#128269;')}
-{$this->seccion('Eficiencia operativa',$reporte['eficiencia_operativa'] ?? null,$icon = '&#9200;')}
-
+{$this->seccion('Resumen ejecutivo',$reporte['resumen_ejecutivo'] ?? null,$icoResumenHtml)}
+{$this->seccion('Hallazgos principales',$reporte['hallazgos_principales'] ?? null,$icoHallazgosHtml)}
+{$this->seccion('Eficiencia operativa',$reporte['eficiencia_operativa'] ?? null,$icoEficienciaHtml)}
 {$htmlCharts}
 
 <div class="section alert">
@@ -190,10 +211,10 @@ HTML;
 body{ font-family:'DejaVu Sans','Arial',sans-serif; font-size:10.5pt; color:{$cTxt}; }
 
 .header{ width:100%; border-collapse:collapse; }
-.logo-cell{ width:160px; vertical-align:middle; }
+.logo-cell{ width:192px; vertical-align:middle; }
 .title-cell{ vertical-align:middle; text-align:left; }
-.logo img{ max-width:150px; max-height:60px; }
-.title{ font-size:18pt; color:{$c1}; font-weight:700; line-height:1.2; }
+.logo img{ max-width:160px; max-height:60px; }
+.title{ font-size:20pt; color:{$c1}; font-weight:700; line-height:1.2; }
 .subtitle{ font-size:12pt; color:{$c2}; }
 
 .divider{ height:3px; margin:14px 0 20px; background:linear-gradient(90deg, {$c1} 0%, {$c2} 100%); }
@@ -217,10 +238,21 @@ body{ font-family:'DejaVu Sans','Arial',sans-serif; font-size:10.5pt; color:{$cT
 .section-body ul{ margin:8px 0 8px 18px; }
 .section-body li{ margin-bottom:6px; }
 
+/* encabezado de alerta */
 .alert{ background:#fff8e1; border:2px solid {$c2}; }
 .alert-head{ background:{$c2}; color:#000; }
 .alert-note{ background:#fff3cd; color:#7a5b00; padding:8px 12px; font-size:9pt; border-left:4px solid #ffc107; }
 
+/* Íconos: aclaramos (invert) para verse sobre header azul */
+.section-head .icon-img{
+    width: 12pt;
+    height: 12pt;
+    margin-right: 8px;
+    vertical-align: -2px;
+    filter: brightness(3) invert(1) contrast(1.1);
+}
+
+/* Gráficas */
 .chart-grid{ width:100%; border-collapse:separate; border-spacing:14px; }
 .chart-cell{ width:50%; vertical-align:top; }
 .chart-box{ border:1px solid #eaeaea; border-radius:4px; padding:10px; }
@@ -230,34 +262,33 @@ body{ font-family:'DejaVu Sans','Arial',sans-serif; font-size:10.5pt; color:{$cT
 CSS;
     }
 
-    private function renderLogo(string $path): string
-    {
-        if ($path && file_exists($path)) {
-            return '<div class="logo"><img src="' . $path . '" alt="Logo"></div>';
-        }
-        // fallback tipográfico
-        return '<div class="logo" style="font-weight:700;color:#004E89;font-size:16pt;">EQQUA</div>';
-    }
-
-    private function getLogoPath(array $reporte): string
+    /** Si hay logo de cliente lo usa, si no: uno de Eqqua. Devuelve data URI o null */
+    private function resolveLogoDataUri(array $reporte): ?string
     {
         if (!empty($reporte['cliente_logo'])) {
-            $p = FCPATH . 'uploads/clientes/' . $reporte['cliente_logo'];
-            if (is_file($p)) return $p;
+            $data = $this->embedImage('uploads/clientes/' . $reporte['cliente_logo']);
+            if ($data) return $data;
         }
-        // intenta con los que existen en /public/assets/images
+
         $candidates = [
+            'assets/images/logo.png',
             'assets/images/eqqua logos-09.png',
             'assets/images/eqqua logos-05.png',
-            'assets/images/logo_blanco.png',
-            'assets/images/logo.png',
             'assets/images/logo_eqqua.png',
         ];
         foreach ($candidates as $rel) {
-            $p = FCPATH . $rel;
-            if (is_file($p)) return $p;
+            $data = $this->embedImage($rel);
+            if ($data) return $data;
         }
-        return '';
+        return null;
+    }
+
+    private function renderLogoData(?string $data): string
+    {
+        if ($data) {
+            return '<div class="logo"><img src="' . $data . '" alt="Logo"></div>';
+        }
+        return '<div class="logo" style="font-weight:700;color:#004E89;font-size:16pt;">EQQUA</div>';
     }
 
     private function getRiesgoBadgeClass($riesgo): string
@@ -324,7 +355,6 @@ HTML;
 
     private function renderCharts(array $charts, string $c1, string $c2): string
     {
-        // si no hay ningún set válido, no renderizamos sección
         $hasAny =
             $this->hasSeries($charts['por_sucursal'] ?? null) ||
             $this->hasSeries($charts['por_categoria'] ?? null) ||
@@ -389,7 +419,7 @@ HTML;
 
         $bars = '';
         foreach ($values as $i => $v) {
-            $y = $y0 + $i * ($barH + $gap);
+            $y  = $y0 + $i * ($barH + $gap);
             $bw = ($w - $x0 - 20) * ($v / $max);
             $label = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
             $valTxt = number_format($v, 0);

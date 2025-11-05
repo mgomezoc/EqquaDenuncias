@@ -785,6 +785,7 @@ MD;
         return (
             str_starts_with($m, 'gpt-5') ||
             str_starts_with($m, 'o1')   ||
+            str_starts_with($m, 'o4')  ||
             str_starts_with($m, 'o3')
         );
     }
