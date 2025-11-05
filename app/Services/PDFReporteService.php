@@ -6,14 +6,13 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * PDFReporteService - Versión Mejorada
+ * PDFReporteService - Versión Final
  * 
- * Mejoras implementadas:
- * - Fuente Raleway para un look más profesional
- * - Paleta de colores corporativos del logo Eqqua
- * - Diseño más formal y estructurado
- * - Mejor integración de gráficas SVG
- * - Espaciado y tipografía optimizados
+ * Versión 2.1 - Mejoras:
+ * - Márgenes más amplios (menos pegado a los bordes)
+ * - Generación automática de gráficas desde array metricas
+ * - Paleta corporativa Eqqua
+ * - Diseño profesional con Raleway
  */
 class PDFReporteService
 {
@@ -53,13 +52,18 @@ class PDFReporteService
     public function generarPDF(array $reporte)
     {
         try {
+            // Generar gráficas automáticamente si hay métricas
+            if (!isset($reporte['charts']) && isset($reporte['metricas'])) {
+                $reporte['charts'] = $this->generarGraficasDesdeMetricas($reporte['metricas'], $reporte);
+            }
+
             $html = $this->generarHTML($reporte);
 
             $this->dompdf->loadHtml($html);
             $this->dompdf->setPaper('letter', 'portrait');
             $this->dompdf->render();
 
-            // Numeración real de páginas (corrige {PAGE_NUM}/{PAGE_COUNT})
+            // Numeración real de páginas
             $this->agregarNumeracionPaginas((string)($reporte['id'] ?? ''));
 
             $filename = $this->generarNombreArchivo($reporte);
@@ -71,6 +75,119 @@ class PDFReporteService
             log_message('error', '[PDFReporteService] ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Genera gráficas automáticamente desde el array de métricas
+     */
+    private function generarGraficasDesdeMetricas(array $metricas, array $reporte): array
+    {
+        $charts = [];
+
+        // Gráfica 1: Distribución por Categoría (Donut)
+        if (!empty($metricas['distribucion_categoria'])) {
+            $dataCategoria = [];
+            $count = 0;
+            foreach ($metricas['distribucion_categoria'] as $item) {
+                if ($count >= 6) break; // Máximo 6 categorías para legibilidad
+                $dataCategoria[$item['categoria']] = (int)$item['total'];
+                $count++;
+            }
+
+            if (!empty($dataCategoria)) {
+                $charts[] = [
+                    'tipo' => 'donut',
+                    'titulo' => 'Distribución por Categoría',
+                    'leyenda' => 'Total de denuncias: ' . array_sum($dataCategoria),
+                    'data' => $dataCategoria
+                ];
+            }
+        }
+
+        // Gráfica 2: Nivel de Riesgo (Gauge)
+        if (isset($reporte['puntuacion_riesgo'])) {
+            $charts[] = [
+                'tipo' => 'gauge',
+                'titulo' => 'Nivel de Riesgo Global',
+                'leyenda' => 'Evaluación del período analizado',
+                'data' => [
+                    'valor' => floatval($reporte['puntuacion_riesgo']),
+                    'max' => 10
+                ]
+            ];
+        }
+
+        // Gráfica 3: Top 5 Sucursales (Barras)
+        if (!empty($metricas['distribucion_sucursal'])) {
+            $dataSucursal = [];
+            $count = 0;
+            foreach ($metricas['distribucion_sucursal'] as $item) {
+                if ($count >= 5) break; // Top 5
+                $dataSucursal[$item['sucursal']] = (int)$item['total'];
+                $count++;
+            }
+
+            if (!empty($dataSucursal)) {
+                $charts[] = [
+                    'tipo' => 'bar',
+                    'titulo' => 'Top 5 Sucursales',
+                    'leyenda' => 'Sucursales con mayor número de denuncias',
+                    'data' => $dataSucursal
+                ];
+            }
+        }
+
+        // Gráfica 4: Canales de Reporte (Donut)
+        if (!empty($metricas['distribucion_medio'])) {
+            $dataMedio = [];
+            foreach ($metricas['distribucion_medio'] as $item) {
+                $dataMedio[$item['medio']] = (int)$item['total'];
+            }
+
+            if (!empty($dataMedio)) {
+                $charts[] = [
+                    'tipo' => 'donut',
+                    'titulo' => 'Canales de Reporte',
+                    'leyenda' => 'Medios utilizados para reportar',
+                    'data' => $dataMedio
+                ];
+            }
+        }
+
+        // Gráfica 5: Top 5 Departamentos (Barras)
+        if (!empty($metricas['distribucion_departamento'])) {
+            $dataDepartamento = [];
+            $count = 0;
+            foreach ($metricas['distribucion_departamento'] as $item) {
+                if ($count >= 5) break; // Top 5
+                $dataDepartamento[$item['departamento']] = (int)$item['total'];
+                $count++;
+            }
+
+            if (!empty($dataDepartamento)) {
+                $charts[] = [
+                    'tipo' => 'bar',
+                    'titulo' => 'Top 5 Departamentos',
+                    'leyenda' => 'Departamentos con más incidencias',
+                    'data' => $dataDepartamento
+                ];
+            }
+        }
+
+        // Gráfica 6: Tasa de Resolución (Gauge)
+        if (isset($metricas['indice_resolucion'])) {
+            $charts[] = [
+                'tipo' => 'gauge',
+                'titulo' => 'Tasa de Resolución',
+                'leyenda' => 'Porcentaje de denuncias cerradas',
+                'data' => [
+                    'valor' => floatval($metricas['indice_resolucion']) / 10, // Convertir 97.7% a escala de 10
+                    'max' => 10
+                ]
+            ];
+        }
+
+        return $charts;
     }
 
     /** Footer con numeración de páginas e ID */
@@ -139,11 +256,11 @@ class PDFReporteService
         $riesgo          = $reporte['puntuacion_riesgo'] ?? 'N/D';
         $estado          = $this->formatearEstado($reporte['estado'] ?? 'generado');
 
-        // Logo: si existe cliente_logo lo incrustamos, si no; logo Eqqua
+        // Logo
         $logoData = $this->resolveLogoDataUri($reporte);
         $logoHtml = $this->renderLogoData($logoData);
 
-        // Íconos de secciones (base64 para evitar problemas de ruta)
+        // Íconos de secciones
         $iconResumen    = $this->embedImage('assets/icons/resumen.png');
         $iconHallazgos  = $this->embedImage('assets/icons/hallazgo.png');
         $iconEficiencia = $this->embedImage('assets/icons/eficiencia.png');
@@ -156,10 +273,10 @@ class PDFReporteService
         $riesgoBadgeClass = $this->getRiesgoBadgeClass($riesgo);
         $riesgoFormatted  = $this->formatRiesgo($riesgo);
 
-        // Gráficas (si existen)
+        // Gráficas
         $htmlCharts = $this->generarSeccionGraficas($reporte);
 
-        // CSS con paleta corporativa
+        // CSS con márgenes aumentados
         $css = $this->getCSS();
 
         return <<<HTML
@@ -238,7 +355,7 @@ HTML;
 @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
 
 @page { 
-    margin: 2cm 1.5cm 2.5cm 1.5cm; 
+    margin: 2.5cm 2cm 3cm 2cm;
 }
 
 * { 
@@ -255,7 +372,7 @@ body {
     font-weight: 400;
 }
 
-/* Header con logo y título */
+/* Header */
 .header { 
     width: 100%; 
     border-collapse: collapse; 
@@ -294,7 +411,7 @@ body {
     font-weight: 500;
 }
 
-/* Divider con gradiente corporativo */
+/* Divider */
 .divider { 
     height: 4px; 
     margin: 14px 0 20px; 
@@ -302,7 +419,7 @@ body {
     border-radius: 2px;
 }
 
-/* Información del reporte */
+/* Info */
 .info { 
     background: #f8f9fa; 
     border-left: 5px solid {$c2}; 
@@ -333,7 +450,7 @@ body {
     font-weight: 500;
 }
 
-/* Badges mejorados */
+/* Badges */
 .badge { 
     display: inline-block; 
     padding: 5px 12px; 
@@ -369,7 +486,7 @@ body {
     color: #fff; 
 }
 
-/* Secciones del reporte */
+/* Secciones */
 .section { 
     margin: 22px 0; 
     page-break-inside: avoid; 
@@ -418,7 +535,7 @@ body {
     color: {$c1};
 }
 
-/* Sección de alerta (sugerencias IA) */
+/* Alerta */
 .alert { 
     background: #fffbf0; 
     border: 2px solid {$c3};
@@ -441,7 +558,7 @@ body {
     font-style: italic;
 }
 
-/* Íconos en headers */
+/* Íconos */
 .section-head .icon-img {
     width: 13pt;
     height: 13pt;
@@ -450,7 +567,7 @@ body {
     filter: brightness(3) invert(1) contrast(1.1);
 }
 
-/* Sección de gráficas */
+/* Gráficas */
 .charts-section {
     margin: 26px 0;
     page-break-inside: avoid;
@@ -515,13 +632,11 @@ body {
     text-align: center; 
 }
 
-/* Texto sin contenido */
 .text-muted {
     color: {$cTxtLight};
     font-style: italic;
 }
 
-/* Ajustes de tipografía */
 h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     color: {$c1};
@@ -530,11 +645,10 @@ h1, h2, h3, h4, h5, h6 {
 CSS;
     }
 
-    /** Si hay logo de cliente lo usa, si no: uno de Eqqua */
     private function resolveLogoDataUri(array $reporte): ?string
     {
         if (!empty($reporte['cliente_logo'])) {
-            $data = $this->embedImage('uploads/clientes/' . $reporte['cliente_logo']);
+            $data = $this->embedImage($reporte['cliente_logo']);
             if ($data) return $data;
         }
 
@@ -625,7 +739,7 @@ HTML;
     }
 
     /**
-     * Genera la sección completa de gráficas si existen datos
+     * Genera la sección completa de gráficas
      */
     private function generarSeccionGraficas(array $reporte): string
     {
@@ -649,7 +763,7 @@ HTML;
             $i++;
         }
 
-        // Cerrar última fila si tiene elementos impares
+        // Cerrar última fila
         if ($i % 2 !== 0) {
             $html .= '<td class="chart-cell"></td>';
         }
@@ -661,7 +775,7 @@ HTML;
     }
 
     /**
-     * Renderiza un gráfico individual según su tipo
+     * Renderiza un gráfico individual
      */
     private function renderChart(array $chart): string
     {
@@ -686,12 +800,11 @@ HTML;
                 $html .= $this->barsSVG($data);
                 break;
             default:
-                $html .= '<p class="text-muted">Tipo de gráfico no soportado</p>';
+                $html .= '<p class="text-muted">Tipo no soportado</p>';
         }
 
         $html .= '</div>';
 
-        // Agregar leyenda si existe
         if (!empty($chart['leyenda'])) {
             $html .= '<div class="chart-subtitle">' . htmlspecialchars($chart['leyenda']) . '</div>';
         }
@@ -702,7 +815,7 @@ HTML;
     }
 
     /**
-     * Genera gráfico de dona (donut) SVG con paleta corporativa
+     * Gráfico de dona SVG
      */
     private function donutSVG(array $data): string
     {
@@ -715,7 +828,6 @@ HTML;
         $r = 100;
         $rInner = 65;
 
-        // Paleta de colores corporativos
         $palette = [
             self::COLOR_PRIMARY,
             self::COLOR_SECONDARY,
@@ -761,7 +873,6 @@ HTML;
             $i++;
         }
 
-        // Texto central con el total
         $centerText = "<text x='$cx' y='" . ($cy - 5) . "' text-anchor='middle' font-size='28' font-weight='700' fill='" . self::COLOR_PRIMARY . "'>$total</text>";
         $centerLabel = "<text x='$cx' y='" . ($cy + 15) . "' text-anchor='middle' font-size='12' fill='" . self::COLOR_TEXT_LIGHT . "'>Total</text>";
 
@@ -769,7 +880,7 @@ HTML;
     }
 
     /**
-     * Genera gauge semicircular para indicador de riesgo
+     * Gauge semicircular
      */
     private function gaugeSVG(float $value, float $max = 10): string
     {
@@ -780,7 +891,6 @@ HTML;
         $cy = 140;
         $r = 95;
 
-        // Color del gauge según el valor
         $color = self::COLOR_PRIMARY;
         if ($value >= 7) {
             $color = self::COLOR_DANGER;
@@ -790,17 +900,14 @@ HTML;
             $color = '#10b981';
         }
 
-        // Arco de fondo
         $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='16' stroke-linecap='round'/>";
 
-        // Arco de valor
         $ang = M_PI * ($value / $max);
         $x = $cx - $r * cos($ang);
         $y = $cy - $r * sin($ang);
         $largeArc = $ang > M_PI ? 1 : 0;
         $fg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 $largeArc,1 $x,$y' fill='none' stroke='$color' stroke-width='16' stroke-linecap='round'/>";
 
-        // Texto del valor
         $txt = "<text x='$cx' y='" . ($cy - 15) . "' text-anchor='middle' font-size='32' font-weight='700' fill='$color'>" . number_format($value, 1) . "</text>";
         $subtxt = "<text x='$cx' y='" . ($cy + 10) . "' text-anchor='middle' font-size='14' fill='" . self::COLOR_TEXT_LIGHT . "'>de " . number_format($max, 0) . "</text>";
 
@@ -808,7 +915,7 @@ HTML;
     }
 
     /**
-     * Genera gráfico de barras horizontales
+     * Gráfico de barras
      */
     private function barsSVG(array $data): string
     {
@@ -837,13 +944,8 @@ HTML;
             $barWidth = ($value / $max) * 200;
             $color = $palette[$i % count($palette)];
 
-            // Barra
             $bars .= "<rect x='70' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.85' rx='3'/>";
-
-            // Etiqueta
             $bars .= "<text x='5' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>" . htmlspecialchars(substr($label, 0, 15)) . "</text>";
-
-            // Valor
             $bars .= "<text x='" . (75 + $barWidth) . "' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
 
             $y += $barHeight + $gap;
