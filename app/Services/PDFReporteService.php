@@ -5,10 +5,28 @@ namespace App\Services;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+/**
+ * PDFReporteService - Versión Mejorada
+ * 
+ * Mejoras implementadas:
+ * - Fuente Raleway para un look más profesional
+ * - Paleta de colores corporativos del logo Eqqua
+ * - Diseño más formal y estructurado
+ * - Mejor integración de gráficas SVG
+ * - Espaciado y tipografía optimizados
+ */
 class PDFReporteService
 {
     private Dompdf $dompdf;
     private string $outputDir;
+
+    // Paleta de colores corporativos Eqqua
+    private const COLOR_PRIMARY = '#004E89';      // Azul oscuro principal
+    private const COLOR_SECONDARY = '#1CBEC6';    // Turquesa/Verde agua
+    private const COLOR_ACCENT = '#FFB703';       // Amarillo/Naranja
+    private const COLOR_DANGER = '#E84855';       // Rojo/Rosa
+    private const COLOR_TEXT = '#2c3e50';         // Texto oscuro
+    private const COLOR_TEXT_LIGHT = '#6c757d';   // Texto secundario
 
     public function __construct()
     {
@@ -16,7 +34,7 @@ class PDFReporteService
         $options->set('isRemoteEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isFontSubsettingEnabled', true);
-        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('defaultFont', 'Raleway');
         $options->set('defaultMediaType', 'print');
         $options->set('isCssFloatEnabled', true);
         $options->set('dpi', 96);
@@ -64,18 +82,19 @@ class PDFReporteService
             $center = "ID: " . ($id ?: 'N/D');
             $right  = "Página {$pageNumber} de {$pageCount}";
 
-            $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
+            $font = $fontMetrics->getFont('Raleway', 'normal');
             $size = 8;
             $y    = $canvas->get_height() - 28;
+            $color = [0.4, 0.4, 0.4];
 
             // izquierda
-            $canvas->text(36, $y, $left, $font, $size, [0.4, 0.4, 0.4]);
+            $canvas->text(36, $y, $left, $font, $size, $color);
             // centro
             $wCenter = $fontMetrics->getTextWidth($center, $font, $size);
-            $canvas->text(($canvas->get_width() - $wCenter) / 2, $y, $center, $font, $size, [0.4, 0.4, 0.4]);
+            $canvas->text(($canvas->get_width() - $wCenter) / 2, $y, $center, $font, $size, $color);
             // derecha
             $wRight = $fontMetrics->getTextWidth($right, $font, $size);
-            $canvas->text($canvas->get_width() - 36 - $wRight, $y, $right, $font, $size, [0.4, 0.4, 0.4]);
+            $canvas->text($canvas->get_width() - 36 - $wRight, $y, $right, $font, $size, $color);
         });
     }
 
@@ -120,66 +139,72 @@ class PDFReporteService
         $riesgo          = $reporte['puntuacion_riesgo'] ?? 'N/D';
         $estado          = $this->formatearEstado($reporte['estado'] ?? 'generado');
 
-        // Colores corporativos
-        $c1   = '#004E89'; // azul principal
-        $c2   = '#FFB703'; // acento
-        $cTxt = '#2c3e50';
-
         // Logo: si existe cliente_logo lo incrustamos, si no; logo Eqqua
         $logoData = $this->resolveLogoDataUri($reporte);
+        $logoHtml = $this->renderLogoData($logoData);
 
         // Íconos de secciones (base64 para evitar problemas de ruta)
         $iconResumen    = $this->embedImage('assets/icons/resumen.png');
-        $iconHallazgos  = $this->embedImage('assets/icons/hallazgo.png'); // ajusta al nombre real del archivo
+        $iconHallazgos  = $this->embedImage('assets/icons/hallazgo.png');
         $iconEficiencia = $this->embedImage('assets/icons/eficiencia.png');
 
-        $icoResumenHtml    = $iconResumen    ? "<img src=\"{$iconResumen}\" class=\"icon-img\">"    : '';
-        $icoHallazgosHtml  = $iconHallazgos  ? "<img src=\"{$iconHallazgos}\" class=\"icon-img\">"  : '';
-        $icoEficienciaHtml = $iconEficiencia ? "<img src=\"{$iconEficiencia}\" class=\"icon-img\">" : '';
+        $icoResumenHtml    = $iconResumen    ? "<img src=\"{$iconResumen}\" class=\"icon-img\">"    : '📊';
+        $icoHallazgosHtml  = $iconHallazgos  ? "<img src=\"{$iconHallazgos}\" class=\"icon-img\">"  : '🔍';
+        $icoEficienciaHtml = $iconEficiencia ? "<img src=\"{$iconEficiencia}\" class=\"icon-img\">" : '⚡';
 
-        // Gráficas (opcional)
-        $charts     = $reporte['charts'] ?? [];
-        $htmlCharts = $this->renderCharts($charts, $c1, $c2);
+        // Badge de riesgo
+        $riesgoBadgeClass = $this->getRiesgoBadgeClass($riesgo);
+        $riesgoFormatted  = $this->formatRiesgo($riesgo);
 
-        $css = $this->getCSS($c1, $c2, $cTxt);
+        // Gráficas (si existen)
+        $htmlCharts = $this->generarSeccionGraficas($reporte);
 
-        $html = <<<HTML
+        // CSS con paleta corporativa
+        $css = $this->getCSS();
+
+        return <<<HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Reporte IA - {$periodo}</title>
-<style>{$css}</style>
+    <meta charset="UTF-8">
+    <title>Reporte de Análisis de Denuncias - {$cliente}</title>
+    <style>{$css}</style>
 </head>
 <body>
 
+<!-- Header con logo y título -->
 <table class="header">
   <tr>
-    <td class="logo-cell">{$this->renderLogoData($logoData)}</td>
+    <td class="logo-cell">{$logoHtml}</td>
     <td class="title-cell">
       <div class="title">Reporte de Análisis de Denuncias</div>
       <div class="subtitle">{$tipo} · {$periodo}</div>
     </td>
   </tr>
 </table>
+
 <div class="divider"></div>
 
+<!-- Información del reporte -->
 <div class="info">
   <table class="info-table">
     <tr>
-      <td class="label">Cliente:</td><td class="value">{$cliente}</td>
-      <td class="label">Periodo:</td><td class="value">{$periodo}</td>
+      <td class="label">Cliente:</td>
+      <td class="value"><strong>{$cliente}</strong></td>
+      <td class="label">Período:</td>
+      <td class="value">{$periodo}</td>
     </tr>
     <tr>
-      <td class="label">Tipo de reporte:</td><td class="value">{$tipo}</td>
+      <td class="label">Tipo de reporte:</td>
+      <td class="value">{$tipo}</td>
       <td class="label">Nivel de riesgo:</td>
-      <td class="value">
-        <span class="badge {$this->getRiesgoBadgeClass($riesgo)}">{$this->formatRiesgo($riesgo)}</span>
-      </td>
+      <td class="value"><span class="badge {$riesgoBadgeClass}">{$riesgoFormatted}</span></td>
     </tr>
     <tr>
-      <td class="label">Generado:</td><td class="value">{$fechaGeneracion}</td>
-      <td class="label">Estado:</td><td class="value"><span class="badge estado">{$estado}</span></td>
+      <td class="label">Generado:</td>
+      <td class="value">{$fechaGeneracion}</td>
+      <td class="label">Estado:</td>
+      <td class="value"><span class="badge estado">{$estado}</span></td>
     </tr>
   </table>
 </div>
@@ -187,82 +212,325 @@ class PDFReporteService
 {$this->seccion('Resumen ejecutivo',$reporte['resumen_ejecutivo'] ?? null,$icoResumenHtml)}
 {$this->seccion('Hallazgos principales',$reporte['hallazgos_principales'] ?? null,$icoHallazgosHtml)}
 {$this->seccion('Eficiencia operativa',$reporte['eficiencia_operativa'] ?? null,$icoEficienciaHtml)}
+
 {$htmlCharts}
 
 <div class="section alert">
-  <div class="section-head alert-head">&#9888; Sugerencias proactivas y predictivas</div>
-  <div class="alert-note">Este contenido fue generado por IA (GPT-4o). Revíselo antes de aplicarlo.</div>
+  <div class="section-head alert-head">⚠ Sugerencias proactivas y predictivas</div>
+  <div class="alert-note">Este contenido fue generado por Inteligencia Artificial (GPT-4o). Se recomienda revisarlo antes de su aplicación.</div>
   <div class="section-body">{$this->formatearTexto($reporte['sugerencias_predictivas'] ?? null)}</div>
 </div>
 
 </body>
 </html>
 HTML;
-
-        return $html;
     }
 
-    private function getCSS(string $c1, string $c2, string $cTxt): string
+    private function getCSS(): string
     {
+        $c1   = self::COLOR_PRIMARY;
+        $c2   = self::COLOR_SECONDARY;
+        $c3   = self::COLOR_ACCENT;
+        $cTxt = self::COLOR_TEXT;
+        $cTxtLight = self::COLOR_TEXT_LIGHT;
+
         return <<<CSS
-@page { margin: 2cm 1.5cm 2.5cm 1.5cm; }
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
 
-*{ box-sizing:border-box; }
-body{ font-family:'DejaVu Sans','Arial',sans-serif; font-size:10.5pt; color:{$cTxt}; }
+@page { 
+    margin: 2cm 1.5cm 2.5cm 1.5cm; 
+}
 
-.header{ width:100%; border-collapse:collapse; }
-.logo-cell{ width:192px; vertical-align:middle; }
-.title-cell{ vertical-align:middle; text-align:left; }
-.logo img{ max-width:160px; max-height:60px; }
-.title{ font-size:20pt; color:{$c1}; font-weight:700; line-height:1.2; }
-.subtitle{ font-size:12pt; color:{$c2}; }
+* { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+}
 
-.divider{ height:3px; margin:14px 0 20px; background:linear-gradient(90deg, {$c1} 0%, {$c2} 100%); }
+body { 
+    font-family: 'Raleway', 'Arial', sans-serif; 
+    font-size: 10.5pt; 
+    color: {$cTxt};
+    line-height: 1.6;
+    font-weight: 400;
+}
 
-.info{ background:#f8f9fa; border-left:4px solid {$c1}; padding:12px 14px; margin-bottom:18px; }
-.info-table{ width:100%; border-collapse:collapse; }
-.info-table .label{ width:22%; color:#6c757d; font-weight:700; padding:6px 10px 6px 0; font-size:9pt; }
-.info-table .value{ width:28%; padding:6px 10px; font-size:9pt; }
+/* Header con logo y título */
+.header { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-bottom: 8px;
+}
 
-.badge{ display:inline-block; padding:4px 10px; border-radius:3px; font-size:8.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.25px; }
-.badge.success{ background:#2fb171; color:#fff; }
-.badge.warning{ background:#ffcf33; color:#000; }
-.badge.danger{ background:#dc3545; color:#fff; }
-.badge.secondary{ background:#6c757d; color:#fff; }
-.badge.estado{ background:#0ea5e9; color:#fff; }
+.logo-cell { 
+    width: 192px; 
+    vertical-align: middle; 
+    padding-right: 20px;
+}
 
-.section{ margin:20px 0; page-break-inside:avoid; }
-.section-head{ background:{$c1}; color:#fff; padding:10px 14px; font-weight:700; border-radius:3px; }
-.section-body{ padding:8px 12px; text-align:justify; }
-.section-body p{ margin:0 0 10px; }
-.section-body ul{ margin:8px 0 8px 18px; }
-.section-body li{ margin-bottom:6px; }
+.title-cell { 
+    vertical-align: middle; 
+    text-align: left; 
+}
 
-/* encabezado de alerta */
-.alert{ background:#fff8e1; border:2px solid {$c2}; }
-.alert-head{ background:{$c2}; color:#000; }
-.alert-note{ background:#fff3cd; color:#7a5b00; padding:8px 12px; font-size:9pt; border-left:4px solid #ffc107; }
+.logo img { 
+    max-width: 160px; 
+    max-height: 60px; 
+    display: block;
+}
 
-/* Íconos: aclaramos (invert) para verse sobre header azul */
-.section-head .icon-img{
-    width: 12pt;
-    height: 12pt;
+.title { 
+    font-size: 22pt; 
+    color: {$c1}; 
+    font-weight: 700; 
+    line-height: 1.2; 
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+}
+
+.subtitle { 
+    font-size: 13pt; 
+    color: {$c2}; 
+    font-weight: 500;
+}
+
+/* Divider con gradiente corporativo */
+.divider { 
+    height: 4px; 
+    margin: 14px 0 20px; 
+    background: linear-gradient(90deg, {$c1} 0%, {$c2} 50%, {$c3} 100%);
+    border-radius: 2px;
+}
+
+/* Información del reporte */
+.info { 
+    background: #f8f9fa; 
+    border-left: 5px solid {$c2}; 
+    padding: 16px 18px; 
+    margin-bottom: 24px;
+    border-radius: 4px;
+}
+
+.info-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+.info-table .label { 
+    width: 22%; 
+    color: {$cTxtLight}; 
+    font-weight: 600; 
+    padding: 7px 12px 7px 0; 
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-table .value { 
+    width: 28%; 
+    padding: 7px 12px; 
+    font-size: 10pt;
+    font-weight: 500;
+}
+
+/* Badges mejorados */
+.badge { 
+    display: inline-block; 
+    padding: 5px 12px; 
+    border-radius: 4px; 
+    font-size: 8.5pt; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+}
+
+.badge.success { 
+    background: #10b981; 
+    color: #fff; 
+}
+
+.badge.warning { 
+    background: {$c3}; 
+    color: #000; 
+}
+
+.badge.danger { 
+    background: {self::COLOR_DANGER}; 
+    color: #fff; 
+}
+
+.badge.secondary { 
+    background: #6c757d; 
+    color: #fff; 
+}
+
+.badge.estado { 
+    background: {$c2}; 
+    color: #fff; 
+}
+
+/* Secciones del reporte */
+.section { 
+    margin: 22px 0; 
+    page-break-inside: avoid; 
+}
+
+.section-head { 
+    background: {$c1}; 
+    color: #fff; 
+    padding: 12px 16px; 
+    font-weight: 700; 
+    font-size: 11pt;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+}
+
+.section-body { 
+    padding: 14px 16px; 
+    text-align: justify; 
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
+
+.section-body p { 
+    margin: 0 0 12px;
+    line-height: 1.7;
+}
+
+.section-body p:last-child {
+    margin-bottom: 0;
+}
+
+.section-body ul { 
+    margin: 10px 0 10px 20px;
+    list-style-type: disc;
+}
+
+.section-body li { 
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.section-body strong {
+    font-weight: 700;
+    color: {$c1};
+}
+
+/* Sección de alerta (sugerencias IA) */
+.alert { 
+    background: #fffbf0; 
+    border: 2px solid {$c3};
+    border-radius: 4px;
+}
+
+.alert-head { 
+    background: {$c3}; 
+    color: #000;
+    font-weight: 700;
+}
+
+.alert-note { 
+    background: #fff3cd; 
+    color: #856404; 
+    padding: 10px 16px; 
+    font-size: 9pt; 
+    border-left: 4px solid #ffc107;
+    font-weight: 500;
+    font-style: italic;
+}
+
+/* Íconos en headers */
+.section-head .icon-img {
+    width: 13pt;
+    height: 13pt;
     margin-right: 8px;
     vertical-align: -2px;
     filter: brightness(3) invert(1) contrast(1.1);
 }
 
-/* Gráficas */
-.chart-grid{ width:100%; border-collapse:separate; border-spacing:14px; }
-.chart-cell{ width:50%; vertical-align:top; }
-.chart-box{ border:1px solid #eaeaea; border-radius:4px; padding:10px; }
-.chart-title{ font-weight:700; color:{$c1}; margin-bottom:8px; font-size:10pt; }
+/* Sección de gráficas */
+.charts-section {
+    margin: 26px 0;
+    page-break-inside: avoid;
+}
 
-.center{text-align:center;}
+.charts-header {
+    background: {$c2};
+    color: #fff;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 11pt;
+    border-radius: 4px 4px 0 0;
+    letter-spacing: 0.3px;
+}
+
+.charts-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
+
+.chart-grid { 
+    width: 100%; 
+    border-collapse: separate; 
+    border-spacing: 16px;
+}
+
+.chart-cell { 
+    width: 50%; 
+    vertical-align: top; 
+}
+
+.chart-box { 
+    background: #ffffff;
+    border: 2px solid #e9ecef; 
+    border-radius: 6px; 
+    padding: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.chart-title { 
+    font-weight: 700; 
+    color: {$c1}; 
+    margin-bottom: 12px; 
+    font-size: 10.5pt;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chart-subtitle {
+    font-size: 8.5pt;
+    color: {$cTxtLight};
+    text-align: center;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+.center { 
+    text-align: center; 
+}
+
+/* Texto sin contenido */
+.text-muted {
+    color: {$cTxtLight};
+    font-style: italic;
+}
+
+/* Ajustes de tipografía */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: {$c1};
+    margin-bottom: 10px;
+}
 CSS;
     }
 
-    /** Si hay logo de cliente lo usa, si no: uno de Eqqua. Devuelve data URI o null */
+    /** Si hay logo de cliente lo usa, si no: uno de Eqqua */
     private function resolveLogoDataUri(array $reporte): ?string
     {
         if (!empty($reporte['cliente_logo'])) {
@@ -288,7 +556,7 @@ CSS;
         if ($data) {
             return '<div class="logo"><img src="' . $data . '" alt="Logo"></div>';
         }
-        return '<div class="logo" style="font-weight:700;color:#004E89;font-size:16pt;">EQQUA</div>';
+        return '<div class="logo" style="font-weight:700;color:' . self::COLOR_PRIMARY . ';font-size:18pt;">EQQUA</div>';
     }
 
     private function getRiesgoBadgeClass($riesgo): string
@@ -308,7 +576,12 @@ CSS;
 
     private function formatearEstado(string $estado): string
     {
-        $map = ['generado' => 'Generado', 'revisado' => 'Revisado', 'publicado' => 'Publicado', 'archivado' => 'Archivado'];
+        $map = [
+            'generado' => 'Generado',
+            'revisado' => 'Revisado',
+            'publicado' => 'Publicado',
+            'archivado' => 'Archivado'
+        ];
         return $map[strtolower($estado)] ?? ucfirst($estado);
     }
 
@@ -351,133 +624,232 @@ HTML;
         return $out ?: '<p class="text-muted">Sin contenido</p>';
     }
 
-    /* ====================  GRÁFICAS SVG OPCIONALES  ==================== */
-
-    private function renderCharts(array $charts, string $c1, string $c2): string
+    /**
+     * Genera la sección completa de gráficas si existen datos
+     */
+    private function generarSeccionGraficas(array $reporte): string
     {
-        $hasAny =
-            $this->hasSeries($charts['por_sucursal'] ?? null) ||
-            $this->hasSeries($charts['por_categoria'] ?? null) ||
-            $this->hasSeries($charts['por_estado'] ?? null) ||
-            $this->hasSeries($charts['medio'] ?? null) ||
-            isset($charts['riesgo']['value']);
+        $charts = $reporte['charts'] ?? [];
+        if (empty($charts)) return '';
 
-        if (!$hasAny) return '';
-
-        $html = '<div class="section"><div class="section-head">Gráficas</div><div class="section-body">';
+        $html = '<div class="charts-section">';
+        $html .= '<div class="charts-header">📊 Análisis Visual</div>';
+        $html .= '<div class="charts-container">';
         $html .= '<table class="chart-grid"><tr>';
 
-        // primera columna
-        $html .= '<td class="chart-cell">';
-        if ($this->hasSeries($charts['por_sucursal'] ?? null)) {
-            $html .= $this->chartBox('Por sucursal', $this->barSVG($charts['por_sucursal'], $c1));
-        }
-        if ($this->hasSeries($charts['por_categoria'] ?? null)) {
-            $html .= $this->chartBox('Por categoría', $this->barSVG($charts['por_categoria'], $c1));
-        }
-        $html .= '</td>';
+        $i = 0;
+        foreach ($charts as $chart) {
+            if ($i > 0 && $i % 2 === 0) {
+                $html .= '</tr><tr>';
+            }
 
-        // segunda columna
-        $html .= '<td class="chart-cell">';
-        if ($this->hasSeries($charts['por_estado'] ?? null)) {
-            $html .= $this->chartBox('Por estatus', $this->pieSVG($charts['por_estado'], $c1, $c2));
+            $html .= '<td class="chart-cell">';
+            $html .= $this->renderChart($chart);
+            $html .= '</td>';
+            $i++;
         }
-        if ($this->hasSeries($charts['medio'] ?? null)) {
-            $html .= $this->chartBox('Por medio de recepción', $this->pieSVG($charts['medio'], $c1, $c2));
-        }
-        if (isset($charts['riesgo']['value'])) {
-            $html .= $this->chartBox('Riesgo', $this->gaugeSVG((float)$charts['riesgo']['value'], (float)($charts['riesgo']['max'] ?? 10), $c1, $c2));
-        }
-        $html .= '</td>';
 
-        $html .= '</tr></table></div></div>';
+        // Cerrar última fila si tiene elementos impares
+        if ($i % 2 !== 0) {
+            $html .= '<td class="chart-cell"></td>';
+        }
+
+        $html .= '</tr></table>';
+        $html .= '</div></div>';
+
         return $html;
     }
 
-    private function hasSeries(?array $s): bool
+    /**
+     * Renderiza un gráfico individual según su tipo
+     */
+    private function renderChart(array $chart): string
     {
-        return !empty($s['labels']) && !empty($s['values']) && count($s['labels']) === count($s['values']);
-    }
+        $tipo = $chart['tipo'] ?? 'donut';
+        $titulo = $chart['titulo'] ?? 'Gráfico';
+        $data = $chart['data'] ?? [];
 
-    private function chartBox(string $title, string $svg): string
-    {
-        return '<div class="chart-box"><div class="chart-title">' . $title . '</div>' . $svg . '</div>';
-    }
+        $html = '<div class="chart-box">';
+        $html .= '<div class="chart-title">' . htmlspecialchars($titulo) . '</div>';
+        $html .= '<div class="center">';
 
-    /** Barras horizontales simples en SVG */
-    private function barSVG(array $series, string $color): string
-    {
-        $labels = $series['labels'];
-        $values = array_map('floatval', $series['values']);
-        $w = 520;
-        $h = max(120, 26 * count($values) + 30);
-        $max = max(1, max($values));
-        $x0 = 140;
-        $y0 = 20;
-        $barH = 18;
-        $gap = 8;
-
-        $bars = '';
-        foreach ($values as $i => $v) {
-            $y  = $y0 + $i * ($barH + $gap);
-            $bw = ($w - $x0 - 20) * ($v / $max);
-            $label = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
-            $valTxt = number_format($v, 0);
-            $bars .= "<text x='10' y='" . ($y + $barH - 2) . "' font-size='9'>{$label}</text>";
-            $bars .= "<rect x='{$x0}' y='{$y}' width='{$bw}' height='{$barH}' fill='{$color}' opacity='0.9'/>";
-            $bars .= "<text x='" . ($x0 + $bw + 6) . "' y='" . ($y + $barH - 2) . "' font-size='9'>{$valTxt}</text>";
+        switch ($tipo) {
+            case 'donut':
+                $html .= $this->donutSVG($data);
+                break;
+            case 'gauge':
+                $valor = $data['valor'] ?? 0;
+                $max = $data['max'] ?? 10;
+                $html .= $this->gaugeSVG($valor, $max);
+                break;
+            case 'bar':
+                $html .= $this->barsSVG($data);
+                break;
+            default:
+                $html .= '<p class="text-muted">Tipo de gráfico no soportado</p>';
         }
-        return "<svg width='{$w}' height='{$h}' aria-hidden='true'>{$bars}</svg>";
+
+        $html .= '</div>';
+
+        // Agregar leyenda si existe
+        if (!empty($chart['leyenda'])) {
+            $html .= '<div class="chart-subtitle">' . htmlspecialchars($chart['leyenda']) . '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
     }
 
-    /** Pie/dona simple en SVG */
-    private function pieSVG(array $series, string $c1, string $c2): string
+    /**
+     * Genera gráfico de dona (donut) SVG con paleta corporativa
+     */
+    private function donutSVG(array $data): string
     {
-        $values = array_map('floatval', $series['values']);
-        $labels = $series['labels'];
-        if (array_sum($values) <= 0) $values = array_fill(0, count($values), 1);
+        if (empty($data)) return '';
 
-        $w = 240;
-        $h = 180;
-        $r = 60;
-        $cx = 90;
-        $cy = 90;
-        $total = array_sum($values);
-        $angle = -M_PI / 2;
+        $w = 280;
+        $h = 280;
+        $cx = 140;
+        $cy = 140;
+        $r = 100;
+        $rInner = 65;
+
+        // Paleta de colores corporativos
+        $palette = [
+            self::COLOR_PRIMARY,
+            self::COLOR_SECONDARY,
+            self::COLOR_ACCENT,
+            self::COLOR_DANGER,
+            '#10b981',
+            '#8b5cf6',
+            '#f59e0b',
+            '#ef4444'
+        ];
+
+        $total = array_sum($data);
+        if ($total <= 0) return '';
+
         $segments = '';
-        $palette = [$c1, $c2, '#6c757d', '#2fb171', '#d9534f', '#9b59b6', '#2aa1d6', '#ff8f00'];
+        $startAngle = -90;
 
-        foreach ($values as $i => $v) {
-            $theta = ($v / $total) * 2 * M_PI;
-            $x1 = $cx + $r * cos($angle);
-            $y1 = $cy + $r * sin($angle);
-            $angle += $theta;
-            $x2 = $cx + $r * cos($angle);
-            $y2 = $cy + $r * sin($angle);
-            $laf = $theta > M_PI ? 1 : 0;
+        $i = 0;
+        foreach ($data as $label => $value) {
+            $angle = ($value / $total) * 360;
+            $endAngle = $startAngle + $angle;
+
+            $x1 = $cx + $r * cos(deg2rad($startAngle));
+            $y1 = $cy + $r * sin(deg2rad($startAngle));
+            $x2 = $cx + $r * cos(deg2rad($endAngle));
+            $y2 = $cy + $r * sin(deg2rad($endAngle));
+
+            $x1i = $cx + $rInner * cos(deg2rad($startAngle));
+            $y1i = $cy + $rInner * sin(deg2rad($startAngle));
+            $x2i = $cx + $rInner * cos(deg2rad($endAngle));
+            $y2i = $cy + $rInner * sin(deg2rad($endAngle));
+
+            $largeArcFlag = $angle > 180 ? 1 : 0;
+
             $color = $palette[$i % count($palette)];
-            $segments .= "<path d='M {$cx},{$cy} L {$x1},{$y1} A {$r},{$r} 0 {$laf},1 {$x2},{$y2} Z' fill='{$color}' opacity='0.9'/>";
+
+            $path = "M $x1,$y1 A $r,$r 0 $largeArcFlag,1 $x2,$y2 ";
+            $path .= "L $x2i,$y2i A $rInner,$rInner 0 $largeArcFlag,0 $x1i,$y1i Z";
+
+            $segments .= "<path d='$path' fill='$color' opacity='0.9'/>";
+
+            $startAngle = $endAngle;
+            $i++;
         }
-        return "<svg width='{$w}' height='{$h}' aria-hidden='true'>{$segments}</svg>";
+
+        // Texto central con el total
+        $centerText = "<text x='$cx' y='" . ($cy - 5) . "' text-anchor='middle' font-size='28' font-weight='700' fill='" . self::COLOR_PRIMARY . "'>$total</text>";
+        $centerLabel = "<text x='$cx' y='" . ($cy + 15) . "' text-anchor='middle' font-size='12' fill='" . self::COLOR_TEXT_LIGHT . "'>Total</text>";
+
+        return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$segments$centerText$centerLabel</svg>";
     }
 
-    /** Gauge semicircular para riesgo */
-    private function gaugeSVG(float $value, float $max, string $c1, string $c2): string
+    /**
+     * Genera gauge semicircular para indicador de riesgo
+     */
+    private function gaugeSVG(float $value, float $max = 10): string
     {
         $value = max(0.0, min($max, $value));
-        $w = 260;
-        $h = 160;
-        $cx = 130;
-        $cy = 130;
-        $r = 90;
+        $w = 280;
+        $h = 170;
+        $cx = 140;
+        $cy = 140;
+        $r = 95;
 
-        $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='14' />";
+        // Color del gauge según el valor
+        $color = self::COLOR_PRIMARY;
+        if ($value >= 7) {
+            $color = self::COLOR_DANGER;
+        } elseif ($value >= 4) {
+            $color = self::COLOR_ACCENT;
+        } else {
+            $color = '#10b981';
+        }
+
+        // Arco de fondo
+        $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='16' stroke-linecap='round'/>";
+
+        // Arco de valor
         $ang = M_PI * ($value / $max);
         $x = $cx - $r * cos($ang);
         $y = $cy - $r * sin($ang);
-        $fg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 " . ($ang > M_PI ? 1 : 0) . ",1 {$x},{$y}' fill='none' stroke='{$c2}' stroke-width='14' />";
-        $txt = "<text x='{$cx}' y='" . ($cy - 10) . "' text-anchor='middle' font-size='18' font-weight='700' fill='{$c1}'>" . number_format($value, 1) . "/" . number_format($max, 0) . "</text>";
+        $largeArc = $ang > M_PI ? 1 : 0;
+        $fg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 $largeArc,1 $x,$y' fill='none' stroke='$color' stroke-width='16' stroke-linecap='round'/>";
 
-        return "<svg width='{$w}' height='{$h}' aria-hidden='true'>{$bg}{$fg}{$txt}</svg>";
+        // Texto del valor
+        $txt = "<text x='$cx' y='" . ($cy - 15) . "' text-anchor='middle' font-size='32' font-weight='700' fill='$color'>" . number_format($value, 1) . "</text>";
+        $subtxt = "<text x='$cx' y='" . ($cy + 10) . "' text-anchor='middle' font-size='14' fill='" . self::COLOR_TEXT_LIGHT . "'>de " . number_format($max, 0) . "</text>";
+
+        return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$bg$fg$txt$subtxt</svg>";
+    }
+
+    /**
+     * Genera gráfico de barras horizontales
+     */
+    private function barsSVG(array $data): string
+    {
+        if (empty($data)) return '';
+
+        $w = 280;
+        $barHeight = 30;
+        $gap = 12;
+        $h = (count($data) * ($barHeight + $gap)) + 40;
+
+        $max = max($data);
+        if ($max <= 0) return '';
+
+        $bars = '';
+        $y = 20;
+        $i = 0;
+
+        $palette = [
+            self::COLOR_PRIMARY,
+            self::COLOR_SECONDARY,
+            self::COLOR_ACCENT,
+            self::COLOR_DANGER
+        ];
+
+        foreach ($data as $label => $value) {
+            $barWidth = ($value / $max) * 200;
+            $color = $palette[$i % count($palette)];
+
+            // Barra
+            $bars .= "<rect x='70' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.85' rx='3'/>";
+
+            // Etiqueta
+            $bars .= "<text x='5' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>" . htmlspecialchars(substr($label, 0, 15)) . "</text>";
+
+            // Valor
+            $bars .= "<text x='" . (75 + $barWidth) . "' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
+
+            $y += $barHeight + $gap;
+            $i++;
+        }
+
+        return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$bars</svg>";
     }
 }
