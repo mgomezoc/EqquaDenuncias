@@ -6,26 +6,24 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * PDFReporteService - Versión Final
- * 
- * Versión 2.1 - Mejoras:
- * - Márgenes más amplios (menos pegado a los bordes)
- * - Generación automática de gráficas desde array metricas
- * - Paleta corporativa Eqqua
- * - Diseño profesional con Raleway
+ * PDFReporteService - v2.2.1
+ * - Fuente principal: Raleway (fallback DejaVu Sans)
+ * - Íconos de secciones eliminados
+ * - Mantiene: márgenes amplios, footer sin ID, listas y saltos de línea mejorados,
+ *   y gráficas (dona, gauge, barras) rasterizadas como <img> base64 para Dompdf.
  */
 class PDFReporteService
 {
     private Dompdf $dompdf;
     private string $outputDir;
 
-    // Paleta de colores corporativos Eqqua
-    private const COLOR_PRIMARY = '#004E89';      // Azul oscuro principal
-    private const COLOR_SECONDARY = '#1CBEC6';    // Turquesa/Verde agua
-    private const COLOR_ACCENT = '#FFB703';       // Amarillo/Naranja
-    private const COLOR_DANGER = '#E84855';       // Rojo/Rosa
-    private const COLOR_TEXT = '#2c3e50';         // Texto oscuro
-    private const COLOR_TEXT_LIGHT = '#6c757d';   // Texto secundario
+    // Paleta Eqqua
+    private const COLOR_PRIMARY       = '#004E89';
+    private const COLOR_SECONDARY     = '#1CBEC6';
+    private const COLOR_ACCENT        = '#FFB703';
+    private const COLOR_DANGER        = '#E84855';
+    private const COLOR_TEXT          = '#2c3e50';
+    private const COLOR_TEXT_LIGHT    = '#6c757d';
 
     public function __construct()
     {
@@ -33,6 +31,7 @@ class PDFReporteService
         $options->set('isRemoteEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isFontSubsettingEnabled', true);
+        // Preferencia del cliente: Raleway
         $options->set('defaultFont', 'Raleway');
         $options->set('defaultMediaType', 'print');
         $options->set('isCssFloatEnabled', true);
@@ -48,12 +47,12 @@ class PDFReporteService
         }
     }
 
-    /** Genera el PDF y retorna la ruta relativa del archivo */
+    /** Genera el PDF y retorna la ruta relativa */
     public function generarPDF(array $reporte)
     {
         try {
-            // Generar gráficas automáticamente si hay métricas
-            if (!isset($reporte['charts']) && isset($reporte['metricas'])) {
+            // Autogenerar gráficas si vienen métricas
+            if (!isset($reporte['charts']) && !empty($reporte['metricas'])) {
                 $reporte['charts'] = $this->generarGraficasDesdeMetricas($reporte['metricas'], $reporte);
             }
 
@@ -63,11 +62,11 @@ class PDFReporteService
             $this->dompdf->setPaper('letter', 'portrait');
             $this->dompdf->render();
 
-            // Numeración real de páginas
-            $this->agregarNumeracionPaginas((string)($reporte['id'] ?? ''));
+            // Footer (sin ID)
+            $this->agregarFooter();
 
             $filename = $this->generarNombreArchivo($reporte);
-            $path = FCPATH . $this->outputDir . $filename;
+            $path     = FCPATH . $this->outputDir . $filename;
 
             file_put_contents($path, $this->dompdf->output());
             return $this->outputDir . $filename;
@@ -77,111 +76,115 @@ class PDFReporteService
         }
     }
 
-    /**
-     * Genera gráficas automáticamente desde el array de métricas
-     */
+    /** Convierte métricas conocidas a un set de charts */
     private function generarGraficasDesdeMetricas(array $metricas, array $reporte): array
     {
         $charts = [];
 
-        // Gráfica 1: Distribución por Categoría (Donut)
+        // Donut: Distribución por Categoría
         if (!empty($metricas['distribucion_categoria'])) {
-            $dataCategoria = [];
-            $count = 0;
-            foreach ($metricas['distribucion_categoria'] as $item) {
-                if ($count >= 6) break; // Máximo 6 categorías para legibilidad
-                $dataCategoria[$item['categoria']] = (int)$item['total'];
-                $count++;
+            $data = [];
+            $c = 0;
+            foreach ($metricas['distribucion_categoria'] as $it) {
+                if ($c >= 6) break;
+                $cat   = $it['categoria']   ?? $it['nombre'] ?? $it['label'] ?? 'N/D';
+                $total = (int)($it['total'] ?? $it['valor'] ?? 0);
+                if ($total > 0) {
+                    $data[$cat] = $total;
+                    $c++;
+                }
             }
-
-            if (!empty($dataCategoria)) {
+            if ($data) {
                 $charts[] = [
                     'tipo' => 'donut',
                     'titulo' => 'Distribución por Categoría',
-                    'leyenda' => 'Total de denuncias: ' . array_sum($dataCategoria),
-                    'data' => $dataCategoria
+                    'leyenda' => 'Total de denuncias: ' . array_sum($data),
+                    'data' => $data
                 ];
             }
         }
 
-        // Gráfica 2: Nivel de Riesgo (Gauge)
-        if (isset($reporte['puntuacion_riesgo'])) {
+        // Gauge: Nivel de riesgo global
+        if (isset($reporte['puntuacion_riesgo']) && is_numeric($reporte['puntuacion_riesgo'])) {
             $charts[] = [
                 'tipo' => 'gauge',
                 'titulo' => 'Nivel de Riesgo Global',
                 'leyenda' => 'Evaluación del período analizado',
                 'data' => [
-                    'valor' => floatval($reporte['puntuacion_riesgo']),
+                    'valor' => (float)$reporte['puntuacion_riesgo'],
                     'max' => 10
                 ]
             ];
         }
 
-        // Gráfica 3: Top 5 Sucursales (Barras)
+        // Barras: Top 5 Sucursales
         if (!empty($metricas['distribucion_sucursal'])) {
-            $dataSucursal = [];
-            $count = 0;
-            foreach ($metricas['distribucion_sucursal'] as $item) {
-                if ($count >= 5) break; // Top 5
-                $dataSucursal[$item['sucursal']] = (int)$item['total'];
-                $count++;
+            $data = [];
+            foreach ($metricas['distribucion_sucursal'] as $i => $it) {
+                if ($i >= 5) break;
+                $suc   = $it['sucursal'] ?? $it['nombre'] ?? $it['label'] ?? 'N/D';
+                $total = (int)($it['total'] ?? $it['valor'] ?? 0);
+                if ($total > 0) $data[$suc] = $total;
             }
-
-            if (!empty($dataSucursal)) {
+            if ($data) {
                 $charts[] = [
                     'tipo' => 'bar',
                     'titulo' => 'Top 5 Sucursales',
                     'leyenda' => 'Sucursales con mayor número de denuncias',
-                    'data' => $dataSucursal
+                    'data' => $data
                 ];
             }
         }
 
-        // Gráfica 4: Canales de Reporte (Donut)
+        // Donut: Canales de reporte
         if (!empty($metricas['distribucion_medio'])) {
-            $dataMedio = [];
-            foreach ($metricas['distribucion_medio'] as $item) {
-                $dataMedio[$item['medio']] = (int)$item['total'];
+            $data = [];
+            foreach ($metricas['distribucion_medio'] as $it) {
+                $medio = $it['medio'] ?? $it['nombre'] ?? $it['label'] ?? 'N/D';
+                $total = (int)($it['total'] ?? $it['valor'] ?? 0);
+                if ($total > 0) $data[$medio] = $total;
             }
-
-            if (!empty($dataMedio)) {
+            if ($data) {
                 $charts[] = [
                     'tipo' => 'donut',
                     'titulo' => 'Canales de Reporte',
                     'leyenda' => 'Medios utilizados para reportar',
-                    'data' => $dataMedio
+                    'data' => $data
                 ];
             }
         }
 
-        // Gráfica 5: Top 5 Departamentos (Barras)
+        // Barras: Top 5 Departamentos
         if (!empty($metricas['distribucion_departamento'])) {
-            $dataDepartamento = [];
-            $count = 0;
-            foreach ($metricas['distribucion_departamento'] as $item) {
-                if ($count >= 5) break; // Top 5
-                $dataDepartamento[$item['departamento']] = (int)$item['total'];
-                $count++;
+            $data = [];
+            foreach ($metricas['distribucion_departamento'] as $i => $it) {
+                if ($i >= 5) break;
+                $dep   = $it['departamento'] ?? $it['nombre'] ?? $it['label'] ?? 'N/D';
+                $total = (int)($it['total'] ?? $it['valor'] ?? 0);
+                if ($total > 0) $data[$dep] = $total;
             }
-
-            if (!empty($dataDepartamento)) {
+            if ($data) {
                 $charts[] = [
                     'tipo' => 'bar',
                     'titulo' => 'Top 5 Departamentos',
                     'leyenda' => 'Departamentos con más incidencias',
-                    'data' => $dataDepartamento
+                    'data' => $data
                 ];
             }
         }
 
-        // Gráfica 6: Tasa de Resolución (Gauge)
-        if (isset($metricas['indice_resolucion'])) {
+        // Gauge: Tasa de resolución (escala 0–10)
+        if (isset($metricas['indice_resolucion']) && is_numeric($metricas['indice_resolucion'])) {
+            $valor0a10 = ((float)$metricas['indice_resolucion']);
+            if ($valor0a10 > 10) {
+                $valor0a10 = round(($valor0a10 / 100) * 10, 1);
+            }
             $charts[] = [
                 'tipo' => 'gauge',
                 'titulo' => 'Tasa de Resolución',
                 'leyenda' => 'Porcentaje de denuncias cerradas',
                 'data' => [
-                    'valor' => floatval($metricas['indice_resolucion']) / 10, // Convertir 97.7% a escala de 10
+                    'valor' => $valor0a10,
                     'max' => 10
                 ]
             ];
@@ -190,26 +193,17 @@ class PDFReporteService
         return $charts;
     }
 
-    /** Footer con numeración de páginas e ID */
-    private function agregarNumeracionPaginas(string $id): void
+    /** Footer con numeración (sin ID) */
+    private function agregarFooter(): void
     {
-        $canvas = $this->dompdf->getCanvas();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($id) {
-            $left   = "Eqqua · Reporte IA";
-            $center = "ID: " . ($id ?: 'N/D');
+        $this->dompdf->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $left   = 'Eqqua · Reporte IA';
             $right  = "Página {$pageNumber} de {$pageCount}";
-
             $font = $fontMetrics->getFont('Raleway', 'normal');
             $size = 8;
             $y    = $canvas->get_height() - 28;
             $color = [0.4, 0.4, 0.4];
-
-            // izquierda
             $canvas->text(36, $y, $left, $font, $size, $color);
-            // centro
-            $wCenter = $fontMetrics->getTextWidth($center, $font, $size);
-            $canvas->text(($canvas->get_width() - $wCenter) / 2, $y, $center, $font, $size, $color);
-            // derecha
             $wRight = $fontMetrics->getTextWidth($right, $font, $size);
             $canvas->text($canvas->get_width() - 36 - $wRight, $y, $right, $font, $size, $color);
         });
@@ -217,13 +211,13 @@ class PDFReporteService
 
     private function generarNombreArchivo(array $reporte): string
     {
-        $id     = $reporte['id'] ?? 'sin-id';
-        $fecha  = date('Y-m-d_H-i-s');
-        $periodo = $this->sanitizeFilename($reporte['periodo_nombre'] ?? 'reporte');
+        $id      = $reporte['id'] ?? 'sin-id';
+        $fecha   = date('Y-m-d_H-i-s');
+        $periodo = $this->sanearNombre($reporte['periodo_nombre'] ?? 'reporte');
         return "reporte_ia_{$id}_{$periodo}_{$fecha}.pdf";
     }
 
-    private function sanitizeFilename(string $f): string
+    private function sanearNombre(string $f): string
     {
         $f = strtolower($f);
         $f = preg_replace('/[^a-z0-9\-_]/', '-', $f);
@@ -236,17 +230,14 @@ class PDFReporteService
     {
         $full = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relativePath);
         if (!is_file($full)) return null;
-
         $data = @file_get_contents($full);
         if ($data === false) return null;
-
-        $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+        $ext  = strtolower(pathinfo($full, PATHINFO_EXTENSION));
         $mime = ($ext === 'svg') ? 'image/svg+xml' : (($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : 'image/png');
-
         return 'data:' . $mime . ';base64,' . base64_encode($data);
     }
 
-    /** HTML completo del reporte */
+    /** HTML del reporte */
     private function generarHTML(array $reporte): string
     {
         $cliente         = $reporte['cliente_nombre'] ?? 'Cliente';
@@ -254,20 +245,10 @@ class PDFReporteService
         $tipo            = ucfirst($reporte['tipo_reporte'] ?? 'Reporte');
         $fechaGeneracion = date('d/m/Y H:i', strtotime($reporte['created_at'] ?? 'now'));
         $riesgo          = $reporte['puntuacion_riesgo'] ?? 'N/D';
-        $estado          = $this->formatearEstado($reporte['estado'] ?? 'generado');
 
         // Logo
         $logoData = $this->resolveLogoDataUri($reporte);
         $logoHtml = $this->renderLogoData($logoData);
-
-        // Íconos de secciones
-        $iconResumen    = $this->embedImage('assets/icons/resumen.png');
-        $iconHallazgos  = $this->embedImage('assets/icons/hallazgo.png');
-        $iconEficiencia = $this->embedImage('assets/icons/eficiencia.png');
-
-        $icoResumenHtml    = $iconResumen    ? "<img src=\"{$iconResumen}\" class=\"icon-img\">"    : '📊';
-        $icoHallazgosHtml  = $iconHallazgos  ? "<img src=\"{$iconHallazgos}\" class=\"icon-img\">"  : '🔍';
-        $icoEficienciaHtml = $iconEficiencia ? "<img src=\"{$iconEficiencia}\" class=\"icon-img\">" : '⚡';
 
         // Badge de riesgo
         $riesgoBadgeClass = $this->getRiesgoBadgeClass($riesgo);
@@ -276,20 +257,20 @@ class PDFReporteService
         // Gráficas
         $htmlCharts = $this->generarSeccionGraficas($reporte);
 
-        // CSS con márgenes aumentados
+        // CSS
         $css = $this->getCSS();
 
         return <<<HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Reporte de Análisis de Denuncias - {$cliente}</title>
-    <style>{$css}</style>
+<meta charset="UTF-8">
+<title>Reporte de Análisis de Denuncias - {$cliente}</title>
+<style>{$css}</style>
 </head>
 <body>
 
-<!-- Header con logo y título -->
+<!-- Encabezado -->
 <table class="header">
   <tr>
     <td class="logo-cell">{$logoHtml}</td>
@@ -302,7 +283,7 @@ class PDFReporteService
 
 <div class="divider"></div>
 
-<!-- Información del reporte -->
+<!-- Información general (sin campo Estado) -->
 <div class="info">
   <table class="info-table">
     <tr>
@@ -320,21 +301,21 @@ class PDFReporteService
     <tr>
       <td class="label">Generado:</td>
       <td class="value">{$fechaGeneracion}</td>
-      <td class="label">Estado:</td>
-      <td class="value"><span class="badge estado">{$estado}</span></td>
+      <td class="label"></td>
+      <td class="value"></td>
     </tr>
   </table>
 </div>
 
-{$this->seccion('Resumen ejecutivo',$reporte['resumen_ejecutivo'] ?? null,$icoResumenHtml)}
-{$this->seccion('Hallazgos principales',$reporte['hallazgos_principales'] ?? null,$icoHallazgosHtml)}
-{$this->seccion('Eficiencia operativa',$reporte['eficiencia_operativa'] ?? null,$icoEficienciaHtml)}
+{$this->seccion('Resumen ejecutivo',$reporte['resumen_ejecutivo'] ?? null)}
+{$this->seccion('Hallazgos principales',$reporte['hallazgos_principales'] ?? null)}
+{$this->seccion('Eficiencia operativa',$reporte['eficiencia_operativa'] ?? null)}
 
 {$htmlCharts}
 
 <div class="section alert">
-  <div class="section-head alert-head">⚠ Sugerencias proactivas y predictivas</div>
-  <div class="alert-note">Este contenido fue generado por Inteligencia Artificial (GPT-4o). Se recomienda revisarlo antes de su aplicación.</div>
+  <div class="section-head alert-head">Sugerencias proactivas y predictivas</div>
+  <div class="alert-note">Este contenido fue generado por Inteligencia Artificial (GPT-4o). Revíselo antes de su aplicación.</div>
   <div class="section-body">{$this->formatearTexto($reporte['sugerencias_predictivas'] ?? null)}</div>
 </div>
 
@@ -345,303 +326,76 @@ HTML;
 
     private function getCSS(): string
     {
-        $c1   = self::COLOR_PRIMARY;
-        $c2   = self::COLOR_SECONDARY;
-        $c3   = self::COLOR_ACCENT;
+        $c1 = self::COLOR_PRIMARY;
+        $c2 = self::COLOR_SECONDARY;
+        $c3 = self::COLOR_ACCENT;
+        $cDanger = self::COLOR_DANGER;
         $cTxt = self::COLOR_TEXT;
         $cTxtLight = self::COLOR_TEXT_LIGHT;
 
         return <<<CSS
-@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
+@page { margin: 2.7cm 2.2cm 3.2cm 2.2cm; }
 
-@page { 
-    margin: 2.5cm 2cm 3cm 2cm;
-}
+* { box-sizing: border-box; margin:0; padding:0; }
 
-* { 
-    box-sizing: border-box; 
-    margin: 0;
-    padding: 0;
-}
-
-body { 
-    font-family: 'Raleway', 'Arial', sans-serif; 
-    font-size: 10.5pt; 
+/* Raleway preferida, con fallback a DejaVu Sans para compatibilidad PDF */
+body {
+    font-family: 'Raleway', 'DejaVu Sans', Arial, sans-serif;
+    font-size: 10.6pt;
     color: {$cTxt};
-    line-height: 1.6;
-    font-weight: 400;
+    line-height: 1.65;
+    margin:26px;
 }
 
 /* Header */
-.header { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-bottom: 8px;
-}
-
-.logo-cell { 
-    width: 192px; 
-    vertical-align: middle; 
-    padding-right: 20px;
-}
-
-.title-cell { 
-    vertical-align: middle; 
-    text-align: left; 
-}
-
-.logo img { 
-    max-width: 160px; 
-    max-height: 60px; 
-    display: block;
-}
-
-.title { 
-    font-size: 22pt; 
-    color: {$c1}; 
-    font-weight: 700; 
-    line-height: 1.2; 
-    margin-bottom: 4px;
-    letter-spacing: -0.5px;
-}
-
-.subtitle { 
-    font-size: 13pt; 
-    color: {$c2}; 
-    font-weight: 500;
-}
+.header { width:100%; border-collapse:collapse; margin-bottom:10px; }
+.logo-cell { width:180px; vertical-align:middle; padding-right:20px; }
+.title-cell { vertical-align:middle; text-align:left; }
+.logo img { max-width:160px; max-height:60px; display:block; }
+.title { font-size:22pt; color:{$c1}; font-weight:700; line-height:1.2; margin-bottom:4px; letter-spacing:-0.3px; }
+.subtitle { font-size:12pt; color:{$c2}; font-weight:600; }
 
 /* Divider */
-.divider { 
-    height: 4px; 
-    margin: 14px 0 20px; 
-    background: linear-gradient(90deg, {$c1} 0%, {$c2} 50%, {$c3} 100%);
-    border-radius: 2px;
-}
+.divider { height:4px; margin:16px 0 22px; background:linear-gradient(90deg, {$c1} 0%, {$c2} 50%, {$c3} 100%); border-radius:2px; }
 
 /* Info */
-.info { 
-    background: #f8f9fa; 
-    border-left: 5px solid {$c2}; 
-    padding: 16px 18px; 
-    margin-bottom: 24px;
-    border-radius: 4px;
-}
-
-.info-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-}
-
-.info-table .label { 
-    width: 22%; 
-    color: {$cTxtLight}; 
-    font-weight: 600; 
-    padding: 7px 12px 7px 0; 
-    font-size: 9pt;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-table .value { 
-    width: 28%; 
-    padding: 7px 12px; 
-    font-size: 10pt;
-    font-weight: 500;
-}
+.info { background:#f8f9fa; border-left:5px solid {$c2}; padding:18px; margin-bottom:26px; border-radius:4px; }
+.info-table { width:100%; border-collapse:collapse; }
+.info-table .label { width:22%; color:{$cTxtLight}; font-weight:700; padding:8px 12px 8px 0; font-size:9pt; text-transform:uppercase; letter-spacing:0.4px; }
+.info-table .value { width:28%; padding:8px 12px; font-size:10pt; font-weight:600; }
 
 /* Badges */
-.badge { 
-    display: inline-block; 
-    padding: 5px 12px; 
-    border-radius: 4px; 
-    font-size: 8.5pt; 
-    font-weight: 700; 
-    text-transform: uppercase; 
-    letter-spacing: 0.5px;
-}
+.badge { display:inline-block; padding:6px 12px; border-radius:4px; font-size:8.6pt; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; }
+.badge.success { background:#10b981; color:#fff; }
+.badge.warning { background:{$c3}; color:#000; }
+.badge.danger  { background:{$cDanger}; color:#fff; }
+.badge.secondary { background:#6c757d; color:#fff; }
 
-.badge.success { 
-    background: #10b981; 
-    color: #fff; 
-}
-
-.badge.warning { 
-    background: {$c3}; 
-    color: #000; 
-}
-
-.badge.danger { 
-    background: {self::COLOR_DANGER}; 
-    color: #fff; 
-}
-
-.badge.secondary { 
-    background: #6c757d; 
-    color: #fff; 
-}
-
-.badge.estado { 
-    background: {$c2}; 
-    color: #fff; 
-}
-
-/* Secciones */
-.section { 
-    margin: 22px 0; 
-    page-break-inside: avoid; 
-}
-
-.section-head { 
-    background: {$c1}; 
-    color: #fff; 
-    padding: 12px 16px; 
-    font-weight: 700; 
-    font-size: 11pt;
-    border-radius: 4px;
-    letter-spacing: 0.3px;
-}
-
-.section-body { 
-    padding: 14px 16px; 
-    text-align: justify; 
-    background: #ffffff;
-    border: 1px solid #e9ecef;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-}
-
-.section-body p { 
-    margin: 0 0 12px;
-    line-height: 1.7;
-}
-
-.section-body p:last-child {
-    margin-bottom: 0;
-}
-
-.section-body ul { 
-    margin: 10px 0 10px 20px;
-    list-style-type: disc;
-}
-
-.section-body li { 
-    margin-bottom: 8px;
-    line-height: 1.6;
-}
-
-.section-body strong {
-    font-weight: 700;
-    color: {$c1};
-}
+/* Secciones (sin íconos) */
+.section { margin:24px 0; page-break-inside:avoid; }
+.section-head { background:{$c1}; color:#fff; padding:12px 16px; font-weight:800; font-size:11pt; border-radius:4px 4px 0 0; letter-spacing:0.2px; }
+.section-body { padding:16px 18px; text-align:justify; background:#fff; border:1px solid #e9ecef; border-top:none; border-radius:0 0 4px 4px; }
+.section-body p { margin:0 0 12px; }
+.section-body ul { margin:10px 0 10px 22px; list-style:disc; }
+.section-body li { margin-bottom:7px; }
+.section-body strong { font-weight:700; color:{$c1}; }
 
 /* Alerta */
-.alert { 
-    background: #fffbf0; 
-    border: 2px solid {$c3};
-    border-radius: 4px;
-}
-
-.alert-head { 
-    background: {$c3}; 
-    color: #000;
-    font-weight: 700;
-}
-
-.alert-note { 
-    background: #fff3cd; 
-    color: #856404; 
-    padding: 10px 16px; 
-    font-size: 9pt; 
-    border-left: 4px solid #ffc107;
-    font-weight: 500;
-    font-style: italic;
-}
-
-/* Íconos */
-.section-head .icon-img {
-    width: 13pt;
-    height: 13pt;
-    margin-right: 8px;
-    vertical-align: -2px;
-    filter: brightness(3) invert(1) contrast(1.1);
-}
+.alert { background:#fffbf0; border:2px solid {$c3}; border-radius:4px; }
+.alert-head { background:{$c3}; color:#000; font-weight:800; }
+.alert-note { background:#fff3cd; color:#856404; padding:10px 16px; font-size:9pt; border-left:4px solid #ffc107; font-weight:600; font-style:italic; }
 
 /* Gráficas */
-.charts-section {
-    margin: 26px 0;
-    page-break-inside: avoid;
-}
-
-.charts-header {
-    background: {$c2};
-    color: #fff;
-    padding: 12px 16px;
-    font-weight: 700;
-    font-size: 11pt;
-    border-radius: 4px 4px 0 0;
-    letter-spacing: 0.3px;
-}
-
-.charts-container {
-    background: #f8f9fa;
-    padding: 20px;
-    border: 1px solid #e9ecef;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-}
-
-.chart-grid { 
-    width: 100%; 
-    border-collapse: separate; 
-    border-spacing: 16px;
-}
-
-.chart-cell { 
-    width: 50%; 
-    vertical-align: top; 
-}
-
-.chart-box { 
-    background: #ffffff;
-    border: 2px solid #e9ecef; 
-    border-radius: 6px; 
-    padding: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.chart-title { 
-    font-weight: 700; 
-    color: {$c1}; 
-    margin-bottom: 12px; 
-    font-size: 10.5pt;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.chart-subtitle {
-    font-size: 8.5pt;
-    color: {$cTxtLight};
-    text-align: center;
-    margin-top: 8px;
-    font-style: italic;
-}
-
-.center { 
-    text-align: center; 
-}
-
-.text-muted {
-    color: {$cTxtLight};
-    font-style: italic;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    color: {$c1};
-    margin-bottom: 10px;
-}
+.charts-section { margin:28px 0; page-break-inside:avoid; }
+.charts-header { background:{$c2}; color:#fff; padding:12px 16px; font-weight:800; font-size:11pt; border-radius:4px 4px 0 0; }
+.charts-container { background:#f8f9fa; padding:20px; border:1px solid #e9ecef; border-top:none; border-radius:0 0 4px 4px; }
+.chart-grid { width:100%; border-collapse:separate; border-spacing:16px; }
+.chart-cell { width:50%; vertical-align:top; }
+.chart-box { background:#fff; border:2px solid #e9ecef; border-radius:6px; padding:14px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.chart-title { font-weight:800; color:{$c1}; margin-bottom:12px; font-size:10.5pt; text-align:center; text-transform:uppercase; letter-spacing:.5px; }
+.chart-subtitle { font-size:8.5pt; color:{$cTxtLight}; text-align:center; margin-top:8px; font-style:italic; }
+.center { text-align:center; }
+.text-muted { color:{$cTxtLight}; font-style:italic; }
 CSS;
     }
 
@@ -651,14 +405,14 @@ CSS;
             $data = $this->embedImage($reporte['cliente_logo']);
             if ($data) return $data;
         }
-
-        $candidates = [
-            'assets/images/logo.png',
-            'assets/images/eqqua logos-09.png',
-            'assets/images/eqqua logos-05.png',
-            'assets/images/logo_eqqua.png',
-        ];
-        foreach ($candidates as $rel) {
+        foreach (
+            [
+                'assets/images/logo.png',
+                'assets/images/eqqua logos-09.png',
+                'assets/images/eqqua logos-05.png',
+                'assets/images/logo_eqqua.png',
+            ] as $rel
+        ) {
             $data = $this->embedImage($rel);
             if ($data) return $data;
         }
@@ -667,16 +421,14 @@ CSS;
 
     private function renderLogoData(?string $data): string
     {
-        if ($data) {
-            return '<div class="logo"><img src="' . $data . '" alt="Logo"></div>';
-        }
-        return '<div class="logo" style="font-weight:700;color:' . self::COLOR_PRIMARY . ';font-size:18pt;">EQQUA</div>';
+        if ($data) return '<div class="logo"><img src="' . $data . '" alt="Logo"></div>';
+        return '<div class="logo" style="font-weight:800;color:' . self::COLOR_PRIMARY . ';font-size:18pt;">EQQUA</div>';
     }
 
     private function getRiesgoBadgeClass($riesgo): string
     {
         if ($riesgo === 'N/D' || !is_numeric($riesgo)) return 'secondary';
-        $r = (float) $riesgo;
+        $r = (float)$riesgo;
         if ($r >= 7) return 'danger';
         if ($r >= 4) return 'warning';
         return 'success';
@@ -688,119 +440,116 @@ CSS;
         return number_format((float)$riesgo, 1) . '/10';
     }
 
-    private function formatearEstado(string $estado): string
-    {
-        $map = [
-            'generado' => 'Generado',
-            'revisado' => 'Revisado',
-            'publicado' => 'Publicado',
-            'archivado' => 'Archivado'
-        ];
-        return $map[strtolower($estado)] ?? ucfirst($estado);
-    }
-
-    private function seccion(string $titulo, ?string $contenido, string $icon = ''): string
+    private function seccion(string $titulo, ?string $contenido): string
     {
         if (!$contenido) return '';
         $txt = $this->formatearTexto($contenido);
         return <<<HTML
 <div class="section">
-  <div class="section-head">{$icon} {$titulo}</div>
+  <div class="section-head">{$titulo}</div>
   <div class="section-body">{$txt}</div>
 </div>
 HTML;
     }
 
+    /**
+     * Normaliza texto:
+     * - Inserta saltos antes de "1. 2. 3." cuando vienen corridos
+     * - Crea <ul><li>…</li></ul> para listas con "1. " o "- " al inicio de línea
+     * - Mantiene párrafos con <p>…</p>
+     */
     private function formatearTexto(?string $texto): string
     {
         if (!$texto) return '<p class="text-muted">Sin contenido</p>';
 
+        // Forzar salto antes de cada enumeración “n. ”
+        $texto = preg_replace('/\s+(\d+)\.\s+/', "\n$1. ", $texto);
+
+        // Escapar HTML
         $t = htmlspecialchars($texto, ENT_QUOTES, 'UTF-8');
 
-        // listas numeradas o con viñetas
+        // Listas
         $t = preg_replace('/^(\d+)\.\s+(.+)$/m', '<li>$2</li>', $t);
         $t = preg_replace('/^[\-\*•]\s+(.+)$/m', '<li>$1</li>', $t);
-        $t = preg_replace('/(<li>.*?<\/li>(\s*\n\s*)?)+/s', '<ul>$0</ul>', $t);
+        $t = preg_replace_callback('/(?:<li>.*?<\/li>\s*)+/s', function ($m) {
+            return '<ul>' . $m[0] . '</ul>';
+        }, $t);
 
-        // párrafos por doble salto
-        $parts = preg_split('/\n\s*\n/', $t);
+        // Párrafos por doble salto
+        $partes = preg_split('/\n\s*\n/', $t);
         $out = '';
-        foreach ($parts as $p) {
+        foreach ($partes as $p) {
             $p = trim($p);
             if ($p === '') continue;
-            if (preg_match('/<(ul|ol|li|p|div)/', $p)) {
+            if (preg_match('/^<(ul|ol|li|p|div)\b/i', $p)) {
                 $out .= $p;
             } else {
                 $out .= '<p>' . nl2br($p) . '</p>';
             }
         }
         $out = preg_replace('/<p>\s*<\/p>/', '', $out);
+
         return $out ?: '<p class="text-muted">Sin contenido</p>';
     }
 
-    /**
-     * Genera la sección completa de gráficas
-     */
+    /** Sección de gráficas */
     private function generarSeccionGraficas(array $reporte): string
     {
         $charts = $reporte['charts'] ?? [];
         if (empty($charts)) return '';
 
-        $html = '<div class="charts-section">';
-        $html .= '<div class="charts-header">📊 Análisis Visual</div>';
+        $html  = '<div class="charts-section">';
+        $html .= '<div class="charts-header">Análisis Visual</div>';
         $html .= '<div class="charts-container">';
         $html .= '<table class="chart-grid"><tr>';
 
         $i = 0;
         foreach ($charts as $chart) {
-            if ($i > 0 && $i % 2 === 0) {
-                $html .= '</tr><tr>';
-            }
-
+            if ($i > 0 && $i % 2 === 0) $html .= '</tr><tr>';
             $html .= '<td class="chart-cell">';
             $html .= $this->renderChart($chart);
             $html .= '</td>';
             $i++;
         }
 
-        // Cerrar última fila
-        if ($i % 2 !== 0) {
-            $html .= '<td class="chart-cell"></td>';
-        }
+        if ($i % 2 !== 0) $html .= '<td class="chart-cell"></td>';
 
-        $html .= '</tr></table>';
-        $html .= '</div></div>';
+        $html .= '</tr></table></div></div>';
 
         return $html;
     }
 
-    /**
-     * Renderiza un gráfico individual
-     */
+    /** Render de un gráfico */
     private function renderChart(array $chart): string
     {
-        $tipo = $chart['tipo'] ?? 'donut';
+        $tipo   = $chart['tipo']   ?? 'donut';
         $titulo = $chart['titulo'] ?? 'Gráfico';
-        $data = $chart['data'] ?? [];
+        $data   = $chart['data']   ?? [];
 
         $html = '<div class="chart-box">';
         $html .= '<div class="chart-title">' . htmlspecialchars($titulo) . '</div>';
         $html .= '<div class="center">';
 
+        $svg = '';
         switch ($tipo) {
             case 'donut':
-                $html .= $this->donutSVG($data);
+                $svg = $this->donutSVG($data);
                 break;
             case 'gauge':
-                $valor = $data['valor'] ?? 0;
-                $max = $data['max'] ?? 10;
-                $html .= $this->gaugeSVG($valor, $max);
+                $valor = (float)($data['valor'] ?? 0);
+                $max   = (float)($data['max']   ?? 10);
+                $svg   = $this->gaugeSVG($valor, $max);
                 break;
             case 'bar':
-                $html .= $this->barsSVG($data);
+                $svg = $this->barsSVG($data);
                 break;
             default:
                 $html .= '<p class="text-muted">Tipo no soportado</p>';
+                $svg = '';
+        }
+
+        if ($svg !== '') {
+            $html .= $this->svgAImagen($svg, 280);
         }
 
         $html .= '</div>';
@@ -814,9 +563,14 @@ HTML;
         return $html;
     }
 
-    /**
-     * Gráfico de dona SVG
-     */
+    private function svgAImagen(string $svg, int $maxWidth = 280): string
+    {
+        if (trim($svg) === '') return '<p class="text-muted">Sin datos</p>';
+        $b64 = base64_encode($svg);
+        return '<img alt="gráfica" style="display:block;margin:0 auto;max-width:' . $maxWidth . 'px;width:100%;height:auto" src="data:image/svg+xml;base64,' . $b64 . '">';
+    }
+
+    /** Dona SVG */
     private function donutSVG(array $data): string
     {
         if (empty($data)) return '';
@@ -844,27 +598,25 @@ HTML;
 
         $segments = '';
         $startAngle = -90;
-
         $i = 0;
+
         foreach ($data as $label => $value) {
             $angle = ($value / $total) * 360;
             $endAngle = $startAngle + $angle;
 
-            $x1 = $cx + $r * cos(deg2rad($startAngle));
-            $y1 = $cy + $r * sin(deg2rad($startAngle));
-            $x2 = $cx + $r * cos(deg2rad($endAngle));
-            $y2 = $cy + $r * sin(deg2rad($endAngle));
-
+            $x1  = $cx + $r * cos(deg2rad($startAngle));
+            $y1  = $cy + $r * sin(deg2rad($startAngle));
+            $x2  = $cx + $r * cos(deg2rad($endAngle));
+            $y2  = $cy + $r * sin(deg2rad($endAngle));
             $x1i = $cx + $rInner * cos(deg2rad($startAngle));
             $y1i = $cy + $rInner * sin(deg2rad($startAngle));
             $x2i = $cx + $rInner * cos(deg2rad($endAngle));
             $y2i = $cy + $rInner * sin(deg2rad($endAngle));
 
-            $largeArcFlag = $angle > 180 ? 1 : 0;
-
+            $largeArcFlag = ($angle > 180) ? 1 : 0;
             $color = $palette[$i % count($palette)];
 
-            $path = "M $x1,$y1 A $r,$r 0 $largeArcFlag,1 $x2,$y2 ";
+            $path  = "M $x1,$y1 A $r,$r 0 $largeArcFlag,1 $x2,$y2 ";
             $path .= "L $x2i,$y2i A $rInner,$rInner 0 $largeArcFlag,0 $x1i,$y1i Z";
 
             $segments .= "<path d='$path' fill='$color' opacity='0.9'/>";
@@ -873,15 +625,13 @@ HTML;
             $i++;
         }
 
-        $centerText = "<text x='$cx' y='" . ($cy - 5) . "' text-anchor='middle' font-size='28' font-weight='700' fill='" . self::COLOR_PRIMARY . "'>$total</text>";
+        $centerText  = "<text x='$cx' y='" . ($cy - 5) . "' text-anchor='middle' font-size='28' font-weight='700' fill='" . self::COLOR_PRIMARY . "'>$total</text>";
         $centerLabel = "<text x='$cx' y='" . ($cy + 15) . "' text-anchor='middle' font-size='12' fill='" . self::COLOR_TEXT_LIGHT . "'>Total</text>";
 
         return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$segments$centerText$centerLabel</svg>";
     }
 
-    /**
-     * Gauge semicircular
-     */
+    /** Gauge semicircular */
     private function gaugeSVG(float $value, float $max = 10): string
     {
         $value = max(0.0, min($max, $value));
@@ -891,14 +641,9 @@ HTML;
         $cy = 140;
         $r = 95;
 
-        $color = self::COLOR_PRIMARY;
-        if ($value >= 7) {
-            $color = self::COLOR_DANGER;
-        } elseif ($value >= 4) {
-            $color = self::COLOR_ACCENT;
-        } else {
-            $color = '#10b981';
-        }
+        if ($value >= 7)       $color = self::COLOR_DANGER;
+        elseif ($value >= 4)   $color = self::COLOR_ACCENT;
+        else                   $color = '#10b981';
 
         $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='16' stroke-linecap='round'/>";
 
@@ -908,15 +653,13 @@ HTML;
         $largeArc = $ang > M_PI ? 1 : 0;
         $fg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 $largeArc,1 $x,$y' fill='none' stroke='$color' stroke-width='16' stroke-linecap='round'/>";
 
-        $txt = "<text x='$cx' y='" . ($cy - 15) . "' text-anchor='middle' font-size='32' font-weight='700' fill='$color'>" . number_format($value, 1) . "</text>";
+        $txt    = "<text x='$cx' y='" . ($cy - 15) . "' text-anchor='middle' font-size='32' font-weight='700' fill='$color'>" . number_format($value, 1) . "</text>";
         $subtxt = "<text x='$cx' y='" . ($cy + 10) . "' text-anchor='middle' font-size='14' fill='" . self::COLOR_TEXT_LIGHT . "'>de " . number_format($max, 0) . "</text>";
 
         return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$bg$fg$txt$subtxt</svg>";
     }
 
-    /**
-     * Gráfico de barras
-     */
+    /** Barras horizontales */
     private function barsSVG(array $data): string
     {
         if (empty($data)) return '';
@@ -929,23 +672,19 @@ HTML;
         $max = max($data);
         if ($max <= 0) return '';
 
+        $palette = [self::COLOR_PRIMARY, self::COLOR_SECONDARY, self::COLOR_ACCENT, self::COLOR_DANGER];
+
         $bars = '';
         $y = 20;
         $i = 0;
 
-        $palette = [
-            self::COLOR_PRIMARY,
-            self::COLOR_SECONDARY,
-            self::COLOR_ACCENT,
-            self::COLOR_DANGER
-        ];
-
         foreach ($data as $label => $value) {
             $barWidth = ($value / $max) * 200;
             $color = $palette[$i % count($palette)];
+            $labelCorto = mb_strimwidth($label, 0, 18, '…', 'UTF-8');
 
-            $bars .= "<rect x='70' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.85' rx='3'/>";
-            $bars .= "<text x='5' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>" . htmlspecialchars(substr($label, 0, 15)) . "</text>";
+            $bars .= "<rect x='70' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.88' rx='3'/>";
+            $bars .= "<text x='5' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>$labelCorto</text>";
             $bars .= "<text x='" . (75 + $barWidth) . "' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
 
             $y += $barHeight + $gap;
