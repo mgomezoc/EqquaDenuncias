@@ -6,11 +6,11 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * PDFReporteService - v2.2.1
- * - Fuente principal: Raleway (fallback DejaVu Sans)
- * - Íconos de secciones eliminados
- * - Mantiene: márgenes amplios, footer sin ID, listas y saltos de línea mejorados,
- *   y gráficas (dona, gauge, barras) rasterizadas como <img> base64 para Dompdf.
+ * PDFReporteService - v2.3.0
+ * - Leyendas completas en donas (categorías/canales) con colores y porcentajes
+ * - Barras con margen de etiquetas fijo (sin sobreponer) + tabla de apoyo
+ * - Gauge de riesgo con trazo seguro (siempre visible)
+ * - Misma estética para todas las gráficas (SVG -> <img> base64)
  */
 class PDFReporteService
 {
@@ -31,7 +31,6 @@ class PDFReporteService
         $options->set('isRemoteEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isFontSubsettingEnabled', true);
-        // Preferencia del cliente: Raleway
         $options->set('defaultFont', 'Raleway');
         $options->set('defaultMediaType', 'print');
         $options->set('isCssFloatEnabled', true);
@@ -51,7 +50,6 @@ class PDFReporteService
     public function generarPDF(array $reporte)
     {
         try {
-            // Autogenerar gráficas si vienen métricas
             if (!isset($reporte['charts']) && !empty($reporte['metricas'])) {
                 $reporte['charts'] = $this->generarGraficasDesdeMetricas($reporte['metricas'], $reporte);
             }
@@ -62,7 +60,6 @@ class PDFReporteService
             $this->dompdf->setPaper('letter', 'portrait');
             $this->dompdf->render();
 
-            // Footer (sin ID)
             $this->agregarFooter();
 
             $filename = $this->generarNombreArchivo($reporte);
@@ -246,18 +243,14 @@ class PDFReporteService
         $fechaGeneracion = date('d/m/Y H:i', strtotime($reporte['created_at'] ?? 'now'));
         $riesgo          = $reporte['puntuacion_riesgo'] ?? 'N/D';
 
-        // Logo
         $logoData = $this->resolveLogoDataUri($reporte);
         $logoHtml = $this->renderLogoData($logoData);
 
-        // Badge de riesgo
         $riesgoBadgeClass = $this->getRiesgoBadgeClass($riesgo);
         $riesgoFormatted  = $this->formatRiesgo($riesgo);
 
-        // Gráficas
         $htmlCharts = $this->generarSeccionGraficas($reporte);
 
-        // CSS
         $css = $this->getCSS();
 
         return <<<HTML
@@ -270,7 +263,6 @@ class PDFReporteService
 </head>
 <body>
 
-<!-- Encabezado -->
 <table class="header">
   <tr>
     <td class="logo-cell">{$logoHtml}</td>
@@ -283,7 +275,6 @@ class PDFReporteService
 
 <div class="divider"></div>
 
-<!-- Información general (sin campo Estado) -->
 <div class="info">
   <table class="info-table">
     <tr>
@@ -338,7 +329,6 @@ HTML;
 
 * { box-sizing: border-box; margin:0; padding:0; }
 
-/* Raleway preferida, con fallback a DejaVu Sans para compatibilidad PDF */
 body {
     font-family: 'Raleway', 'DejaVu Sans', Arial, sans-serif;
     font-size: 10.6pt;
@@ -371,7 +361,7 @@ body {
 .badge.danger  { background:{$cDanger}; color:#fff; }
 .badge.secondary { background:#6c757d; color:#fff; }
 
-/* Secciones (sin íconos) */
+/* Secciones */
 .section { margin:24px 0; page-break-inside:avoid; }
 .section-head { background:{$c1}; color:#fff; padding:12px 16px; font-weight:800; font-size:11pt; border-radius:4px 4px 0 0; letter-spacing:0.2px; }
 .section-body { padding:16px 18px; text-align:justify; background:#fff; border:1px solid #e9ecef; border-top:none; border-radius:0 0 4px 4px; }
@@ -396,6 +386,16 @@ body {
 .chart-subtitle { font-size:8.5pt; color:{$cTxtLight}; text-align:center; margin-top:8px; font-style:italic; }
 .center { text-align:center; }
 .text-muted { color:{$cTxtLight}; font-style:italic; }
+
+/* Leyendas de donas/barras */
+.legend { margin:12px auto 0; width:100%; }
+.legend table { width:100%; border-collapse:collapse; }
+.legend td { padding:4px 6px; font-size:9pt; }
+.legend .swatch { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+.legend .value { text-align:right; white-space:nowrap; }
+.legend .label { width:70%; }
+.legend .pct { text-align:right; white-space:nowrap; color:{$cTxtLight}; }
+
 CSS;
     }
 
@@ -405,14 +405,7 @@ CSS;
             $data = $this->embedImage($reporte['cliente_logo']);
             if ($data) return $data;
         }
-        foreach (
-            [
-                'assets/images/logo.png',
-                'assets/images/eqqua logos-09.png',
-                'assets/images/eqqua logos-05.png',
-                'assets/images/logo_eqqua.png',
-            ] as $rel
-        ) {
+        foreach (['assets/images/logo.png','assets/images/eqqua logos-09.png','assets/images/eqqua logos-05.png','assets/images/logo_eqqua.png'] as $rel) {
             $data = $this->embedImage($rel);
             if ($data) return $data;
         }
@@ -452,30 +445,20 @@ CSS;
 HTML;
     }
 
-    /**
-     * Normaliza texto:
-     * - Inserta saltos antes de "1. 2. 3." cuando vienen corridos
-     * - Crea <ul><li>…</li></ul> para listas con "1. " o "- " al inicio de línea
-     * - Mantiene párrafos con <p>…</p>
-     */
     private function formatearTexto(?string $texto): string
     {
         if (!$texto) return '<p class="text-muted">Sin contenido</p>';
 
-        // Forzar salto antes de cada enumeración “n. ”
         $texto = preg_replace('/\s+(\d+)\.\s+/', "\n$1. ", $texto);
 
-        // Escapar HTML
         $t = htmlspecialchars($texto, ENT_QUOTES, 'UTF-8');
 
-        // Listas
         $t = preg_replace('/^(\d+)\.\s+(.+)$/m', '<li>$2</li>', $t);
         $t = preg_replace('/^[\-\*•]\s+(.+)$/m', '<li>$1</li>', $t);
         $t = preg_replace_callback('/(?:<li>.*?<\/li>\s*)+/s', function ($m) {
             return '<ul>' . $m[0] . '</ul>';
         }, $t);
 
-        // Párrafos por doble salto
         $partes = preg_split('/\n\s*\n/', $t);
         $out = '';
         foreach ($partes as $p) {
@@ -530,10 +513,13 @@ HTML;
         $html .= '<div class="chart-title">' . htmlspecialchars($titulo) . '</div>';
         $html .= '<div class="center">';
 
+        $legendHtml = '';
         $svg = '';
+
         switch ($tipo) {
             case 'donut':
-                $svg = $this->donutSVG($data);
+                $palette = $this->palette();
+                [$svg, $legendHtml] = $this->donutSVGConLeyenda($data, $palette);
                 break;
             case 'gauge':
                 $valor = (float)($data['valor'] ?? 0);
@@ -541,18 +527,22 @@ HTML;
                 $svg   = $this->gaugeSVG($valor, $max);
                 break;
             case 'bar':
-                $svg = $this->barsSVG($data);
+                $palette = $this->palette();
+                [$svg, $legendHtml] = $this->barsSVGConTabla($data, $palette);
                 break;
             default:
                 $html .= '<p class="text-muted">Tipo no soportado</p>';
-                $svg = '';
         }
 
         if ($svg !== '') {
-            $html .= $this->svgAImagen($svg, 280);
+            $html .= $this->svgAImagen($svg, 320);
         }
 
         $html .= '</div>';
+
+        if ($legendHtml) {
+            $html .= $legendHtml;
+        }
 
         if (!empty($chart['leyenda'])) {
             $html .= '<div class="chart-subtitle">' . htmlspecialchars($chart['leyenda']) . '</div>';
@@ -570,19 +560,10 @@ HTML;
         return '<img alt="gráfica" style="display:block;margin:0 auto;max-width:' . $maxWidth . 'px;width:100%;height:auto" src="data:image/svg+xml;base64,' . $b64 . '">';
     }
 
-    /** Dona SVG */
-    private function donutSVG(array $data): string
+    /** Paleta cíclica */
+    private function palette(): array
     {
-        if (empty($data)) return '';
-
-        $w = 280;
-        $h = 280;
-        $cx = 140;
-        $cy = 140;
-        $r = 100;
-        $rInner = 65;
-
-        $palette = [
+        return [
             self::COLOR_PRIMARY,
             self::COLOR_SECONDARY,
             self::COLOR_ACCENT,
@@ -592,13 +573,20 @@ HTML;
             '#f59e0b',
             '#ef4444'
         ];
+    }
 
+    /** Dona + leyenda detallada */
+    private function donutSVGConLeyenda(array $data, array $palette): array
+    {
+        if (empty($data)) return ['', ''];
+
+        // SVG
+        $w = 320; $h = 280; $cx = 160; $cy = 140; $r = 105; $rInner = 68;
         $total = array_sum($data);
-        if ($total <= 0) return '';
+        if ($total <= 0) return ['', ''];
 
-        $segments = '';
-        $startAngle = -90;
-        $i = 0;
+        $segments = ''; $startAngle = -90; $i = 0;
+        $colors = [];
 
         foreach ($data as $label => $value) {
             $angle = ($value / $total) * 360;
@@ -615,6 +603,7 @@ HTML;
 
             $largeArcFlag = ($angle > 180) ? 1 : 0;
             $color = $palette[$i % count($palette)];
+            $colors[$label] = $color;
 
             $path  = "M $x1,$y1 A $r,$r 0 $largeArcFlag,1 $x2,$y2 ";
             $path .= "L $x2i,$y2i A $rInner,$rInner 0 $largeArcFlag,0 $x1i,$y1i Z";
@@ -627,30 +616,36 @@ HTML;
 
         $centerText  = "<text x='$cx' y='" . ($cy - 5) . "' text-anchor='middle' font-size='28' font-weight='700' fill='" . self::COLOR_PRIMARY . "'>$total</text>";
         $centerLabel = "<text x='$cx' y='" . ($cy + 15) . "' text-anchor='middle' font-size='12' fill='" . self::COLOR_TEXT_LIGHT . "'>Total</text>";
+        $svg = "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$segments$centerText$centerLabel</svg>";
 
-        return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$segments$centerText$centerLabel</svg>";
+        // Leyenda (nombres completos + valor + %)
+        $legendHtml = $this->renderLeyendaTabla($data, $colors, $total);
+
+        return [$svg, $legendHtml];
     }
 
-    /** Gauge semicircular */
+    /** Gauge semicircular robusto */
     private function gaugeSVG(float $value, float $max = 10): string
     {
+        $max = $max > 0 ? $max : 10;
         $value = max(0.0, min($max, $value));
-        $w = 280;
-        $h = 170;
-        $cx = 140;
-        $cy = 140;
-        $r = 95;
 
+        $w=320; $h=180; $cx=160; $cy=140; $r=100;
+
+        $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='16' stroke-linecap='round'/>";
+
+        // Color por valor
         if ($value >= 7)       $color = self::COLOR_DANGER;
         elseif ($value >= 4)   $color = self::COLOR_ACCENT;
         else                   $color = '#10b981';
 
-        $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='16' stroke-linecap='round'/>";
-
-        $ang = M_PI * ($value / $max);
+        // Progreso (mínimo visible para evitar que parezca vacío)
+        $minVisible = max($value, 0.15);
+        $ang = M_PI * ($minVisible / $max);
         $x = $cx - $r * cos($ang);
         $y = $cy - $r * sin($ang);
-        $largeArc = $ang > M_PI ? 1 : 0;
+        $largeArc = ($ang > M_PI) ? 1 : 0;
+
         $fg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 $largeArc,1 $x,$y' fill='none' stroke='$color' stroke-width='16' stroke-linecap='round'/>";
 
         $txt    = "<text x='$cx' y='" . ($cy - 15) . "' text-anchor='middle' font-size='32' font-weight='700' fill='$color'>" . number_format($value, 1) . "</text>";
@@ -659,38 +654,69 @@ HTML;
         return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$bg$fg$txt$subtxt</svg>";
     }
 
-    /** Barras horizontales */
-    private function barsSVG(array $data): string
+    /** Barras horizontales + tabla con nombres completos */
+    private function barsSVGConTabla(array $data, array $palette): array
     {
-        if (empty($data)) return '';
+        if (empty($data)) return ['', ''];
 
-        $w = 280;
-        $barHeight = 30;
+        // SVG con margen de etiquetas a la izquierda
+        $w = 320;
+        $labelWidth = 120;   // área fija para etiqueta (no se sobrepone)
+        $barMaxWidth = 180;  // ancho máximo de barra
+        $barHeight = 28;
         $gap = 12;
-        $h = (count($data) * ($barHeight + $gap)) + 40;
+        $h = (count($data) * ($barHeight + $gap)) + 30;
 
         $max = max($data);
-        if ($max <= 0) return '';
-
-        $palette = [self::COLOR_PRIMARY, self::COLOR_SECONDARY, self::COLOR_ACCENT, self::COLOR_DANGER];
+        if ($max <= 0) return ['', ''];
 
         $bars = '';
-        $y = 20;
+        $y = 15;
         $i = 0;
 
         foreach ($data as $label => $value) {
-            $barWidth = ($value / $max) * 200;
+            $barWidth = ($value / $max) * $barMaxWidth;
             $color = $palette[$i % count($palette)];
+
+            // Etiqueta corta visual (no se monta sobre barra)
             $labelCorto = mb_strimwidth($label, 0, 18, '…', 'UTF-8');
 
-            $bars .= "<rect x='70' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.88' rx='3'/>";
-            $bars .= "<text x='5' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>$labelCorto</text>";
-            $bars .= "<text x='" . (75 + $barWidth) . "' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
+            $bars .= "<text x='0' y='" . ($y + $barHeight/2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>$labelCorto</text>";
+            $bars .= "<rect x='{$labelWidth}' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.9' rx='3'/>";
+            $bars .= "<text x='" . ($labelWidth + $barWidth + 6) . "' y='" . ($y + $barHeight/2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
 
             $y += $barHeight + $gap;
             $i++;
         }
 
-        return "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$bars</svg>";
+        $svg = "<svg width='$w' height='$h' viewBox='0 0 $w $h' xmlns='http://www.w3.org/2000/svg'>$bars</svg>";
+
+        // Tabla con nombres completos (evita pérdida de información)
+        $colors = [];
+        $i = 0;
+        foreach ($data as $label => $_) {
+            $colors[$label] = $palette[$i % count($palette)];
+            $i++;
+        }
+        $legendHtml = $this->renderLeyendaTabla($data, $colors, array_sum($data));
+
+        return [$svg, $legendHtml];
+    }
+
+    /** Tabla de leyenda reutilizable (nombre completo + valor + %) */
+    private function renderLeyendaTabla(array $data, array $colors, int $total): string
+    {
+        if ($total <= 0) return '';
+        $rows = '';
+        foreach ($data as $label => $value) {
+            $pct = ($value / $total) * 100;
+            $color = $colors[$label] ?? self::COLOR_PRIMARY;
+            $rows .= '<tr>'
+                . '<td class="label"><span class="swatch" style="background:' . $color . '"></span>' . htmlspecialchars($label) . '</td>'
+                . '<td class="value"><strong>' . (int)$value . '</strong></td>'
+                . '<td class="pct">' . number_format($pct, 1) . '%</td>'
+                . '</tr>';
+        }
+        return '<div class="legend"><table>' . $rows . '</table></div>';
     }
 }
