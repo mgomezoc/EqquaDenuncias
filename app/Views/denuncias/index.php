@@ -257,15 +257,15 @@
                     {{#if esAnonimo}}
                         <div class="col-md-4">
                             <label for="nombre_completo-{{id}}" class="form-label">Nombre Completo</label>
-                            <input type="text" class="form-control" id="nombre_completo-{{id}}" name="nombre_completo" value="{{nombre_completo}}" readonly>
+                            <input type="text" class="form-control" id="nombre_completo-{{id}}" name="nombre_completo" value="{{nombre_completo}}">
                         </div>
                         <div class="col-md-4">
                             <label for="correo_electronico-{{id}}" class="form-label">Correo Electrónico</label>
-                            <input type="text" class="form-control" id="correo_electronico-{{id}}" name="correo_electronico" value="{{correo_electronico}}" readonly>
+                            <input type="text" class="form-control" id="correo_electronico-{{id}}" name="correo_electronico" value="{{correo_electronico}}">
                         </div>
                         <div class="col-md-4">
                             <label for="telefono-{{id}}" class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" id="telefono-{{id}}" name="telefono" value="{{telefono}}" readonly>
+                            <input type="text" class="form-control" id="telefono-{{id}}" name="telefono" value="{{telefono}}">
                         </div>
                     {{/if}}
 
