@@ -114,7 +114,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label for="id_departamento-{{id}}" class="form-label">Departamento</label>
+                        <label for="id_departamento-{{id}}" class="form-label">Departamento (dónde ocurrió el incidente)</label>
                         <select class="form-select select2" id="id_departamento-{{id}}" name="id_departamento">
                             {{{selectOptions departamentos id_departamento}}}
                         </select>

@@ -85,11 +85,12 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
             </div>
 
             <div class="col-md-6">
-                <label for="id_departamento" class="form-label">Departamento</label>
+                <label for="id_departamento" class="form-label">Departamento (dónde ocurrió el incidente)</label>
                 <select class="form-select select2" id="id_departamento" name="id_departamento">
                     <option value="">Seleccione un departamento</option>
                 </select>
             </div>
+
 
             <!-- Información del incidente -->
             <div class="col-md-6">
