@@ -57,7 +57,7 @@ class PDFReporteService
             $html = $this->generarHTML($reporte);
 
             $this->dompdf->loadHtml($html);
-            $this->dompdf->setPaper('letter', 'portrait');
+            $this->dompdf->setPaper('letter', 'landscape');
             $this->dompdf->render();
 
             $this->agregarFooter();
@@ -334,7 +334,7 @@ body {
     font-size: 10.6pt;
     color: {$cTxt};
     line-height: 1.65;
-    margin:26px;
+    margin:16px;
 }
 
 /* Header */
@@ -405,7 +405,7 @@ CSS;
             $data = $this->embedImage($reporte['cliente_logo']);
             if ($data) return $data;
         }
-        foreach (['assets/images/logo.png','assets/images/eqqua logos-09.png','assets/images/eqqua logos-05.png','assets/images/logo_eqqua.png'] as $rel) {
+        foreach (['assets/images/logo.png', 'assets/images/eqqua logos-09.png', 'assets/images/eqqua logos-05.png', 'assets/images/logo_eqqua.png'] as $rel) {
             $data = $this->embedImage($rel);
             if ($data) return $data;
         }
@@ -581,11 +581,18 @@ HTML;
         if (empty($data)) return ['', ''];
 
         // SVG
-        $w = 320; $h = 280; $cx = 160; $cy = 140; $r = 105; $rInner = 68;
+        $w = 320;
+        $h = 280;
+        $cx = 160;
+        $cy = 140;
+        $r = 105;
+        $rInner = 68;
         $total = array_sum($data);
         if ($total <= 0) return ['', ''];
 
-        $segments = ''; $startAngle = -90; $i = 0;
+        $segments = '';
+        $startAngle = -90;
+        $i = 0;
         $colors = [];
 
         foreach ($data as $label => $value) {
@@ -630,7 +637,11 @@ HTML;
         $max = $max > 0 ? $max : 10;
         $value = max(0.0, min($max, $value));
 
-        $w=320; $h=180; $cx=160; $cy=140; $r=100;
+        $w = 320;
+        $h = 180;
+        $cx = 160;
+        $cy = 140;
+        $r = 100;
 
         $bg = "<path d='M " . ($cx - $r) . ",$cy A $r,$r 0 1,1 " . ($cx + $r) . ",$cy' fill='none' stroke='#e5e7eb' stroke-width='16' stroke-linecap='round'/>";
 
@@ -681,9 +692,9 @@ HTML;
             // Etiqueta corta visual (no se monta sobre barra)
             $labelCorto = mb_strimwidth($label, 0, 18, '…', 'UTF-8');
 
-            $bars .= "<text x='0' y='" . ($y + $barHeight/2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>$labelCorto</text>";
+            $bars .= "<text x='0' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' fill='" . self::COLOR_TEXT . "'>$labelCorto</text>";
             $bars .= "<rect x='{$labelWidth}' y='$y' width='$barWidth' height='$barHeight' fill='$color' opacity='0.9' rx='3'/>";
-            $bars .= "<text x='" . ($labelWidth + $barWidth + 6) . "' y='" . ($y + $barHeight/2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
+            $bars .= "<text x='" . ($labelWidth + $barWidth + 6) . "' y='" . ($y + $barHeight / 2 + 5) . "' font-size='10' font-weight='700' fill='" . self::COLOR_TEXT . "'>$value</text>";
 
             $y += $barHeight + $gap;
             $i++;
