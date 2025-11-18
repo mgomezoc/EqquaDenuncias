@@ -6,12 +6,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * PDFReporteService - v2.5.0
- * - Tarjetas de métrica (metric_card) para riesgos/índices (reemplazo del gauge)
- * - Donas con leyendas claras (tabla/columnas)
- * - Barras con área fija para etiquetas + tabla compacta
- * - Reorganización de la sección “Análisis Visual”
- * - SVG rasterizado a <img> base64 para compatibilidad con Dompdf
+ * PDFReporteService - v2.5.0 (DejaVu Sans only)
  */
 class PDFReporteService
 {
@@ -32,11 +27,20 @@ class PDFReporteService
         $options->set('isRemoteEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isFontSubsettingEnabled', true);
-        $options->set('defaultFont', 'Raleway');
+        // 👉 Usar SOLO DejaVu Sans
+        $options->set('defaultFont', 'DejaVu Sans');
         $options->set('defaultMediaType', 'print');
         $options->set('isCssFloatEnabled', true);
         $options->set('dpi', 96);
         $options->set('chroot', FCPATH);
+
+        // Cache de fuentes en carpeta escribible
+        $fontCache = WRITEPATH . 'dompdf';
+        if (!is_dir($fontCache)) {
+            @mkdir($fontCache, 0755, true);
+        }
+        $options->set('fontDir', $fontCache);
+        $options->set('fontCache', $fontCache);
 
         $this->dompdf = new Dompdf($options);
 
@@ -523,7 +527,8 @@ class PDFReporteService
 @page { margin: 2.5cm 2cm 3cm 2cm; }
 * { box-sizing: border-box; margin:0; padding:0; }
 
-body { font-family: 'Raleway','DejaVu Sans',Arial,sans-serif; font-size:10.5pt; color:{$cTxt}; line-height:1.6; margin:12px; }
+/* 👉 DejaVu Sans como única fuente */
+body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size:10.5pt; color:{$cTxt}; line-height:1.6; margin:12px; }
 
 /* Header */
 .header { width:100%; border-collapse:collapse; margin-bottom:10px; }
@@ -613,7 +618,8 @@ CSS;
         $this->dompdf->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
             $left   = 'Eqqua · Reporte IA';
             $right  = "Página {$pageNumber} de {$pageCount}";
-            $font = $fontMetrics->getFont('Raleway', 'normal');
+            // 👉 Usar DejaVu Sans también aquí
+            $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
             $size = 8;
             $y    = $canvas->get_height() - 28;
             $color = [0.4, 0.4, 0.4];
