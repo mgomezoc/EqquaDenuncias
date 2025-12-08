@@ -753,7 +753,7 @@ body {
     padding-bottom: 60px; 
 }
 
-/* 🔥 CORRECCIÓN: Eliminar salto de página en la última página */
+/* Eliminar salto de página en la última página */
 .pagina:last-child {
     page-break-after: avoid;
 }
@@ -854,7 +854,8 @@ body {
 
 /* ========== SECCIONES TEXTO (Resumen / Hallazgos / Eficiencia) ========== */
 .seccion {
-    margin: 0; 
+    margin: 0;
+    border-top: 6px solid #000;
 }
 
 .seccion-titulo {
@@ -866,12 +867,12 @@ body {
 }
 
 .seccion-titulo.azul {
-    background-color: #2E86C1;
+    background-color: #1F7AC3;
     color: #fff;
 }
 
 .seccion-titulo.rojo {
-    background-color: #EC5555;
+    background-color: #E74545;
     color: #fff;
     margin: 0;
     border-radius: 0;
@@ -1110,6 +1111,7 @@ body {
 .seccion-sugerencias {
     margin: 0; 
     border: 4px solid #F39C12;
+    border-top: 6px solid #000;
     border-radius: 0;
     overflow: hidden;
 }
