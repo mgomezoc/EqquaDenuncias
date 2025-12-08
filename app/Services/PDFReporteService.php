@@ -718,9 +718,7 @@ body {
     width: 100%;
     page-break-after: always;
     position: relative;
-    /* Se añade un padding inferior solo en la página para dar espacio al pie de página fijo,
-       si no se usa position: absolute en .pie-pagina, este padding puede eliminarse y
-       confiar en el margin-top del pie de página. */
+    /* Dejamos espacio para el pie de página fijo */
     padding-bottom: 60px; 
 }
 
@@ -823,15 +821,15 @@ body {
 
 /* ========== SECCIONES TEXTO (Resumen / Hallazgos / Eficiencia) ========== */
 .seccion {
-    /* 🛑 CORRECCIÓN: Eliminar margen lateral para diseño borde a borde en títulos */
-    margin: 25px 0 0 0; 
+    /* 🛑 CORRECCIÓN 1: Establecer margin-top a 0 para eliminar el espacio superior no deseado. */
+    margin: 0; 
 }
 
 .seccion-titulo {
     font-size: 14pt;
     font-weight: 700;
-    padding: 12px 40px; /* 🛑 CORRECCIÓN: Aumentar padding lateral para centrar texto */
-    border-radius: 0; /* 🛑 CORRECCIÓN: Eliminar border-radius */
+    padding: 12px 40px; 
+    border-radius: 0; 
     text-align: center;
 }
 
@@ -846,11 +844,10 @@ body {
     color: #fff;
     margin: 0;
     border-radius: 0;
-    padding: 12px 40px; /* Mantener padding para el texto interno */
+    padding: 12px 40px;
 }
 
 .seccion-contenido {
-    /* 🛑 CORRECCIÓN: Aplicar el padding lateral necesario de 40px al contenido de texto */
     padding: 16px 40px; 
 }
 
@@ -872,7 +869,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin: 25px 0 15px 0;
-    padding: 0 45px; /* 🛑 CORRECCIÓN: Padding lateral para el grid de métricas */
+    padding: 0 45px; 
 }
 
 .metrica-celda {
@@ -937,12 +934,12 @@ body {
 /* Separador punteado verde */
 .separador-seccion {
     border-top: 2px dashed {$turquesa};
-    margin: 20px 45px; /* 🛑 CORRECCIÓN: Margen lateral de 45px */
+    margin: 20px 45px; 
 }
 
 /* Donas */
 .seccion-dona {
-    margin: 18px 45px; /* 🛑 CORRECCIÓN: Margen lateral de 45px */
+    margin: 18px 45px; 
 }
 
 .dona-titulo {
@@ -1006,7 +1003,7 @@ body {
 
 /* Barras */
 .seccion-barras {
-    margin: 18px 45px; /* 🛑 CORRECCIÓN: Margen lateral de 45px */
+    margin: 18px 45px; 
 }
 
 .barras-titulo {
@@ -1056,7 +1053,8 @@ body {
     color: #fff;
     font-size: 10pt;
     font-weight: 600;
-    line-height: 28px;
+    /* 🛑 CORRECCIÓN 2: Asegurar que el texto esté centrado verticalmente en la barra */
+    line-height: 28px; 
 }
 
 .barra-valor-td {
@@ -1070,8 +1068,8 @@ body {
 
 /* Sugerencias */
 .seccion-sugerencias {
-    /* 🛑 CORRECCIÓN: Eliminar margen lateral y border-radius */
-    margin: 30px 0;
+    /* 🛑 CORRECCIÓN 3: Establecer margin-top a 0 para eliminar el espacio superior no deseado. */
+    margin: 0; 
     border: 3px solid {$amarillo};
     border-radius: 0;
     overflow: hidden;
@@ -1082,12 +1080,12 @@ body {
     color: #000;
     font-size: 14pt;
     font-weight: 700;
-    padding: 12px 40px; /* 🛑 CORRECCIÓN: Aplicar padding lateral de 40px */
+    padding: 12px 40px; 
     text-align: center;
 }
 
 .sugerencias-nota {
-    padding: 10px 40px; /* 🛑 CORRECCIÓN: Aplicar padding lateral de 40px */
+    padding: 10px 40px; 
     font-style: italic;
     font-size: 10pt;
     color: {$textoClaro};
@@ -1095,12 +1093,11 @@ body {
 }
 
 .sugerencias-contenido {
-    padding: 14px 40px; /* 🛑 CORRECCIÓN: Aplicar padding lateral de 40px */
+    padding: 14px 40px; 
 }
 
 /* Pie de página general (páginas de contenido) */
 .pie-pagina {
-    /* 🛑 CORRECCIÓN: Vuelve a posición absoluta para fijarlo abajo en las páginas de contenido */
     position: absolute; 
     bottom: 25px;
     left: 0;
