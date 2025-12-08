@@ -718,7 +718,6 @@ body {
     width: 100%;
     page-break-after: always;
     position: relative;
-    /* Dejamos espacio para el pie de página fijo */
     padding-bottom: 60px; 
 }
 
@@ -740,7 +739,6 @@ body {
     page-break-inside: avoid;
 }
 
-/* Contenido genérico de páginas (sin padding extra) */
 .contenido {
     padding: 0;
 }
@@ -749,7 +747,6 @@ body {
 .portada {
     padding: 0;
     position: relative;
-    
 }
 
 .portada-decoracion-izq {
@@ -810,7 +807,6 @@ body {
     display: inline-block;
 }
 
-/* Footer específico de portada sí va pegado abajo */
 .portada-footer {
     position: absolute;
     bottom: 50px;
@@ -827,40 +823,41 @@ body {
 .seccion-titulo {
     font-size: 14pt;
     font-weight: 700;
-    padding: 12px 40px; 
+    padding: 14px 40px; 
     border-radius: 0; 
     text-align: center;
 }
 
 .seccion-titulo.azul {
-    background-color: {$azul};
+    background-color: #2E86C1;
     color: #fff;
 }
 
-/* Barra roja de "Análisis visual" va al ras superior de la página de contenido */
 .seccion-titulo.rojo {
-    background-color: {$rojo};
+    background-color: #EC5555;
     color: #fff;
     margin: 0;
     border-radius: 0;
-    padding: 12px 40px;
+    padding: 14px 40px;
 }
 
 .seccion-contenido {
-    padding: 16px 40px; 
+    padding: 18px 40px; 
 }
 
 .seccion-contenido p {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     text-align: justify;
+    line-height: 1.6;
 }
 
 .seccion-contenido ul {
-    margin: 10px 0 10px 25px;
+    margin: 12px 0 12px 25px;
 }
 
 .seccion-contenido li {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    line-height: 1.6;
 }
 
 /* ========== ANÁLISIS VISUAL ========== */
@@ -868,7 +865,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin: 25px 0 15px 0;
-    padding: 0 45px; 
+    padding: 0 40px; 
 }
 
 .metrica-celda {
@@ -885,20 +882,21 @@ body {
     font-size: 12pt;
     font-weight: 700;
     color: {$azulOscuro};
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .metrica-valor {
     font-size: 48pt;
     font-weight: 700;
     line-height: 1;
+    margin: 5px 0;
 }
 
 .metrica-de {
     font-size: 12pt;
     color: {$turquesa};
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .metrica-barra-tabla {
@@ -930,15 +928,14 @@ body {
     font-weight: 600;
 }
 
-/* Separador punteado verde */
 .separador-seccion {
     border-top: 2px dashed {$turquesa};
-    margin: 20px 45px; 
+    margin: 22px 40px; 
 }
 
 /* Donas */
 .seccion-dona {
-    margin: 18px 45px; 
+    margin: 20px 40px; 
 }
 
 .dona-titulo {
@@ -946,7 +943,7 @@ body {
     font-weight: 700;
     color: {$azulOscuro};
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .dona-layout {
@@ -957,7 +954,7 @@ body {
 .dona-leyenda-celda {
     width: 55%;
     vertical-align: middle;
-    padding-right: 15px;
+    padding-right: 20px;
 }
 
 .dona-grafica-celda {
@@ -972,12 +969,12 @@ body {
 }
 
 .dona-leyenda-tabla tr {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #E8E8E8;
 }
 
 .leyenda-color-td {
     width: 25px;
-    padding: 8px 0;
+    padding: 10px 0;
 }
 
 .leyenda-color {
@@ -988,8 +985,9 @@ body {
 }
 
 .leyenda-texto-td {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 10pt;
+    color: {$texto};
 }
 
 .leyenda-valor-td {
@@ -997,12 +995,13 @@ body {
     text-align: right;
     font-size: 14pt;
     font-weight: 700;
-    padding: 8px 0;
+    padding: 10px 0;
+    color: {$texto};
 }
 
 /* Barras */
 .seccion-barras {
-    margin: 18px 45px; 
+    margin: 20px 40px; 
 }
 
 .barras-titulo {
@@ -1010,7 +1009,7 @@ body {
     font-weight: 700;
     color: {$azulOscuro};
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 18px;
 }
 
 .barras-tabla {
@@ -1019,7 +1018,7 @@ body {
 }
 
 .barra-fila td {
-    padding: 8px 0;
+    padding: 10px 0;
 }
 
 .barra-etiqueta-td {
@@ -1027,21 +1026,23 @@ body {
     font-size: 9pt;
     font-weight: 700;
     color: {$azulOscuro};
-    padding-right: 10px;
+    padding-right: 12px;
+    vertical-align: middle;
 }
 
 .barra-contenedor-td {
     width: 60%;
+    vertical-align: middle;
 }
 
 .barra-fondo {
-    background-color: #f3f4f6;
+    background-color: #F5F5F5;
     border-radius: 4px;
     overflow: hidden;
 }
 
 .barra-relleno {
-    height: 28px;
+    height: 30px;
     border-radius: 4px;
     position: relative;
     min-width: 60px;
@@ -1063,40 +1064,56 @@ body {
     text-align: right;
     font-size: 14pt;
     font-weight: 700;
-    color: {$textoClaro};
-    padding-left: 10px;
+    color: {$texto};
+    padding-left: 12px;
+    vertical-align: middle;
 }
 
 /* Sugerencias */
 .seccion-sugerencias {
     margin: 0; 
-    border: 3px solid {$amarillo};
+    border: 4px solid #F39C12;
     border-radius: 0;
     overflow: hidden;
 }
 
 .sugerencias-titulo {
-    background-color: {$amarillo};
+    background-color: #F39C12;
     color: #000;
     font-size: 14pt;
     font-weight: 700;
-    padding: 12px 40px; 
+    padding: 14px 40px; 
     text-align: center;
 }
 
 .sugerencias-nota {
-    padding: 10px 40px; 
+    padding: 12px 40px; 
     font-style: italic;
     font-size: 10pt;
-    color: {$textoClaro};
-    border-bottom: 1px solid #f0e6c0;
+    color: {$texto};
+    background-color: #FEF5E7;
+    border-bottom: 1px solid #F5E6C8;
 }
 
 .sugerencias-contenido {
-    padding: 14px 40px; 
+    padding: 18px 40px; 
 }
 
-/* Pie de página general (páginas de contenido) */
+.sugerencias-contenido p {
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.sugerencias-contenido ul {
+    margin: 12px 0 12px 20px;
+}
+
+.sugerencias-contenido li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+/* Pie de página general */
 .pie-pagina {
     position: absolute; 
     bottom: 25px;
