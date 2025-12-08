@@ -821,7 +821,6 @@ body {
 
 /* ========== SECCIONES TEXTO (Resumen / Hallazgos / Eficiencia) ========== */
 .seccion {
-    /* 🛑 CORRECCIÓN 1: Establecer margin-top a 0 para eliminar el espacio superior no deseado. */
     margin: 0; 
 }
 
@@ -1046,6 +1045,9 @@ body {
     border-radius: 4px;
     position: relative;
     min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
 }
 
@@ -1053,8 +1055,7 @@ body {
     color: #fff;
     font-size: 10pt;
     font-weight: 600;
-    /* 🛑 CORRECCIÓN 2: Asegurar que el texto esté centrado verticalmente en la barra */
-    line-height: 28px; 
+    line-height: 1;
 }
 
 .barra-valor-td {
@@ -1068,7 +1069,6 @@ body {
 
 /* Sugerencias */
 .seccion-sugerencias {
-    /* 🛑 CORRECCIÓN 3: Establecer margin-top a 0 para eliminar el espacio superior no deseado. */
     margin: 0; 
     border: 3px solid {$amarillo};
     border-radius: 0;
