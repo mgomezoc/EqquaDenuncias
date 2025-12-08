@@ -635,16 +635,48 @@ HTML;
         ];
     }
 
+    /**
+     * Obtiene el logo del cliente desde la base de datos o del array del reporte
+     */
     private function obtenerLogoCliente(array $reporte): string
     {
+        // Prioridad 1: Logo ya proporcionado en el reporte (base64 o ruta)
         if (!empty($reporte['cliente_logo'])) {
             $data = $this->incrustarImagen($reporte['cliente_logo']);
             if ($data) {
                 return '<img src="' . $data . '" alt="Logo Cliente" class="logo-cliente">';
             }
         }
-        $nombre = $reporte['cliente_nombre'] ?? 'Cliente';
-        return '<div class="logo-cliente-texto">' . htmlspecialchars($nombre) . '</div>';
+
+        // Prioridad 2: Buscar logo en base de datos por id_cliente
+        if (!empty($reporte['id_cliente'])) {
+            $db = \Config\Database::connect();
+            $builder = $db->table('clientes');
+            $cliente = $builder->select('logo, nombre_empresa')
+                ->where('id', $reporte['id_cliente'])
+                ->get()
+                ->getRowArray();
+
+            if ($cliente && !empty($cliente['logo'])) {
+                $data = $this->incrustarImagen($cliente['logo']);
+                if ($data) {
+                    return '<img src="' . $data . '" alt="Logo ' . htmlspecialchars($cliente['nombre_empresa']) . '" class="logo-cliente">';
+                }
+            }
+
+            // Si hay nombre pero no logo, mostrar texto
+            if ($cliente && !empty($cliente['nombre_empresa'])) {
+                return '<div class="logo-cliente-texto">' . htmlspecialchars($cliente['nombre_empresa']) . '</div>';
+            }
+        }
+
+        // Prioridad 3: Nombre del cliente desde el reporte
+        if (!empty($reporte['cliente_nombre'])) {
+            return '<div class="logo-cliente-texto">' . htmlspecialchars($reporte['cliente_nombre']) . '</div>';
+        }
+
+        // Fallback final
+        return '<div class="logo-cliente-texto">Cliente</div>';
     }
 
     private function obtenerLogoEqqua(): string
@@ -719,6 +751,11 @@ body {
     page-break-after: always;
     position: relative;
     padding-bottom: 60px; 
+}
+
+/* 🔥 CORRECCIÓN: Eliminar salto de página en la última página */
+.pagina:last-child {
+    page-break-after: avoid;
 }
 
 /* Evitar cortes internos en los bloques importantes */
