@@ -497,7 +497,7 @@ HTML;
     }
 
     /**
-     * Formatea texto para secciones
+     * Formatea texto para secciones, mejorando el reconocimiento de listas numeradas
      */
     private function formatearTextoSeccion(?string $texto): string
     {
@@ -507,11 +507,20 @@ HTML;
 
         $texto = htmlspecialchars($texto, ENT_QUOTES, 'UTF-8');
 
-        // Convertir listas numeradas y bullets
+        // CORRECCIÓN 1: Agregar saltos de línea antes de números seguidos de punto
+        // Esto convierte "texto. 2. Otro texto" en "texto.\n2. Otro texto"
+        $texto = preg_replace('/\.\s+(\d+)\.\s+/', ".\n$1. ", $texto);
+
+        // CORRECCIÓN 2: Agregar saltos de línea antes de bullets o guiones al inicio
+        $texto = preg_replace('/\.\s+([\-\*•])\s+/', ".\n$1 ", $texto);
+
+        // Convertir listas numeradas
         $texto = preg_replace('/^(\d+)\.\s+(.+)$/m', '<li>$2</li>', $texto);
+
+        // Convertir bullets
         $texto = preg_replace('/^[\-\*•]\s+(.+)$/m', '<li>$1</li>', $texto);
 
-        // Envolver listas
+        // Envolver listas en <ul>
         $texto = preg_replace_callback('/(<li>.*?<\/li>\s*)+/s', function ($match) {
             return '<ul>' . $match[0] . '</ul>';
         }, $texto);
@@ -789,15 +798,15 @@ body {
 .portada-decoracion-izq {
     position: absolute;
     left: 0;
-    top: 80px;
+    top: 120px;
     width: 20px;
 }
 
 .deco-barra {
-    width: 12px;
-    height: 80px;
-    margin-bottom: 8px;
-    border-radius: 0 6px 6px 0;
+    width: 18px;
+    height: 100px;
+    margin-bottom: 12px;
+    border-radius: 0 10px 10px 0;
 }
 
 .deco-morado { background-color: {$morado}; }
@@ -806,42 +815,55 @@ body {
 .deco-rojo { background-color: {$rojo}; }
 
 .portada-contenido {
-    padding: 100px 60px 40px 60px;
+    padding: 150px 70px 60px 90px;
     text-align: left;
+    min-height: 650px;
 }
 
 .portada-periodo {
-    font-size: 16pt;
+    font-size: 22pt;
     font-weight: 700;
     color: {$turquesa};
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .portada-titulo {
-    font-size: 28pt;
+    font-size: 33pt;
     font-weight: 700;
     color: {$azulOscuro};
-    line-height: 1.2;
-    margin-bottom: 50px;
+    line-height: 1.25;
+    margin-bottom: 80px;
+    max-width: 500px;
 }
 
 .portada-logo-cliente {
-    margin: 40px 0;
+    margin: 80px 0 60px 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 180px;
 }
 
 .logo-cliente {
-    max-width: 260px;
-    max-height: 90px;
+    max-width: 450px;
+    max-height: 180px;
+    width: auto;
+    height: auto;
+    display: block;
 }
 
 .logo-cliente-texto {
-    font-size: 24pt;
+    font-size: 32pt;
     font-weight: 700;
     color: {$azul};
-    padding: 15px 35px;
-    border: 3px solid {$amarillo};
-    border-radius: 8px;
+    padding: 25px 50px;
+    border: 5px solid {$amarillo};
+    border-radius: 12px;
     display: inline-block;
+    text-align: center;
 }
 
 .portada-footer {
