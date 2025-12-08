@@ -713,15 +713,18 @@ body {
     line-height: 1.5;
 }
 
+/* Cada bloque .pagina corresponde a UNA hoja */
 .pagina {
     width: 100%;
-    min-height: 100%;
     page-break-after: always;
     position: relative;
+    /* Se añade un padding inferior solo en la página para dar espacio al pie de página fijo,
+       si no se usa position: absolute en .pie-pagina, este padding puede eliminarse y
+       confiar en el margin-top del pie de página. */
+    padding-bottom: 60px; 
 }
 
-/* Evitar que bloques importantes se corten a la mitad */
-.pagina,
+/* Evitar cortes internos en los bloques importantes */
 .seccion,
 .seccion-dona,
 .seccion-barras,
@@ -739,14 +742,16 @@ body {
     page-break-inside: avoid;
 }
 
+/* Contenido genérico de páginas (sin padding extra) */
 .contenido {
-    padding: 0 0 60px 0;
+    padding: 0;
 }
 
 /* ========== PORTADA ========== */
 .portada {
     padding: 0;
     position: relative;
+    
 }
 
 .portada-decoracion-izq {
@@ -807,6 +812,7 @@ body {
     display: inline-block;
 }
 
+/* Footer específico de portada sí va pegado abajo */
 .portada-footer {
     position: absolute;
     bottom: 50px;
@@ -815,16 +821,17 @@ body {
     text-align: center;
 }
 
-/* ========== SECCIONES TEXTO ========== */
+/* ========== SECCIONES TEXTO (Resumen / Hallazgos / Eficiencia) ========== */
 .seccion {
-    margin: 20px 40px;
+    /* 🛑 CORRECCIÓN: Eliminar margen lateral para diseño borde a borde en títulos */
+    margin: 25px 0 0 0; 
 }
 
 .seccion-titulo {
     font-size: 14pt;
     font-weight: 700;
-    padding: 12px 20px;
-    border-radius: 6px;
+    padding: 12px 40px; /* 🛑 CORRECCIÓN: Aumentar padding lateral para centrar texto */
+    border-radius: 0; /* 🛑 CORRECCIÓN: Eliminar border-radius */
     text-align: center;
 }
 
@@ -833,15 +840,18 @@ body {
     color: #fff;
 }
 
+/* Barra roja de "Análisis visual" va al ras superior de la página de contenido */
 .seccion-titulo.rojo {
     background-color: {$rojo};
     color: #fff;
     margin: 0;
     border-radius: 0;
+    padding: 12px 40px; /* Mantener padding para el texto interno */
 }
 
 .seccion-contenido {
-    padding: 16px 20px;
+    /* 🛑 CORRECCIÓN: Aplicar el padding lateral necesario de 40px al contenido de texto */
+    padding: 16px 40px; 
 }
 
 .seccion-contenido p {
@@ -861,8 +871,8 @@ body {
 .metricas-grid {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
-    padding: 0 40px;
+    margin: 25px 0 15px 0;
+    padding: 0 45px; /* 🛑 CORRECCIÓN: Padding lateral para el grid de métricas */
 }
 
 .metrica-celda {
@@ -924,15 +934,15 @@ body {
     font-weight: 600;
 }
 
-/* Separador */
+/* Separador punteado verde */
 .separador-seccion {
     border-top: 2px dashed {$turquesa};
-    margin: 20px 40px;
+    margin: 20px 45px; /* 🛑 CORRECCIÓN: Margen lateral de 45px */
 }
 
 /* Donas */
 .seccion-dona {
-    margin: 15px 40px;
+    margin: 18px 45px; /* 🛑 CORRECCIÓN: Margen lateral de 45px */
 }
 
 .dona-titulo {
@@ -996,7 +1006,7 @@ body {
 
 /* Barras */
 .seccion-barras {
-    margin: 15px 40px;
+    margin: 18px 45px; /* 🛑 CORRECCIÓN: Margen lateral de 45px */
 }
 
 .barras-titulo {
@@ -1060,9 +1070,10 @@ body {
 
 /* Sugerencias */
 .seccion-sugerencias {
-    margin: 25px 40px;
+    /* 🛑 CORRECCIÓN: Eliminar margen lateral y border-radius */
+    margin: 30px 0;
     border: 3px solid {$amarillo};
-    border-radius: 10px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -1071,12 +1082,12 @@ body {
     color: #000;
     font-size: 14pt;
     font-weight: 700;
-    padding: 12px 20px;
+    padding: 12px 40px; /* 🛑 CORRECCIÓN: Aplicar padding lateral de 40px */
     text-align: center;
 }
 
 .sugerencias-nota {
-    padding: 10px 20px;
+    padding: 10px 40px; /* 🛑 CORRECCIÓN: Aplicar padding lateral de 40px */
     font-style: italic;
     font-size: 10pt;
     color: {$textoClaro};
@@ -1084,20 +1095,13 @@ body {
 }
 
 .sugerencias-contenido {
-    padding: 14px 20px;
+    padding: 14px 40px; /* 🛑 CORRECCIÓN: Aplicar padding lateral de 40px */
 }
 
-.sugerencias-contenido ul {
-    margin: 10px 0 10px 25px;
-}
-
-.sugerencias-contenido li {
-    margin-bottom: 8px;
-}
-
-/* Pie de página */
+/* Pie de página general (páginas de contenido) */
 .pie-pagina {
-    position: absolute;
+    /* 🛑 CORRECCIÓN: Vuelve a posición absoluta para fijarlo abajo en las páginas de contenido */
+    position: absolute; 
     bottom: 25px;
     left: 0;
     right: 0;
