@@ -6,7 +6,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * PDFReporteService - v5.0.0
+ * PDFReporteService - v5.1.0
  * Diseño exacto según PDF del cliente (Reporta_IA_Eqqua.pdf)
  */
 class PDFReporteService
@@ -68,7 +68,8 @@ class PDFReporteService
             $html = $this->generarHTML($reporte);
 
             $this->dompdf->loadHtml($html);
-            $this->dompdf->setPaper('letter', 'portrait');
+            // 👉 El diseño del cliente es A4 sin márgenes
+            $this->dompdf->setPaper('A4', 'portrait');
             $this->dompdf->render();
 
             $nombreArchivo = $this->generarNombreArchivo($reporte);
@@ -94,7 +95,7 @@ class PDFReporteService
 
         $css = $this->obtenerCSS();
 
-        $paginaPortada = $this->generarPortada($periodo, $logoClienteHtml, $logoEqquaHtml);
+        $paginaPortada   = $this->generarPortada($periodo, $logoClienteHtml, $logoEqquaHtml);
         $paginaContenido = $this->generarPaginaContenido($reporte, $logoEqquaHtml);
         $paginasAnalisis = $this->generarPaginasAnalisis($reporte, $logoEqquaHtml);
 
@@ -144,7 +145,7 @@ HTML;
     }
 
     /**
-     * Genera la página de contenido textual
+     * Genera la página de contenido textual (resumen, hallazgos, eficiencia)
      */
     private function generarPaginaContenido(array $reporte, string $logoEqquaHtml): string
     {
@@ -190,7 +191,11 @@ HTML;
     }
 
     /**
-     * Genera las páginas de análisis visual
+     * Genera las páginas de análisis visual:
+     * - Página 1: métricas + primera dona
+     * - Páginas siguientes: cada dona restante en su propia hoja
+     * - Otra página: barras (Top 5 Sucursales / Departamentos)
+     * - Última página: Sugerencias proactivas SIEMPRE en hoja nueva
      */
     private function generarPaginasAnalisis(array $reporte, string $logoEqquaHtml): string
     {
@@ -217,62 +222,83 @@ HTML;
             }
         }
 
-        $html = '';
+        $htmlPaginas = '';
 
-        // Página de análisis visual (métricas + donas)
-        $html .= '<div class="pagina contenido">';
-        $html .= '<div class="seccion-titulo rojo">Análisis visual</div>';
+        /** ===================== PÁGINA 1 ANÁLISIS (MÉTRICAS + 1ª DONA) ===================== */
+        if (!empty($tarjetasMetricas) || !empty($donas)) {
+            $htmlPaginas .= '<div class="pagina contenido">';
+            $htmlPaginas .= '<div class="seccion-titulo rojo">Análisis visual</div>';
 
-        // Tarjetas de métricas (2 por fila)
-        if (!empty($tarjetasMetricas)) {
-            $html .= '<table class="metricas-grid"><tr>';
-            foreach ($tarjetasMetricas as $indice => $metrica) {
-                $html .= '<td class="metrica-celda">' . $this->renderizarTarjetaMetrica($metrica) . '</td>';
+            // Tarjetas de métricas (dos por fila)
+            if (!empty($tarjetasMetricas)) {
+                $htmlPaginas .= '<table class="metricas-grid"><tr>';
+                foreach ($tarjetasMetricas as $indice => $metrica) {
+                    $htmlPaginas .= '<td class="metrica-celda">' . $this->renderizarTarjetaMetrica($metrica) . '</td>';
+                    if ($indice === 0 && count($tarjetasMetricas) === 1) {
+                        // Espacio en blanco para mantener el equilibrio visual
+                        $htmlPaginas .= '<td class="metrica-celda"></td>';
+                    }
+                }
+                $htmlPaginas .= '</tr></table>';
             }
-            if (count($tarjetasMetricas) === 1) {
-                $html .= '<td class="metrica-celda"></td>';
+
+            // Primera dona (por diseño solo una en esta hoja)
+            if (!empty($donas)) {
+                $primeraDona = array_shift($donas);
+                $htmlPaginas .= '<div class="separador-seccion"></div>';
+                $htmlPaginas .= $this->renderizarSeccionDona($primeraDona);
             }
-            $html .= '</tr></table>';
+
+            $htmlPaginas .= '<div class="pie-pagina">' . $logoEqquaHtml . '</div>';
+            $htmlPaginas .= '</div>';
         }
 
-        // Donas (leyenda a la izquierda, gráfica a la derecha)
-        foreach ($donas as $dona) {
-            $html .= '<div class="separador-seccion"></div>';
-            $html .= $this->renderizarSeccionDona($dona);
+        /** ===================== PÁGINAS DE DONAS RESTANTES ===================== */
+        if (!empty($donas)) {
+            foreach ($donas as $dona) {
+                $htmlPaginas .= '<div class="pagina contenido">';
+                // En el diseño de ejemplo la segunda dona aparece con el título de la sección,
+                // pero mantenemos la barra roja para consistencia visual.
+                $htmlPaginas .= '<div class="seccion-titulo rojo">Análisis visual</div>';
+                $htmlPaginas .= $this->renderizarSeccionDona($dona);
+                $htmlPaginas .= '<div class="pie-pagina">' . $logoEqquaHtml . '</div>';
+                $htmlPaginas .= '</div>';
+            }
         }
 
-        $html .= '<div class="pie-pagina">' . $logoEqquaHtml . '</div>';
-        $html .= '</div>';
-
-        // Página de barras + sugerencias
-        if (!empty($barras) || !empty($reporte['sugerencias_predictivas'])) {
-            $html .= '<div class="pagina contenido">';
-            $html .= '<div class="seccion-titulo rojo">Análisis visual</div>';
+        /** ===================== PÁGINA DE BARRAS (TOP 5) ===================== */
+        if (!empty($barras)) {
+            $htmlPaginas .= '<div class="pagina contenido">';
+            $htmlPaginas .= '<div class="seccion-titulo rojo">Análisis visual</div>';
 
             foreach ($barras as $indice => $barra) {
-                $html .= $this->renderizarSeccionBarras($barra);
+                $htmlPaginas .= $this->renderizarSeccionBarras($barra);
                 if ($indice < count($barras) - 1) {
-                    $html .= '<div class="separador-seccion"></div>';
+                    $htmlPaginas .= '<div class="separador-seccion"></div>';
                 }
             }
 
-            // Sugerencias proactivas
-            if (!empty($reporte['sugerencias_predictivas'])) {
-                $sugerencias = $this->formatearTextoSeccion($reporte['sugerencias_predictivas']);
-                $html .= <<<HTML
+            $htmlPaginas .= '<div class="pie-pagina">' . $logoEqquaHtml . '</div>';
+            $htmlPaginas .= '</div>';
+        }
+
+        /** ===================== PÁGINA EXCLUSIVA DE SUGERENCIAS ===================== */
+        if (!empty($reporte['sugerencias_predictivas'])) {
+            $sugerencias = $this->formatearTextoSeccion($reporte['sugerencias_predictivas']);
+
+            $htmlPaginas .= '<div class="pagina contenido">';
+            $htmlPaginas .= <<<HTML
 <div class="seccion-sugerencias">
     <div class="sugerencias-titulo">Sugerencias proactivas y predictivas</div>
     <div class="sugerencias-nota">Este contenido fue generado por Inteligencia Artificial (GPT-4o). Revíselo antes de su aplicación.</div>
     <div class="sugerencias-contenido">{$sugerencias}</div>
 </div>
 HTML;
-            }
-
-            $html .= '<div class="pie-pagina">' . $logoEqquaHtml . '</div>';
-            $html .= '</div>';
+            $htmlPaginas .= '<div class="pie-pagina">' . $logoEqquaHtml . '</div>';
+            $htmlPaginas .= '</div>';
         }
 
-        return $html;
+        return $htmlPaginas;
     }
 
     /**
@@ -286,7 +312,7 @@ HTML;
 
         $porcentaje = $maximo > 0 ? round(($valor / $maximo) * 100) : 0;
 
-        // Color según valor (amarillo/naranja para riesgo, turquesa para resolución)
+        // Color según valor (amarillo para riesgo, turquesa para resolución)
         if (stripos($titulo, 'Riesgo') !== false) {
             $colorValor = self::COLOR_AMARILLO;
         } else {
@@ -671,6 +697,7 @@ HTML;
         return <<<CSS
 @page {
     margin: 0;
+    size: A4 portrait;
 }
 
 * {
@@ -691,6 +718,25 @@ body {
     min-height: 100%;
     page-break-after: always;
     position: relative;
+}
+
+/* Evitar que bloques importantes se corten a la mitad */
+.pagina,
+.seccion,
+.seccion-dona,
+.seccion-barras,
+.seccion-sugerencias,
+.tarjeta-metrica,
+.metricas-grid,
+.metricas-grid tr,
+.metricas-grid td,
+.dona-layout,
+.dona-layout tr,
+.dona-layout td,
+.barras-tabla,
+.barras-tabla tr,
+.barras-tabla td {
+    page-break-inside: avoid;
 }
 
 .contenido {
@@ -769,7 +815,7 @@ body {
     text-align: center;
 }
 
-/* ========== SECCIONES ========== */
+/* ========== SECCIONES TEXTO ========== */
 .seccion {
     margin: 20px 40px;
 }
