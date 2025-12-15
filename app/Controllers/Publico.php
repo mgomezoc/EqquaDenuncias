@@ -67,6 +67,7 @@ class Publico extends BaseController
                 'message' => 'Cliente no encontrado.'
             ]);
         }
+
         $politica = (int) ($cliente['politica_anonimato'] ?? 0); // 0 opcional, 1 forzar anón., 2 forzar ident.
 
         // 2) Identidad/anonimato
@@ -83,6 +84,7 @@ class Publico extends BaseController
                 $anonimo = 1;
                 $nombre = $correo = $tel = $id_sexo = null;
                 break;
+
             case 2: // forzar identificadas
                 $anonimo = 0;
                 if (empty(trim((string)$nombre)) || (empty(trim((string)$correo)) && empty(trim((string)$tel)))) {
@@ -92,6 +94,7 @@ class Publico extends BaseController
                     ]);
                 }
                 break;
+
             default: // opcional
                 $anonimo = (int) ($anonimo ?? 1);
                 if ($anonimo === 0) {
@@ -107,6 +110,23 @@ class Publico extends BaseController
                 break;
         }
 
+        // 2.5) Tipo de denunciante público (NO confundir con anonimato)
+        $tipoPublicoRaw = $this->request->getPost('tipo_denunciante_publico');
+
+        // Fallback por compatibilidad: si algún formulario manda "tipo_denunciante"
+        if (empty($tipoPublicoRaw)) {
+            $tipoPublicoRaw = $this->request->getPost('tipo_denunciante');
+        }
+
+        $tipoPublicoRaw = strtolower(trim((string)$tipoPublicoRaw));
+
+        $tipoDenunciante = match ($tipoPublicoRaw) {
+            'colaborador' => 'Colaborador',
+            'proveedor'   => 'Proveedor',
+            'cliente'     => 'Cliente',
+            default       => 'Cliente', // fallback seguro
+        };
+
         // 3) Payload (NO enviamos campos vacíos para no romper NOT NULL)
         $raw = [
             'id_cliente'          => $idCliente,
@@ -115,7 +135,11 @@ class Publico extends BaseController
             // Si quieres defaults para categoría/subcategoría, define en .env y descomenta:
             // 'categoria'           => getenv('DEFAULT_CATEGORIA_ID') ?: null,
             // 'subcategoria'        => getenv('DEFAULT_SUBCATEGORIA_ID') ?: null,
-            'tipo_denunciante'    => $anonimo ? 'Anónimo' : 'No anónimo',
+
+            // IMPORTANTE: esto debe guardar el tipo seleccionado (Cliente/Colaborador/Proveedor),
+            // NO el anonimato (eso ya se guarda en "anonimo").
+            'tipo_denunciante'    => $tipoDenunciante,
+
             'anonimo'             => $anonimo,
             'nombre_completo'     => $nombre,
             'correo_electronico'  => $correo,
@@ -280,12 +304,12 @@ class Publico extends BaseController
 
         $denunciaModel = new DenunciaModel();
         $denuncia = $denunciaModel
-            ->select('denuncias.*, 
-            clientes.nombre_empresa AS cliente_nombre, 
-            sucursales.nombre AS sucursal_nombre, 
-            categorias_denuncias.nombre AS categoria_nombre, 
-            subcategorias_denuncias.nombre AS subcategoria_nombre, 
-            departamentos.nombre AS departamento_nombre, 
+            ->select('denuncias.*,
+            clientes.nombre_empresa AS cliente_nombre,
+            sucursales.nombre AS sucursal_nombre,
+            categorias_denuncias.nombre AS categoria_nombre,
+            subcategorias_denuncias.nombre AS subcategoria_nombre,
+            departamentos.nombre AS departamento_nombre,
             estados_denuncias.nombre AS estado_nombre')
             ->join('clientes', 'clientes.id = denuncias.id_cliente', 'left')
             ->join('sucursales', 'sucursales.id = denuncias.id_sucursal', 'left')
@@ -337,11 +361,11 @@ class Publico extends BaseController
         }
 
         return $this->response->setJSON([
-            'success'    => true,
-            'message'    => 'Denuncia encontrada con éxito.',
-            'denuncia'   => $denuncia,
+            'success'     => true,
+            'message'     => 'Denuncia encontrada con éxito.',
+            'denuncia'    => $denuncia,
             'comentarios' => array_values($comentariosVisibles),
-            'archivos'   => $archivosDenuncia
+            'archivos'    => $archivosDenuncia
         ]);
     }
 

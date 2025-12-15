@@ -55,9 +55,11 @@ $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_public
                 <div class="col-md-6">
                     <label for="tipo_denunciante_publico" class="form-label">Tipo de denunciante <span class="text-danger">*</span></label>
                     <select class="form-select select2" id="tipo_denunciante_publico" name="tipo_denunciante_publico" required>
+                        <option value="cliente">Cliente</option>
                         <option value="colaborador">Colaborador</option>
                         <option value="proveedor">Proveedor</option>
                     </select>
+
                 </div>
             <?php endif; ?>
 
