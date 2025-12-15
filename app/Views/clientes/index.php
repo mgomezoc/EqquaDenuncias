@@ -85,6 +85,22 @@
                         <label for="saludo" class="form-label">Saludo</label>
                         <textarea class="form-control" id="saludo" name="saludo" rows="4">{{saludo}}</textarea>
                     </div>
+                    <!-- NUEVO: Mostrar Tipo de Denunciante en formulario público -->
+                    <div class="col-md-4">
+                        <label for="mostrar_tipo_denunciante_publico-{{id}}" class="form-label">Tipo de denunciante (formulario público)</label>
+                        <select
+                            class="form-select"
+                            name="mostrar_tipo_denunciante_publico"
+                            id="mostrar_tipo_denunciante_publico-{{id}}"
+                            <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?>>
+                            <option value="0">No mostrar</option>
+                            <option value="1">Mostrar</option>
+                        </select>
+                        <small class="text-muted">
+                            Controla si se muestra el combo “Tipo de denunciante” en el formulario público del cliente.
+                        </small>
+                    </div>
+
                     <div class="col-12"></div>
                     <div class="col-md-4">
                         <label for="primary_color" class="form-label">Primary Color</label>
@@ -240,6 +256,15 @@
                             <label for="whatsapp" class="form-label">WhatsApp</label>
                             <input type="text" class="form-control" id="whatsapp" name="whatsapp" pattern="\d{10}">
                         </div>
+                        <!-- NUEVO: Mostrar Tipo de Denunciante en formulario público (al crear) -->
+                        <div class="col-md-6">
+                            <label for="mostrar_tipo_denunciante_publico" class="form-label">Tipo de denunciante (formulario público)</label>
+                            <select class="form-select" name="mostrar_tipo_denunciante_publico" id="mostrar_tipo_denunciante_publico">
+                                <option value="0" selected>No mostrar</option>
+                                <option value="1">Mostrar</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-4">
                             <label for="primary_color" class="form-label">Primary Color</label>
                             <input type="color" class="form-control" id="primary_color" name="primary_color">

@@ -64,6 +64,12 @@ $(function () {
                 .val(row.politica_anonimato ?? 0)
                 .trigger('change');
 
+            // NUEVO: Setear valor del select para mostrar tipo de denunciante público
+            $detail
+                .find('[name="mostrar_tipo_denunciante_publico"]')
+                .val(row.mostrar_tipo_denunciante_publico ?? 0)
+                .trigger('change');
+
             // Inicializar Dropzones
             initializeDropzone(`dropzoneLogo-${row.id}`, 'logo', row.id);
             initializeDropzone(`dropzoneBanner-${row.id}`, 'banner', row.id);

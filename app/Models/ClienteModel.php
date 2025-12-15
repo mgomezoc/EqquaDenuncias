@@ -8,6 +8,7 @@ class ClienteModel extends Model
 {
     protected $table = 'clientes';
     protected $primaryKey = 'id';
+
     protected $allowedFields = [
         'nombre_empresa',
         'numero_identificacion',
@@ -23,6 +24,8 @@ class ClienteModel extends Model
         'secondary_color',
         'link_color',
         'politica_anonimato',
+        // Configuración: mostrar/ocultar el campo "Tipo de denunciante" en formulario público
+        'mostrar_tipo_denunciante_publico',
         'created_at'
     ];
 

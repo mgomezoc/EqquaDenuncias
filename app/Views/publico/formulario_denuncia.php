@@ -4,6 +4,9 @@
 <?php
 // 0 = Opcional, 1 = Forzar anónimas, 2 = Forzar identificadas
 $pol = (int)($cliente['politica_anonimato'] ?? 0);
+
+// Flag: mostrar/ocultar tipo de denunciante público
+$mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_publico'] ?? 0);
 ?>
 <section class="container my-5">
     <div class="text-center mb-4">
@@ -15,6 +18,14 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
         <!-- Datos ocultos -->
         <input type="hidden" name="id_cliente" value="<?= esc($cliente['id']) ?>">
         <input type="hidden" name="tipo_denunciante" value="Cliente">
+
+        <!-- Tipo de denunciante (público) según configuración del cliente -->
+        <?php if ($mostrarTipoDenunciantePublico === 1): ?>
+            <!-- Se renderiza como campo visible -->
+        <?php else: ?>
+            <!-- Si no se muestra, se manda default -->
+            <input type="hidden" name="tipo_denunciante_publico" value="cliente">
+        <?php endif; ?>
 
         <!-- Si la política es forzada, mandamos el valor por hidden -->
         <?php if ($pol === 1): ?>
@@ -38,6 +49,17 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
                     </div>
                 </div>
             </div>
+
+            <!-- NUEVO: Tipo de denunciante (público) -->
+            <?php if ($mostrarTipoDenunciantePublico === 1): ?>
+                <div class="col-md-6">
+                    <label for="tipo_denunciante_publico" class="form-label">Tipo de denunciante <span class="text-danger">*</span></label>
+                    <select class="form-select select2" id="tipo_denunciante_publico" name="tipo_denunciante_publico" required>
+                        <option value="colaborador">Colaborador</option>
+                        <option value="proveedor">Proveedor</option>
+                    </select>
+                </div>
+            <?php endif; ?>
 
             <!-- Información adicional cuando NO es anónimo -->
             <?php
@@ -90,7 +112,6 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
                     <option value="">Seleccione un departamento</option>
                 </select>
             </div>
-
 
             <!-- Información del incidente -->
             <div class="col-md-6">
@@ -177,6 +198,7 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
 <script>
     const slug = '<?= $cliente['slug'] ?>';
     const POLITICA = <?= (int)$pol ?>; // 0=Opcional, 1=Forzar anónimas, 2=Forzar identificadas
+    const MOSTRAR_TIPO_DENUNCIANTE_PUBLICO = <?= (int)$mostrarTipoDenunciantePublico ?>;
 </script>
 <script src="<?= base_url("assets/js/denuncias_public.js") ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

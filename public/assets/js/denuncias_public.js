@@ -155,10 +155,14 @@ $(document).ready(function () {
         if ($('#categoria').length) rules.categoria = { required: true };
         if ($('#subcategoria').length) rules.subcategoria = { required: true };
 
+        // NUEVO: si existe el combo, hacerlo obligatorio
+        if ($('#tipo_denunciante_publico').length) rules.tipo_denunciante_publico = { required: true };
+
         const messages = {
             id_sucursal: 'Seleccione una sucursal.',
             categoria: 'Seleccione una categoría.',
             subcategoria: 'Seleccione una subcategoría.',
+            tipo_denunciante_publico: 'Seleccione el tipo de denunciante.',
             fecha_incidente: 'Ingrese una fecha válida.',
             como_se_entero: 'Seleccione cómo se enteró.',
             area_incidente: 'Ingrese el área donde sucedió (mínimo 5 caracteres).',

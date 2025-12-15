@@ -13,10 +13,10 @@ class ClientesController extends Controller
         $session = session();
 
         $data = [
-            'title' => 'Administración de Clientes',
+            'title'       => 'Administración de Clientes',
             'controlador' => 'Clientes',
-            'vista' => 'Clientes',
-            'rol_slug' => $session->get('rol_slug'),
+            'vista'       => 'Clientes',
+            'rol_slug'    => $session->get('rol_slug'),
         ];
 
         return view('clientes/index', $data);
@@ -25,7 +25,7 @@ class ClientesController extends Controller
     public function listar()
     {
         $clienteModel = new ClienteModel();
-        $clientes = $clienteModel->findAll(); // incluirá politica_anonimato
+        $clientes = $clienteModel->findAll(); // incluye politica_anonimato y mostrar_tipo_denunciante_publico
 
         return $this->response->setJSON($clientes);
     }
@@ -40,19 +40,19 @@ class ClientesController extends Controller
 
         // Leer todos los campos que podrían venir del formulario
         $data = [
-            'nombre_empresa'       => $this->request->getVar('nombre_empresa'),
+            'nombre_empresa'        => $this->request->getVar('nombre_empresa'),
             'numero_identificacion' => $this->request->getVar('numero_identificacion'),
-            'correo_contacto'      => $this->request->getVar('correo_contacto'),
-            'telefono_contacto'    => $this->request->getVar('telefono_contacto'),
-            'direccion'            => $this->request->getVar('direccion'),
-            'slug'                 => $this->request->getVar('slug'),
-            'logo'                 => $this->request->getVar('logo'),
-            'banner'               => $this->request->getVar('banner'),
-            'saludo'               => $this->request->getVar('saludo'),
-            'whatsapp'             => $this->request->getVar('whatsapp'),
-            'primary_color'        => $this->request->getVar('primary_color'),
-            'secondary_color'      => $this->request->getVar('secondary_color'),
-            'link_color'           => $this->request->getVar('link_color'),
+            'correo_contacto'       => $this->request->getVar('correo_contacto'),
+            'telefono_contacto'     => $this->request->getVar('telefono_contacto'),
+            'direccion'             => $this->request->getVar('direccion'),
+            'slug'                  => $this->request->getVar('slug'),
+            'logo'                  => $this->request->getVar('logo'),
+            'banner'                => $this->request->getVar('banner'),
+            'saludo'                => $this->request->getVar('saludo'),
+            'whatsapp'              => $this->request->getVar('whatsapp'),
+            'primary_color'         => $this->request->getVar('primary_color'),
+            'secondary_color'       => $this->request->getVar('secondary_color'),
+            'link_color'            => $this->request->getVar('link_color'),
         ];
 
         // Normalizar/validar política si viene en la petición
@@ -65,15 +65,25 @@ class ClientesController extends Controller
             $data['politica_anonimato'] = $politica;
         }
 
+        // Normalizar/validar flag de visualización del tipo de denunciante (formulario público)
+        $mostrarTipoDenunciantePublico = $this->request->getVar('mostrar_tipo_denunciante_publico');
+        if ($mostrarTipoDenunciantePublico !== null) {
+            $valorNormalizado = strtolower(trim((string) $mostrarTipoDenunciantePublico));
+            $data['mostrar_tipo_denunciante_publico'] = in_array($valorNormalizado, ['1', 'true', 'on', 'si', 'yes'], true) ? 1 : 0;
+        }
+
         // === Reglas de permisos ===
-        // CLIENTE sólo puede actualizar su propio registro y únicamente 'politica_anonimato'
+        // CLIENTE sólo puede actualizar su propio registro y únicamente 'politica_anonimato' y 'mostrar_tipo_denunciante_publico'
         if ($rolSlug === 'CLIENTE') {
             $miClienteId = (int) ($session->get('id_cliente') ?? 0);
-            if ((int)$id !== $miClienteId) {
+            if ((int) $id !== $miClienteId) {
                 return $this->response->setStatusCode(403)->setJSON(['message' => 'No autorizado.']);
             }
-            // Limitar campos a sólo la política
-            $data = array_intersect_key($data, array_flip(['politica_anonimato']));
+
+            $data = array_intersect_key($data, array_flip([
+                'politica_anonimato',
+                'mostrar_tipo_denunciante_publico'
+            ]));
         }
 
         // === Validación de unicidad (solo aplica si ADMIN crea/edita más campos) ===
@@ -117,7 +127,6 @@ class ClientesController extends Controller
                     unset($data[$key]);
                 }
             }
-
 
             if (!empty($data)) {
                 $clienteModel->update($id, $data);
