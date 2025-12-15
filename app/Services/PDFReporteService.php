@@ -89,7 +89,7 @@ class PDFReporteService
     private function generarHTML(array $reporte): string
     {
         $cliente = $reporte['cliente_nombre'] ?? 'Cliente';
-        $periodo = $reporte['periodo_nombre'] ?? 'Sin periodo';
+        $periodo = $this->formatearPeriodoPortada($reporte);
         $logoClienteHtml = $this->obtenerLogoCliente($reporte);
         $logoEqquaHtml = $this->obtenerLogoEqqua();
 
@@ -723,6 +723,105 @@ HTML;
         $periodo = preg_replace('/-+/', '-', trim($periodo, '-'));
         return "reporte_ia_{$id}_{$periodo}_{$fecha}.pdf";
     }
+
+    /**
+     * Texto de periodo para portada.
+     * - Semestral: "Enero–Junio 2025" / "Julio–Diciembre 2025"
+     * - Otros: fallback a periodo_nombre si existe; si no, arma desde fechas.
+     */
+    private function formatearPeriodoPortada(array $reporte): string
+    {
+        $tipo = $reporte['tipo_reporte'] ?? null; // 'mensual'|'trimestral'|'semestral'
+        $periodoNombre = trim((string)($reporte['periodo_nombre'] ?? ''));
+
+        $fi = $reporte['fecha_inicio'] ?? null; // YYYY-MM-DD
+        $ff = $reporte['fecha_fin'] ?? null;    // YYYY-MM-DD
+
+        $dIni = $this->parseDateYmd($fi);
+        $dFin = $this->parseDateYmd($ff);
+
+        // Si no hay fechas válidas, usar el nombre ya guardado
+        if (!$dIni || !$dFin) {
+            return $periodoNombre !== '' ? $periodoNombre : 'Sin periodo';
+        }
+
+        // Caso requerido: SEMESTRAL -> texto entendible
+        if ($tipo === 'semestral') {
+            $year = (int)$dIni->format('Y');
+            $mIni = (int)$dIni->format('n');
+
+            // Si por alguna razón el rango cruza años, mostramos rango explícito
+            if ($dIni->format('Y') !== $dFin->format('Y')) {
+                return $this->nombreMes((int)$dIni->format('n')) . ' ' . $dIni->format('Y')
+                    . '–' .
+                    $this->nombreMes((int)$dFin->format('n')) . ' ' . $dFin->format('Y');
+            }
+
+            // Semestre 1 o 2 según mes de inicio
+            if ($mIni <= 6) {
+                return "Enero–Junio {$year}";
+            }
+            return "Julio–Diciembre {$year}";
+        }
+
+        // Opcional (recomendado): si deseas que TODOS se vean homogéneos por fechas
+        // - Mensual: "Octubre 2025"
+        if ($tipo === 'mensual') {
+            return $this->nombreMes((int)$dIni->format('n')) . ' ' . $dIni->format('Y');
+        }
+
+        // - Trimestral: "Enero–Marzo 2025" (derivado del rango real)
+        if ($tipo === 'trimestral') {
+            if ($dIni->format('Y') === $dFin->format('Y')) {
+                return $this->nombreMes((int)$dIni->format('n')) . '–' . $this->nombreMes((int)$dFin->format('n')) . ' ' . $dIni->format('Y');
+            }
+            return $this->nombreMes((int)$dIni->format('n')) . ' ' . $dIni->format('Y')
+                . '–' .
+                $this->nombreMes((int)$dFin->format('n')) . ' ' . $dFin->format('Y');
+        }
+
+        // Fallback general:
+        // 1) si periodo_nombre existe, respétalo
+        if ($periodoNombre !== '') {
+            return $periodoNombre;
+        }
+
+        // 2) si no, arma desde fechas
+        if ($dIni->format('Y') === $dFin->format('Y')) {
+            return $this->nombreMes((int)$dIni->format('n')) . '–' . $this->nombreMes((int)$dFin->format('n')) . ' ' . $dIni->format('Y');
+        }
+        return $this->nombreMes((int)$dIni->format('n')) . ' ' . $dIni->format('Y')
+            . '–' .
+            $this->nombreMes((int)$dFin->format('n')) . ' ' . $dFin->format('Y');
+    }
+
+    private function parseDateYmd($value): ?\DateTimeImmutable
+    {
+        $v = trim((string)$value);
+        if ($v === '') return null;
+        $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $v);
+        return ($dt instanceof \DateTimeImmutable) ? $dt : null;
+    }
+
+    private function nombreMes(int $mes): string
+    {
+        return match ($mes) {
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre',
+            default => 'Mes',
+        };
+    }
+
 
     private function obtenerCSS(): string
     {
