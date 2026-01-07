@@ -1,5 +1,5 @@
 /* ====================================================================
- * REPORTES IA - JavaScript Mejorado
+ * REPORTES IA - JavaScript
  * ==================================================================== */
 
 /* global Server, Handlebars, Swal, bootstrap, Chart */
@@ -35,7 +35,12 @@ function estadoFormatter(value) {
 }
 
 function tipoFormatter(value) {
-    const map = { mensual: 'primary', trimestral: 'warning', semestral: 'purple' };
+    const map = {
+        mensual: 'primary',
+        trimestral: 'warning',
+        semestral: 'purple',
+        anual: 'info'
+    };
     const cls = map[(value || '').toLowerCase()] || 'secondary';
     const txt = (value || '').charAt(0).toUpperCase() + (value || '').slice(1);
     return `<span class="badge bg-${cls}">${txt}</span>`;
@@ -77,7 +82,7 @@ window.operateEvents = {
         const result = await Swal.fire({
             title: '¿Eliminar reporte?',
             html: `<p>ID <strong>${row.id}</strong> – ${row.periodo_nombre}</p>
-             <p class="text-danger mb-0">Esta acción no se puede deshacer.</p>`,
+                   <p class="text-danger mb-0">Esta acción no se puede deshacer.</p>`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sí, eliminar',
@@ -123,13 +128,13 @@ async function cambiarEstadoPrompt(idReporte, estadoActual) {
     const { value: nuevoEstado } = await Swal.fire({
         title: 'Cambiar Estado',
         html: `
-      <div class="mb-3">
-        <label class="form-label">Seleccione el nuevo estado:</label>
-        <select id="swal-estado" class="form-select">
-          ${optionsHtml}
-        </select>
-      </div>
-    `,
+            <div class="mb-3">
+                <label class="form-label">Seleccione el nuevo estado:</label>
+                <select id="swal-estado" class="form-select">
+                    ${optionsHtml}
+                </select>
+            </div>
+        `,
         showCancelButton: true,
         confirmButtonText: 'Cambiar',
         cancelButtonText: 'Cancelar',
@@ -156,58 +161,6 @@ async function cambiarEstadoPrompt(idReporte, estadoActual) {
                 Swal.fire('Error', msg, 'error');
             });
     }
-}
-
-/* ====== GENERAR REPORTE ====== */
-function initGenerarReporte() {
-    const $form = $('#formGenerarReporte');
-    if (!$form.length) return;
-
-    $form.validate({
-        rules: {
-            id_cliente: { required: true },
-            tipo_reporte: { required: true },
-            fecha_inicio: { required: true },
-            fecha_fin: { required: true }
-        },
-        submitHandler: () => procesarGeneracionReporte()
-    });
-}
-
-function procesarGeneracionReporte() {
-    const $form = $('#formGenerarReporte');
-    const $btn = $('#btnGenerar');
-    const $resultado = $('#resultadoGeneracion');
-
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Generando...');
-    $resultado.addClass('d-none').removeClass('alert alert-success alert-danger').text('');
-
-    $.ajax({
-        url: `${Server}reportes-ia/procesar`,
-        method: 'POST',
-        data: $form.serialize(),
-        dataType: 'json'
-    })
-        .done(res => {
-            if (res.success) {
-                $resultado.removeClass('d-none').addClass('alert alert-success').html(`
-            <i class="fas fa-check-circle me-2"></i>${res.message}
-            <br>
-            <a href="${Server}reportes-ia/ver/${res.id_reporte}" class="alert-link">
-              Ver reporte <i class="fas fa-arrow-right"></i>
-            </a>
-          `);
-                $form[0].reset();
-                $('.select2').val(null).trigger('change');
-            } else {
-                $resultado.removeClass('d-none').addClass('alert alert-danger').html(`<i class="fas fa-exclamation-triangle me-2"></i>${res.message}`);
-            }
-        })
-        .fail(xhr => {
-            const msg = xhr.responseJSON?.message || 'Error interno del servidor.';
-            $resultado.removeClass('d-none').addClass('alert alert-danger').html(`<i class="fas fa-exclamation-triangle me-2"></i>${msg}`);
-        })
-        .always(() => $btn.prop('disabled', false).html('<i class="fas fa-cogs me-1"></i> Generar'));
 }
 
 /* ====== GRÁFICOS ====== */
@@ -245,13 +198,11 @@ function chartOrEmpty(ctxId, labels, values, type = 'bar') {
 
 /* ====== FILTROS AJAX ====== */
 $(function () {
-    // Filtros AJAX para la tabla
     $('#frmFiltros').on('submit', function (e) {
         e.preventDefault();
         $('#tablaReportes').bootstrapTable('refresh', { pageNumber: 1 });
     });
 
-    // QueryParams dinámicos
     $('#tablaReportes').bootstrapTable('refreshOptions', {
         queryParams: function (params) {
             const data = Object.fromEntries(new FormData(document.getElementById('frmFiltros')).entries());
@@ -259,7 +210,6 @@ $(function () {
         }
     });
 
-    // Tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
 });

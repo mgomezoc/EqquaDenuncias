@@ -104,7 +104,7 @@ class ReportesIAController extends BaseController
         try {
             $rules = [
                 'id_cliente'   => 'required|is_natural_no_zero',
-                'tipo_reporte' => 'required|in_list[mensual,trimestral,semestral]',
+                'tipo_reporte' => 'required|in_list[mensual,trimestral,semestral,anual]',
                 'fecha_inicio' => 'required|valid_date[Y-m-d]',
                 'fecha_fin'    => 'required|valid_date[Y-m-d]',
             ];
@@ -362,6 +362,21 @@ class ReportesIAController extends BaseController
                     ];
                 }
                 break;
+
+            case 'anual':
+                $y = (int)$fechaRef->format('Y');
+                // Mostrar últimos 3 años
+                for ($i = 0; $i < 3; $i++) {
+                    $year = $y - $i;
+                    $inicio = new \DateTime("{$year}-01-01");
+                    $fin = new \DateTime("{$year}-12-31");
+                    $periodos[] = [
+                        'nombre'       => 'Año ' . $year,
+                        'fecha_inicio' => $inicio->format('Y-m-d'),
+                        'fecha_fin'    => $fin->format('Y-m-d'),
+                    ];
+                }
+                break;
         }
 
         return $periodos;
@@ -380,8 +395,4 @@ class ReportesIAController extends BaseController
         $rows = $this->reporteModel->getReportesResumen($filtros) ?? [];
         return $this->response->setJSON($rows); // arreglo simple para paginación en cliente
     }
-
-    // (ya existente) cambiarEstado() — no cambies nada aquí,
-    // pero OJO: el frontend debe mandar el parámetro 'estado' (ver JS).
-
 }

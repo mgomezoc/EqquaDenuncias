@@ -4,8 +4,6 @@
 
 <?= $this->section('content') ?>
 
-<?php // Header de la página (usa tu partial estándar) 
-?>
 <?php echo view('partials/_pageHeader', ['controlador' => $controlador, 'vista' => $vista]); ?>
 
 <div class="container-fluid py-3">
@@ -22,7 +20,7 @@
         </div>
     </div>
 
-    <!-- Filtros (estilo Sparic) -->
+    <!-- Filtros -->
     <div class="card custom-card mb-3">
         <div class="card-body">
             <form id="frmFiltros" class="row g-3">
@@ -42,9 +40,10 @@
                     <label class="form-label">Tipo de Reporte</label>
                     <select name="tipo_reporte" class="form-select select2" data-placeholder="Todos">
                         <option value="">Todos</option>
-                        <option value="mensual" <?= (($filtros['tipo_reporte'] ?? '') === 'mensual')    ? 'selected' : '' ?>>Mensual</option>
+                        <option value="mensual" <?= (($filtros['tipo_reporte'] ?? '') === 'mensual') ? 'selected' : '' ?>>Mensual</option>
                         <option value="trimestral" <?= (($filtros['tipo_reporte'] ?? '') === 'trimestral') ? 'selected' : '' ?>>Trimestral</option>
-                        <option value="semestral" <?= (($filtros['tipo_reporte'] ?? '') === 'semestral')  ? 'selected' : '' ?>>Semestral</option>
+                        <option value="semestral" <?= (($filtros['tipo_reporte'] ?? '') === 'semestral') ? 'selected' : '' ?>>Semestral</option>
+                        <option value="anual" <?= (($filtros['tipo_reporte'] ?? '') === 'anual') ? 'selected' : '' ?>>Anual</option>
                     </select>
                 </div>
 
@@ -52,8 +51,8 @@
                     <label class="form-label">Estado</label>
                     <select name="estado" class="form-select select2" data-placeholder="Todos">
                         <option value="">Todos</option>
-                        <option value="generado" <?= (($filtros['estado'] ?? '') === 'generado')  ? 'selected' : '' ?>>Generado</option>
-                        <option value="revisado" <?= (($filtros['estado'] ?? '') === 'revisado')  ? 'selected' : '' ?>>Revisado</option>
+                        <option value="generado" <?= (($filtros['estado'] ?? '') === 'generado') ? 'selected' : '' ?>>Generado</option>
+                        <option value="revisado" <?= (($filtros['estado'] ?? '') === 'revisado') ? 'selected' : '' ?>>Revisado</option>
                         <option value="publicado" <?= (($filtros['estado'] ?? '') === 'publicado') ? 'selected' : '' ?>>Publicado</option>
                         <option value="archivado" <?= (($filtros['estado'] ?? '') === 'archivado') ? 'selected' : '' ?>>Archivado</option>
                     </select>
@@ -68,7 +67,7 @@
         </div>
     </div>
 
-    <!-- Tabla (Bootstrap Table con AJAX) -->
+    <!-- Tabla -->
     <div class="card custom-card">
         <div class="card-body">
             <div class="table-responsive">
@@ -102,22 +101,22 @@
     </div>
 </div>
 
-<!-- Template Handlebars para acciones (Font Awesome + look Sparic) -->
+<!-- Template Handlebars para acciones -->
 <script id="tplAccionesReportes" type="text/x-handlebars-template">
     <div class="hstack gap-2 fs-15 justify-content-center">
-    <a class="btn btn-icon btn-sm btn-info-light view" title="Ver Reporte" data-bs-toggle="tooltip">
-      <i class="fas fa-eye"></i>
-    </a>
-    <a class="btn btn-icon btn-sm btn-secondary-light pdf" title="Descargar PDF" data-bs-toggle="tooltip">
-      <i class="fas fa-file-pdf"></i>
-    </a>
-    <button class="btn btn-icon btn-sm btn-primary-light estado" title="Cambiar Estado" data-bs-toggle="tooltip">
-      <i class="fas fa-arrows-rotate"></i>
-    </button>
-    <button class="btn btn-icon btn-sm btn-danger-light eliminar" title="Eliminar" data-bs-toggle="tooltip">
-      <i class="fas fa-trash"></i>
-    </button>
-  </div>
+        <a class="btn btn-icon btn-sm btn-info-light view" title="Ver Reporte" data-bs-toggle="tooltip">
+            <i class="fas fa-eye"></i>
+        </a>
+        <a class="btn btn-icon btn-sm btn-secondary-light pdf" title="Descargar PDF" data-bs-toggle="tooltip">
+            <i class="fas fa-file-pdf"></i>
+        </a>
+        <button class="btn btn-icon btn-sm btn-primary-light estado" title="Cambiar Estado" data-bs-toggle="tooltip">
+            <i class="fas fa-arrows-rotate"></i>
+        </button>
+        <button class="btn btn-icon btn-sm btn-danger-light eliminar" title="Eliminar" data-bs-toggle="tooltip">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
 </script>
 
 <?= $this->endSection() ?>
@@ -128,7 +127,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 
 <style>
-    /* Asegura el look de botones tipo Sparic dentro de la tabla */
     .btn-icon {
         width: 32px;
         height: 32px;
@@ -145,22 +143,17 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.0/dist/bootstrap-table.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.22.1/locale/bootstrap-table-es-MX.min.js"></script>
 <script src="<?= base_url('assets/js/bootstrap-table-config.js') ?>"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- Script principal de Reportes IA -->
-<script src="<?= base_url('assets/js/reportes_ia.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('assets/js/reportes_ia.js') ?>?v=<?= time() ?>"></script>
 
 <script>
     $(function() {
-        // Select2 al estilo bootstrap 5
         $('.select2').select2({
             theme: 'bootstrap-5',
             allowClear: true,
             placeholder: 'Todos'
         });
 
-        // Enviar filtros como queryParams a la tabla
         $('#tablaReportes').bootstrapTable('refreshOptions', {
             queryParams: function(p) {
                 const data = Object.fromEntries(new FormData(document.getElementById('frmFiltros')).entries());
@@ -168,15 +161,11 @@
             }
         });
 
-        // Filtrar por AJAX sin recargar
         $('#frmFiltros').on('submit', function(e) {
             e.preventDefault();
-            $('#tablaReportes').bootstrapTable('refresh', {
-                pageNumber: 1
-            });
+            $('#tablaReportes').bootstrapTable('refresh', { pageNumber: 1 });
         });
 
-        // Tooltips
         const t = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         [...t].forEach(el => new bootstrap.Tooltip(el));
     });

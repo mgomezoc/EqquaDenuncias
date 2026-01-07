@@ -731,7 +731,7 @@ HTML;
      */
     private function formatearPeriodoPortada(array $reporte): string
     {
-        $tipo = $reporte['tipo_reporte'] ?? null; // 'mensual'|'trimestral'|'semestral'
+        $tipo = $reporte['tipo_reporte'] ?? null; // 'mensual'|'trimestral'|'semestral'|'anual'
         $periodoNombre = trim((string)($reporte['periodo_nombre'] ?? ''));
 
         $fi = $reporte['fecha_inicio'] ?? null; // YYYY-MM-DD
@@ -768,6 +768,15 @@ HTML;
         // - Mensual: "Octubre 2025"
         if ($tipo === 'mensual') {
             return $this->nombreMes((int)$dIni->format('n')) . ' ' . $dIni->format('Y');
+        }
+
+        // - Anual: \"Año 2025\"
+        if ($tipo === 'anual') {
+            if ($dIni->format('Y') === $dFin->format('Y')) {
+                return 'Año ' . $dIni->format('Y');
+            }
+            // Si cruza años, mostramos el rango explícito
+            return 'Año ' . $dIni->format('Y') . '–' . $dFin->format('Y');
         }
 
         // - Trimestral: "Enero–Marzo 2025" (derivado del rango real)
