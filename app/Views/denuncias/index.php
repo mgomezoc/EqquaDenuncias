@@ -346,7 +346,6 @@
     </div>
 </template>
 
-
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
@@ -404,19 +403,60 @@
     </div>
 </div>
 
-<!-- Modal Cambiar Estatus -->
+<!-- Modal Cambiar Estatus (ACTUALIZADO para usuarios_excluidos) -->
 <div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estatus de Denuncia</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary">Guardar</button>
-            </div>
+            <form id="formCambiarEstado"
+                action="<?= base_url('denuncias/cambiarEstado') ?>"
+                method="post"
+                data-url-usuarios="<?= base_url('usuarios/por-cliente') ?>">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estatus de Denuncia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="cambiarEstado_id_denuncia" value="">
+
+                    <div class="mb-3">
+                        <label for="estado_nuevo" class="form-label">Nuevo Estatus</label>
+                        <!-- Si tus estados los llenas por JS, puedes dejar vacío y poblar con JS -->
+                        <select class="form-select select2" name="estado_nuevo" id="estado_nuevo" required>
+                            <!-- opciones por JS -->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="comentario_estado" class="form-label">Comentario (opcional)</label>
+                        <textarea class="form-control" name="comentario" id="comentario_estado" rows="3" placeholder="Comentario..."></textarea>
+                    </div>
+
+                    <!-- Bloque deny-list: sólo aplica al liberar al cliente (estado 4) -->
+                    <div class="mb-3 d-none" id="wrapUsuariosExcluidos">
+                        <label for="usuarios_excluidos" class="form-label">
+                            Usuarios excluidos (no verán la denuncia ni recibirán correo)
+                        </label>
+
+                        <select class="form-select select2"
+                            id="usuarios_excluidos"
+                            name="usuarios_excluidos[]"
+                            multiple="multiple"
+                            data-placeholder="Selecciona usuarios a excluir...">
+                            <!-- opciones por JS -->
+                        </select>
+
+                        <small class="text-muted d-block mt-2">
+                            Recomendado: excluir al usuario denunciado si también es usuario del cliente.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarCambioEstado">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -456,6 +496,7 @@
                             </div>
                             <small id="politicaHelp" class="form-text text-muted d-block mt-2"></small>
                         </div>
+
                         <!-- Información adicional cuando no es anónimo -->
                         <div id="infoAdicional" class="row g-3" style="display: none;" aria-hidden="true">
                             <div class="col-md-6">
@@ -474,6 +515,7 @@
                             </div>
                         </div>
                         <hr>
+
                         <!-- Sección 1: Información del Cliente -->
                         <div class="col-md-6">
                             <label for="id_cliente" class="form-label">Cliente</label>

@@ -16,6 +16,8 @@ use App\Models\UsuarioModel;
 use App\Services\EmailService;
 use App\Services\IAService;
 use CodeIgniter\Controller;
+use App\Models\DenunciaUsuarioExcluidoModel;
+
 
 class DenunciasController extends Controller
 {
@@ -152,20 +154,56 @@ class DenunciasController extends Controller
 
     public function detalle($id)
     {
+        $idDenuncia = (int) $id;
+
         $denunciaModel     = new DenunciaModel();
         $seguimientoModel  = new SeguimientoDenunciaModel();
-
-        $denuncia      = $denunciaModel->getDenunciaById($id);
-        $seguimientos  = $seguimientoModel->getSeguimientoByDenunciaId($id);
-
         $anexoModel        = new \App\Models\AnexoDenunciaModel();
-        $archivosDenuncia  = $anexoModel->where('id_denuncia', $id)->findAll();
+
+        $denuncia = $denunciaModel->getDenunciaById($idDenuncia);
+
+        if (!$denuncia) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Denuncia no encontrada']);
+        }
+
+        // ============================
+        // Seguridad para CLIENTE
+        // ============================
+        $rolSlug   = strtoupper((string) (session()->get('rol_slug') ?? ''));
+        $rolNombre = strtoupper((string) (session()->get('rol_nombre') ?? ''));
+        $esCliente = ($rolSlug === 'CLIENTE' || $rolNombre === 'CLIENTE');
+
+        if ($esCliente) {
+            $idClienteSesion = (int) (session()->get('id_cliente') ?? 0);
+            $idUsuarioSesion = (int) (session()->get('id') ?? 0);
+
+            // 1) Validar que la denuncia pertenezca al mismo cliente
+            if ($idClienteSesion <= 0 || (int)$denuncia['id_cliente'] !== $idClienteSesion) {
+                return $this->response->setStatusCode(403)->setJSON(['message' => 'Acceso denegado']);
+            }
+
+            // 2) Validar deny-list (si está excluido, no debe verla)
+            if ($idUsuarioSesion > 0) {
+                $excluidoModel = new DenunciaUsuarioExcluidoModel();
+                if ($excluidoModel->usuarioEstaExcluido($idDenuncia, $idUsuarioSesion)) {
+                    // 404 para no filtrar existencia (recomendado)
+                    return $this->response->setStatusCode(404)->setJSON(['message' => 'Denuncia no encontrada']);
+                }
+            }
+        }
+
+        // ============================
+        // Construcción de respuesta
+        // ============================
+        $seguimientos = $seguimientoModel->getSeguimientoByDenunciaId($idDenuncia);
+        $archivosDenuncia = $anexoModel->where('id_denuncia', $idDenuncia)->findAll();
 
         $denuncia['seguimientos'] = $seguimientos;
         $denuncia['archivos']     = $archivosDenuncia;
 
         return $this->response->setJSON($denuncia);
     }
+
 
     /* ===============================
      * CRUD Denuncias
@@ -306,65 +344,111 @@ class DenunciasController extends Controller
         $seguimientoModel = new SeguimientoDenunciaModel();
         $comentarioModel  = new \App\Models\ComentarioDenunciaModel();
 
-        $id           = $this->request->getVar('id');
-        $estado_nuevo = $this->request->getVar('estado_nuevo');
+        $idDenuncia  = (int) $this->request->getVar('id');
+        $estadoNuevo = (int) $this->request->getVar('estado_nuevo');
 
-        $denuncia         = $denunciaModel->find($id);
-        $estado_anterior  = $denuncia['estado_actual'];
+        $erroresCorreo = [];
 
-        if ($estado_anterior == 4 && $estado_nuevo == 5) {
+        $denuncia = $denunciaModel->find($idDenuncia);
+        if (!$denuncia) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Denuncia no encontrada']);
+        }
+
+        $estadoAnterior = (int) $denuncia['estado_actual'];
+
+        // Si pasa de liberada (4) a atendida (5), calcular tiempo de atención
+        if ($estadoAnterior === 4 && $estadoNuevo === 5) {
             $seguimiento = $seguimientoModel
-                ->where('id_denuncia', $id)
+                ->where('id_denuncia', $idDenuncia)
                 ->where('estado_nuevo', 4)
                 ->orderBy('fecha', 'DESC')
                 ->first();
+
             if ($seguimiento) {
                 $fechaLiberacion = strtotime($seguimiento['fecha']);
                 $tiempoAtencion  = time() - $fechaLiberacion;
-                $denunciaModel->update($id, ['tiempo_atencion_cliente' => $tiempoAtencion]);
+                $denunciaModel->update($idDenuncia, ['tiempo_atencion_cliente' => $tiempoAtencion]);
             }
         }
 
-        $denunciaModel->cambiarEstado($id, $estado_nuevo);
+        // Cambiar estado
+        $denunciaModel->cambiarEstado($idDenuncia, $estadoNuevo);
 
+        // Registrar seguimiento
         $seguimientoModel->save([
-            'id_denuncia'     => $id,
-            'estado_anterior' => $estado_anterior,
-            'estado_nuevo'    => $estado_nuevo,
+            'id_denuncia'     => $idDenuncia,
+            'estado_anterior' => $estadoAnterior,
+            'estado_nuevo'    => $estadoNuevo,
             'comentario'      => $this->request->getVar('comentario'),
-            'id_usuario'      => session()->get('id'),
-            'fecha'           => date('Y-m-d H:i:s')
+            'id_usuario'      => (int) session()->get('id'),
+            'fecha'           => date('Y-m-d H:i:s'),
         ]);
 
-        registrarAccion(session()->get('id'), 'Cambio de estado de denuncia', 'ID: ' . $id);
+        registrarAccion((int) session()->get('id'), 'Cambio de estado de denuncia', 'ID: ' . $idDenuncia);
 
-        if ($estado_nuevo == 4) {
+        // =========================================================
+        // Si se libera al cliente (estado 4): comentario + exclusión + correos
+        // =========================================================
+        if ($estadoNuevo === 4) {
+            // Comentario automático
             $comentarioModel->insert([
-                'id_denuncia'     => $id,
-                'id_usuario'      => 1,
-                'contenido'       => 'Su denuncia está siendo atendida. Favor de revisar en 48 horas.',
-                'estado_denuncia' => $estado_nuevo,
-                'fecha_comentario' => date('Y-m-d H:i:s')
+                'id_denuncia'      => $idDenuncia,
+                'id_usuario'       => 1,
+                'contenido'        => 'Su denuncia está siendo atendida. Favor de revisar en 48 horas.',
+                'estado_denuncia'  => $estadoNuevo,
+                'fecha_comentario' => date('Y-m-d H:i:s'),
             ]);
 
-            $usuarioModel = new UsuarioModel();
-            $usuarios = $usuarioModel
-                ->where('id_cliente', $denuncia['id_cliente'])
-                ->where('recibe_notificaciones', 1)
-                ->findAll();
+            // 1) Guardar deny-list (usuarios excluidos)
+            $usuariosExcluidos = $this->request->getVar('usuarios_excluidos');
 
-            $erroresCorreo = [];
-            foreach ($usuarios as $usuario) {
+            if (!is_array($usuariosExcluidos)) {
+                $usuariosExcluidos = [];
+            }
+
+            // Normalizar a enteros válidos
+            $idsUsuariosExcluidos = [];
+            foreach ($usuariosExcluidos as $idUsuario) {
+                $idUsuario = (int) $idUsuario;
+                if ($idUsuario > 0) {
+                    $idsUsuariosExcluidos[] = $idUsuario;
+                }
+            }
+            $idsUsuariosExcluidos = array_values(array_unique($idsUsuariosExcluidos));
+
+            $modeloExclusion = new DenunciaUsuarioExcluidoModel();
+            $modeloExclusion->reemplazarExclusionesDeDenuncia(
+                $idDenuncia,
+                $idsUsuariosExcluidos,
+                (int) session()->get('id'),
+                null
+            );
+
+            // 2) Enviar correo SOLO a usuarios permitidos (no excluidos)
+            $usuarioModel = new UsuarioModel();
+
+            $consultaUsuarios = $usuarioModel
+                ->where('id_cliente', (int) $denuncia['id_cliente'])
+                ->where('recibe_notificaciones', 1);
+
+            if (!empty($idsUsuariosExcluidos)) {
+                $consultaUsuarios->whereNotIn('id', $idsUsuariosExcluidos);
+            }
+
+            $usuariosNotificar = $consultaUsuarios->findAll();
+
+            foreach ($usuariosNotificar as $usuario) {
                 $correoDestino = !empty($usuario['correo_notificaciones'])
                     ? $usuario['correo_notificaciones']
                     : $usuario['correo_electronico'];
 
                 $resultado = $this->enviarCorreoLiberacionCliente($correoDestino, $usuario['nombre_usuario'], $denuncia);
+
                 if ($resultado !== true) {
                     $erroresCorreo[] = [
                         'usuario' => $usuario['nombre_usuario'],
                         'correo'  => $correoDestino,
-                        'error'   => $resultado
+                        'error'   => $resultado,
                     ];
                 }
             }
@@ -372,9 +456,10 @@ class DenunciasController extends Controller
 
         return $this->response->setJSON([
             'message'       => 'Estado actualizado correctamente',
-            'erroresCorreo' => $erroresCorreo ?? []
+            'erroresCorreo' => $erroresCorreo,
         ]);
     }
+
 
     public function subirAnexo()
     {

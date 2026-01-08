@@ -93,6 +93,38 @@ class DenunciaModel extends Model
         return $permModel->getTiposByUsuario($userId);
     }
 
+    /** Indica si el usuario en sesión es del rol CLIENTE */
+    private function esUsuarioClienteActual(): bool
+    {
+        $rolSlug = strtoupper((string) (session()->get('rol_slug') ?? ''));
+        $rolNombre = strtoupper((string) (session()->get('rol_nombre') ?? ''));
+
+        return ($rolSlug === 'CLIENTE' || $rolNombre === 'CLIENTE');
+    }
+
+    /**
+     * Aplica la exclusión (deny-list) para el usuario indicado:
+     * - LEFT JOIN denuncias_usuarios_excluidos para ese usuario
+     * - WHERE ex.id IS NULL para ocultar las denuncias excluidas
+     */
+    private function aplicarFiltroExclusionesPorUsuario($builder, int $idUsuario): void
+    {
+        if ($idUsuario <= 0) {
+            return;
+        }
+
+        // Nota: el cast a int evita inyección; no interpolamos texto libre.
+        $builder->join(
+            'denuncias_usuarios_excluidos exu',
+            'exu.id_denuncia = denuncias.id AND exu.id_usuario = ' . (int) $idUsuario,
+            'left'
+        );
+
+        // Genera "exu.id IS NULL"
+        $builder->where('exu.id', null);
+    }
+
+
 
     public function getDenuncias(): array
     {
@@ -166,6 +198,13 @@ class DenunciaModel extends Model
             ->where('denuncias.id_cliente', $clienteId)
             ->whereIn('denuncias.estado_actual', $estadosPermitidos);
 
+        // 1) Deny-list (solo aplica a CLIENTE)
+        if ($this->esUsuarioClienteActual()) {
+            $idUsuarioActual = (int) (session()->get('id') ?? 0);
+            $this->aplicarFiltroExclusionesPorUsuario($builder, $idUsuarioActual);
+        }
+
+        // 2) Filtro por tipos permitidos
         $tiposPermitidos = $this->tiposPermitidosUsuarioActual();
         if (!empty($tiposPermitidos)) {
             $builder->whereIn('denuncias.tipo_denunciante', $tiposPermitidos);
@@ -173,6 +212,7 @@ class DenunciaModel extends Model
 
         return $builder->orderBy('denuncias.fecha_hora_reporte', 'DESC')->findAll();
     }
+
 
     public function eliminarDenuncia(int $id): bool
     {
@@ -372,6 +412,21 @@ class DenunciaModel extends Model
         $builder->join('categorias_denuncias', 'categorias_denuncias.id = denuncias.categoria', 'left');
 
         $builder->where('denuncias.id_cliente', $clienteId);
+
+        // Deny-list (solo aplica a CLIENTE)
+        if ($this->esUsuarioClienteActual()) {
+            $idUsuarioActual = (int) (session()->get('id') ?? 0);
+
+            if ($idUsuarioActual > 0) {
+                $builder->join(
+                    'denuncias_usuarios_excluidos exu',
+                    'exu.id_denuncia = denuncias.id AND exu.id_usuario = ' . (int) $idUsuarioActual,
+                    'left'
+                );
+                $builder->where('exu.id', null);
+            }
+        }
+
 
         $estadosVisibles = [4, 5, 6];
         $builder->whereIn('denuncias.estado_actual', $estadosVisibles);
