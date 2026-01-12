@@ -124,7 +124,7 @@ class Publico extends BaseController
             'colaborador' => 'Colaborador',
             'proveedor'   => 'Proveedor',
             'cliente'     => 'Cliente',
-            default       => 'Cliente', // fallback seguro
+            default       => 'Colaborador', // fallback seguro
         };
 
         // 3) Payload (NO enviamos campos vacíos para no romper NOT NULL)

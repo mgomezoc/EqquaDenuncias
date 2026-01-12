@@ -17,14 +17,13 @@ $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_public
     <form id="formCrearDenuncia" action="<?= base_url('denuncias/guardar') ?>" method="post" enctype="multipart/form-data">
         <!-- Datos ocultos -->
         <input type="hidden" name="id_cliente" value="<?= esc($cliente['id']) ?>">
-        <input type="hidden" name="tipo_denunciante" value="Cliente">
 
         <!-- Tipo de denunciante (público) según configuración del cliente -->
         <?php if ($mostrarTipoDenunciantePublico === 1): ?>
             <!-- Se renderiza como campo visible -->
         <?php else: ?>
             <!-- Si no se muestra, se manda default -->
-            <input type="hidden" name="tipo_denunciante_publico" value="cliente">
+            <input type="hidden" name="tipo_denunciante_publico" value="colaborador">
         <?php endif; ?>
 
         <!-- Si la política es forzada, mandamos el valor por hidden -->
