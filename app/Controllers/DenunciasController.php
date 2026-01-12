@@ -490,6 +490,54 @@ class DenunciasController extends Controller
         return $this->response->setJSON($estadoModel->getEstados());
     }
 
+    /* ===============================
+     * USUARIOS EXCLUIDOS (DENY-LIST)
+     * =============================== */
+
+    /**
+     * Obtiene usuarios activos de un cliente específico.
+     * Usado en el modal de cambiar estado para seleccionar usuarios a excluir.
+     *
+     * @param int $idCliente ID del cliente
+     * @return \CodeIgniter\HTTP\ResponseInterface JSON con lista de usuarios
+     */
+    public function obtenerUsuariosPorCliente($idCliente)
+    {
+        $idCliente = (int) $idCliente;
+
+        if ($idCliente <= 0) {
+            return $this->response->setJSON([]);
+        }
+
+        $usuarioModel = new UsuarioModel();
+
+        // Usar el método del modelo que ya existe para obtener usuarios del cliente
+        $usuarios = $usuarioModel->getUsuariosActivosPorCliente($idCliente);
+
+        return $this->response->setJSON($usuarios);
+    }
+
+    /**
+     * Obtiene los usuarios actualmente excluidos de una denuncia.
+     * Útil para preseleccionar en el modal cuando se vuelve a cambiar el estado.
+     *
+     * @param int $idDenuncia ID de la denuncia
+     * @return \CodeIgniter\HTTP\ResponseInterface JSON con IDs de usuarios excluidos
+     */
+    public function obtenerUsuariosExcluidosDenuncia($idDenuncia)
+    {
+        $idDenuncia = (int) $idDenuncia;
+
+        if ($idDenuncia <= 0) {
+            return $this->response->setJSON([]);
+        }
+
+        $modeloExclusion = new DenunciaUsuarioExcluidoModel();
+        $idsExcluidos = $modeloExclusion->obtenerIdsUsuariosExcluidos($idDenuncia);
+
+        return $this->response->setJSON($idsExcluidos);
+    }
+
     public function obtenerAnexos($id_denuncia)
     {
         $anexoModel = new \App\Models\AnexoDenunciaModel();

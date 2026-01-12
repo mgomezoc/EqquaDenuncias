@@ -67,15 +67,15 @@ $routes->group('', ['filter' => 'authFilter:ADMIN,CLIENTE,AGENTE,SUPERVISOR_CALI
 
     // Reportes IA (nuevo)
     $routes->group('reportes-ia', ['filter' => 'authFilter:ADMIN'], function ($routes) {
-        $routes->get('/', 'ReportesIAController::index');                 // Listado
+        $routes->get('/', 'ReportesIAController::index');                       // Listado
         $routes->get('listar', 'ReportesIAController::listar');
-        $routes->get('generar', 'ReportesIAController::generar');         // Form generar
-        $routes->post('procesar', 'ReportesIAController::procesarGeneracion'); // AJAX generar
-        $routes->get('ver/(:num)', 'ReportesIAController::ver/$1');       // Detalle
+        $routes->get('generar', 'ReportesIAController::generar');               // Form generar
+        $routes->post('procesar', 'ReportesIAController::procesarGeneracion');  // AJAX generar
+        $routes->get('ver/(:num)', 'ReportesIAController::ver/$1');             // Detalle
         $routes->post('cambiar-estado', 'ReportesIAController::cambiarEstado'); // Cambiar estado
         $routes->get('descargar/(:num)', 'ReportesIAController::descargarPDF/$1'); // PDF
-        $routes->post('eliminar', 'ReportesIAController::eliminar');      // Eliminar
-        $routes->get('estadisticas', 'ReportesIAController::estadisticas'); // Estadísticas
+        $routes->post('eliminar', 'ReportesIAController::eliminar');            // Eliminar
+        $routes->get('estadisticas', 'ReportesIAController::estadisticas');     // Estadísticas
         $routes->get('periodos', 'ReportesIAController::getPeriodosDisponibles'); // Periodos disponibles
     });
 
@@ -151,6 +151,10 @@ $routes->group('denuncias', ['filter' => 'authFilter:ADMIN,AGENTE,SUPERVISOR_CAL
     $routes->get('sucursales/obtenerSucursalesPorCliente/(:num)', 'DenunciasController::obtenerSucursalesPorCliente/$1');
     $routes->get('obtenerEstados', 'DenunciasController::obtenerEstados');
     $routes->get('obtenerAnexos/(:num)', 'DenunciasController::obtenerAnexos/$1');
+
+    // Usuarios excluidos al liberar denuncia
+    $routes->get('usuarios-por-cliente/(:num)', 'DenunciasController::obtenerUsuariosPorCliente/$1');
+    $routes->get('usuarios-excluidos/(:num)', 'DenunciasController::obtenerUsuariosExcluidosDenuncia/$1');
 
     $routes->get('mis-denuncias-agente', 'DenunciasController::misDenunciasAgente');
     $routes->get('listar-denuncias-agente', 'DenunciasController::listarDenunciasAgente');

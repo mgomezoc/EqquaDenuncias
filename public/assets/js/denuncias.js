@@ -353,7 +353,13 @@ $(function () {
             });
         },
 
+        // ====================================================================
+        // EVENTO CORREGIDO: Cambiar Estado con Usuarios Excluidos
+        // ====================================================================
         'click .change-status': function (e, v, row) {
+            const ID_ESTADO_LIBERADA_CLIENTE = 4;
+
+            // Obtener estados disponibles
             $.get(`${Server}denuncias/obtenerEstados`, function (estados) {
                 let opciones = '';
                 estados.forEach(estado => {
@@ -361,38 +367,178 @@ $(function () {
                     opciones += `<option value="${estado.id}" ${selected}>${estado.nombre}</option>`;
                 });
 
-                const modal = new bootstrap.Modal($('#modalCambiarEstado'));
-                $('#modalCambiarEstado .modal-body').html(`
-                    <form id="formCambiarEstado">
-                        <div class="mb-3">
-                            <label for="estado_nuevo" class="form-label">Nuevo Estatus</label>
-                            <select id="estado_nuevo" name="estado_nuevo" class="form-select">${opciones}</select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="comentario" class="form-label">Comentario (opcional)</label>
-                            <textarea id="comentario" name="comentario" class="form-control" rows="3" placeholder="Escribe un comentario..."></textarea>
-                        </div>
-                    </form>`);
+                // Referencias a elementos del modal existente
+                const $modal = $('#modalCambiarEstado');
+                const $selectEstado = $('#estado_nuevo');
+                const $inputIdDenuncia = $('#cambiarEstado_id_denuncia');
+                const $comentario = $('#comentario_estado');
+                const $wrapExcluidos = $('#wrapUsuariosExcluidos');
+                const $selectExcluidos = $('#usuarios_excluidos');
 
-                $('#modalCambiarEstado .modal-footer .btn-primary')
+                // Limpiar y configurar el modal
+                $inputIdDenuncia.val(row.id);
+                $selectEstado.html(opciones);
+                $comentario.val('');
+                $wrapExcluidos.addClass('d-none');
+                $selectExcluidos.empty();
+
+                // Destruir Select2 previo si existe y reinicializar
+                if ($selectEstado.hasClass('select2-hidden-accessible')) {
+                    $selectEstado.select2('destroy');
+                }
+                $selectEstado.select2({
+                    dropdownParent: $modal,
+                    placeholder: 'Seleccione un estado',
+                    allowClear: false,
+                    width: '100%'
+                });
+
+                if ($selectExcluidos.hasClass('select2-hidden-accessible')) {
+                    $selectExcluidos.select2('destroy');
+                }
+                $selectExcluidos.select2({
+                    dropdownParent: $modal,
+                    placeholder: 'Selecciona usuarios a excluir...',
+                    allowClear: true,
+                    multiple: true,
+                    width: '100%'
+                });
+
+                // ================================================================
+                // LÓGICA PARA MOSTRAR/OCULTAR USUARIOS EXCLUIDOS
+                // ================================================================
+                function manejarCambioEstado() {
+                    const estadoSeleccionado = parseInt($selectEstado.val(), 10);
+
+                    if (estadoSeleccionado === ID_ESTADO_LIBERADA_CLIENTE) {
+                        // Mostrar el contenedor de usuarios excluidos
+                        $wrapExcluidos.removeClass('d-none');
+
+                        // Cargar usuarios del cliente
+                        cargarUsuariosCliente(row.id_cliente, row.id);
+                    } else {
+                        // Ocultar y limpiar
+                        $wrapExcluidos.addClass('d-none');
+                        $selectExcluidos.val(null).trigger('change');
+                    }
+                }
+
+                /**
+                 * Carga los usuarios del cliente y preselecciona los ya excluidos
+                 */
+                function cargarUsuariosCliente(idCliente, idDenuncia) {
+                    // Mostrar loading
+                    $selectExcluidos.prop('disabled', true);
+                    $selectExcluidos.empty().append('<option value="">Cargando usuarios...</option>');
+
+                    // Primero obtener los usuarios del cliente
+                    $.get(`${Server}denuncias/usuarios-por-cliente/${idCliente}`)
+                        .done(function (usuarios) {
+                            $selectExcluidos.empty();
+
+                            if (!usuarios || usuarios.length === 0) {
+                                $selectExcluidos.append('<option value="" disabled>No hay usuarios disponibles</option>');
+                                $selectExcluidos.prop('disabled', true);
+                                return;
+                            }
+
+                            // Agregar opciones de usuarios
+                            usuarios.forEach(usuario => {
+                                const texto = usuario.nombre_usuario + (usuario.correo_electronico ? ` (${usuario.correo_electronico})` : '');
+                                $selectExcluidos.append(`<option value="${usuario.id}">${texto}</option>`);
+                            });
+
+                            $selectExcluidos.prop('disabled', false);
+
+                            // Ahora cargar los usuarios ya excluidos (si los hay)
+                            cargarUsuariosYaExcluidos(idDenuncia);
+                        })
+                        .fail(function () {
+                            $selectExcluidos.empty().append('<option value="" disabled>Error al cargar usuarios</option>');
+                            $selectExcluidos.prop('disabled', true);
+                            showToast('Error al cargar la lista de usuarios del cliente.', 'error');
+                        });
+                }
+
+                /**
+                 * Preselecciona los usuarios que ya están excluidos de esta denuncia
+                 */
+                function cargarUsuariosYaExcluidos(idDenuncia) {
+                    $.get(`${Server}denuncias/usuarios-excluidos/${idDenuncia}`)
+                        .done(function (idsExcluidos) {
+                            if (idsExcluidos && idsExcluidos.length > 0) {
+                                $selectExcluidos.val(idsExcluidos).trigger('change');
+                            }
+                        })
+                        .fail(function () {
+                            // No es crítico, simplemente no preselecciona
+                            console.warn('No se pudieron cargar los usuarios excluidos previos.');
+                        });
+                }
+
+                // ================================================================
+                // EVENTOS
+                // ================================================================
+
+                // Escuchar cambios en el select de estado
+                $selectEstado.off('change.excluidos').on('change.excluidos', manejarCambioEstado);
+
+                // Verificar estado inicial al abrir el modal
+                manejarCambioEstado();
+
+                // ================================================================
+                // ENVÍO DEL FORMULARIO
+                // ================================================================
+                $('#btnGuardarCambioEstado')
                     .off('click')
-                    .on('click', function () {
-                        $.post(
-                            `${Server}denuncias/cambiarEstado`,
-                            {
-                                id: row.id,
-                                estado_nuevo: $('#estado_nuevo').val(),
-                                comentario: $('#comentario').val()
-                            },
-                            function () {
+                    .on('click', function (e) {
+                        e.preventDefault();
+
+                        const datosEnviar = {
+                            id: row.id,
+                            estado_nuevo: $selectEstado.val(),
+                            comentario: $comentario.val()
+                        };
+
+                        // Si es estado "Liberada al Cliente", incluir usuarios excluidos
+                        const estadoNuevo = parseInt($selectEstado.val(), 10);
+                        if (estadoNuevo === ID_ESTADO_LIBERADA_CLIENTE) {
+                            const usuariosExcluidos = $selectExcluidos.val() || [];
+                            datosEnviar.usuarios_excluidos = usuariosExcluidos;
+                        }
+
+                        // Deshabilitar botón mientras se procesa
+                        const $btn = $(this);
+                        const textoOriginal = $btn.html();
+                        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
+
+                        $.post(`${Server}denuncias/cambiarEstado`, datosEnviar)
+                            .done(function (response) {
                                 showToast('Estatus actualizado correctamente.', 'success');
                                 $tablaDenuncias.bootstrapTable('refresh');
-                                modal.hide();
-                            }
-                        ).fail(() => showToast('Error al actualizar el estatus.', 'error'));
+                                bootstrap.Modal.getInstance($modal[0]).hide();
+
+                                // Mostrar advertencia si hubo errores de correo
+                                if (response.erroresCorreo && response.erroresCorreo.length > 0) {
+                                    const errores = response.erroresCorreo.map(err => `${err.usuario}: ${err.error}`).join('<br>');
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Advertencia',
+                                        html: `El estado se actualizó, pero hubo errores al enviar algunos correos:<br><br>${errores}`
+                                    });
+                                }
+                            })
+                            .fail(function () {
+                                showToast('Error al actualizar el estatus.', 'error');
+                            })
+                            .always(function () {
+                                $btn.prop('disabled', false).html(textoOriginal);
+                            });
                     });
 
-                modal.show();
+                // Mostrar el modal
+                const modalInstance = new bootstrap.Modal($modal[0]);
+                modalInstance.show();
             });
         },
 
