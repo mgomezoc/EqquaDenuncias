@@ -9,17 +9,53 @@ let $tablaClientes;
 let $modalCrearCliente;
 let dropzones = {};
 
-Dropzone.autoDiscover = false; // Desactivar la autodetección de Dropzone
+Dropzone.autoDiscover = false;
 
-// Añadir la regla personalizada 'regex'
+// --- Polyfill serializeObject (por si no existe en tu proyecto) ---
+if (typeof $.fn.serializeObject !== 'function') {
+    $.fn.serializeObject = function () {
+        const o = {};
+        const a = this.serializeArray();
+        $.each(a, function () {
+            if (o[this.name] !== undefined) {
+                if (!Array.isArray(o[this.name])) o[this.name] = [o[this.name]];
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+}
+
+// Regla personalizada 'regex'
 $.validator.addMethod(
     'regex',
     function (value, element, regexp) {
-        var re = new RegExp(regexp);
+        const re = new RegExp(regexp);
         return this.optional(element) || re.test(value);
     },
     'Por favor, ingrese un valor válido.'
 );
+
+// Tipos de denunciante soportados
+const TIPOS_DENUNCIANTE = ['Cliente', 'Colaborador', 'Proveedor'];
+
+// Helpers
+function parseCsv(value) {
+    if (value === null || value === undefined) return [];
+    const s = String(value).trim();
+    if (!s) return [];
+    return s
+        .split(',')
+        .map(x => x.trim())
+        .filter(Boolean);
+}
+
+function toCsv(value) {
+    if (Array.isArray(value)) return value.join(',');
+    return (value ?? '').toString();
+}
 
 // Mapea la política a badge/etiqueta
 function politicaFormatter(value) {
@@ -27,6 +63,112 @@ function politicaFormatter(value) {
     if (v === 1) return '<span class="badge text-bg-success">Forzar anónimas</span>';
     if (v === 2) return '<span class="badge text-bg-warning">Forzar identificadas</span>';
     return '<span class="badge text-bg-secondary">Opcional</span>';
+}
+
+/**
+ * Inicializa los controles de:
+ * - mostrar_tipo_denunciante_publico
+ * - tipos_denunciante_publico_permitidos
+ * - tipo_denunciante_publico_default
+ * dentro del detailView.
+ */
+function initTipoDenunciantePublicoControls($detail, row) {
+    const $mostrar = $detail.find('[name="mostrar_tipo_denunciante_publico"]');
+
+    // Puede ser <select multiple> o <input>
+    const $permitidos = $detail.find('[name="tipos_denunciante_publico_permitidos"]');
+
+    // Debe ser <select>
+    const $default = $detail.find('[name="tipo_denunciante_publico_default"]');
+
+    // 1) Setear mostrar
+    const mostrarVal = Number(row.mostrar_tipo_denunciante_publico ?? 0);
+    if ($mostrar.length) {
+        $mostrar.val(String(mostrarVal)).trigger('change');
+    }
+
+    // 2) Permisos (tipos permitidos)
+    const permitidosArr = parseCsv(row.tipos_denunciante_publico_permitidos);
+    const permitidosFinal = permitidosArr.length ? permitidosArr : [...TIPOS_DENUNCIANTE];
+
+    if ($permitidos.length) {
+        // Si es un SELECT, nos aseguramos que existan opciones y seleccionamos
+        if ($permitidos.is('select')) {
+            // Si no tiene opciones, las creamos
+            if ($permitidos.find('option').length === 0) {
+                TIPOS_DENUNCIANTE.forEach(t => {
+                    $permitidos.append(new Option(t, t, false, false));
+                });
+            }
+            // Si es multiple: set array; si no: set string
+            if ($permitidos.prop('multiple')) {
+                $permitidos.val(permitidosFinal).trigger('change');
+            } else {
+                $permitidos.val(permitidosFinal[0] || 'Colaborador').trigger('change');
+            }
+        } else {
+            // Si es INPUT, seteamos CSV
+            $permitidos.val(permitidosFinal.join(','));
+        }
+    }
+
+    // 3) Default
+    const defaultVal = (row.tipo_denunciante_publico_default ?? 'Colaborador').toString();
+
+    if ($default.length) {
+        // Si no tiene opciones, las creamos
+        if ($default.is('select') && $default.find('option').length === 0) {
+            TIPOS_DENUNCIANTE.forEach(t => {
+                $default.append(new Option(t, t, false, false));
+            });
+        }
+
+        // Forzar que el default esté dentro de permitidos
+        let fixedDefault = defaultVal;
+        if (!permitidosFinal.includes(fixedDefault)) {
+            fixedDefault = permitidosFinal[0] || 'Colaborador';
+        }
+
+        $default.val(fixedDefault).trigger('change');
+    }
+
+    // 4) Habilitar/deshabilitar según mostrar
+    function toggleEnabled() {
+        const m = Number($mostrar.val() ?? 0);
+        const enabled = m === 1;
+
+        if ($permitidos.length) {
+            $permitidos.prop('disabled', !enabled).trigger('change.select2');
+        }
+        if ($default.length) {
+            $default.prop('disabled', !enabled).trigger('change.select2');
+        }
+    }
+
+    // 5) Si cambia mostrar, toggle
+    if ($mostrar.length) {
+        $mostrar.off('change._tipoDen').on('change._tipoDen', function () {
+            toggleEnabled();
+        });
+    }
+
+    // 6) Si cambia permitidos, asegurar default válido (solo si permitidos es select multiple)
+    if ($permitidos.length && $permitidos.is('select') && $permitidos.prop('multiple')) {
+        $permitidos.off('change._permitidos').on('change._permitidos', function () {
+            const selected = $(this).val() || [];
+            const selectedArr = Array.isArray(selected) ? selected : [selected];
+
+            if (!$default.length) return;
+
+            const currentDefault = ($default.val() ?? '').toString();
+            if (selectedArr.length && !selectedArr.includes(currentDefault)) {
+                $default.val(selectedArr[0]).trigger('change');
+            }
+        });
+    }
+
+    // aplicar estado inicial
+    toggleEnabled();
 }
 
 $(function () {
@@ -50,7 +192,7 @@ $(function () {
                 clickToSelect: false,
                 formatter: operateFormatter,
                 events: window.operateEvents,
-                visible: rol == 'ADMIN'
+                visible: rol === 'ADMIN'
             }
         ],
         detailView: true,
@@ -58,30 +200,24 @@ $(function () {
             const renderData = Handlebars.compile(tplDetalleTabla)(row);
             $detail.html(renderData);
 
-            // Setear valor del select de política
+            // Inicializar select2 primero (para que seteo .val() sea visible)
+            $detail.find('select').select2({ width: '100%' });
+
+            // Política
             $detail
                 .find('[name="politica_anonimato"]')
                 .val(row.politica_anonimato ?? 0)
                 .trigger('change');
 
-            // NUEVO: Setear valor del select para mostrar tipo de denunciante público
-            $detail
-                .find('[name="mostrar_tipo_denunciante_publico"]')
-                .val(row.mostrar_tipo_denunciante_publico ?? 0)
-                .trigger('change');
+            // NUEVO: Tipo denunciante público (mostrar + permitidos + default)
+            initTipoDenunciantePublicoControls($detail, row);
 
-            // Inicializar Dropzones
+            // Dropzones
             initializeDropzone(`dropzoneLogo-${row.id}`, 'logo', row.id);
             initializeDropzone(`dropzoneBanner-${row.id}`, 'banner', row.id);
 
-            // Selects (si alguno usa select2)
-            $detail.find('select').select2();
-
-            // Validación:
-            // - ADMIN: validación completa
-            // - CLIENTE: solo permitir enviar política (no exigir otros campos)
+            // Validación
             const isAdmin = rol === 'ADMIN';
-
             const $frm = $detail.find('.formEditarCliente');
 
             if (isAdmin) {
@@ -136,41 +272,25 @@ $(function () {
                                     }
                                 }
                             }
-                        }
-                    },
-                    messages: {
-                        nombre_empresa: {
-                            required: 'Por favor ingrese el nombre de la empresa',
-                            minlength: 'El nombre de la empresa debe tener al menos 3 caracteres',
-                            remote: 'El nombre de la empresa ya está en uso'
                         },
-                        correo_contacto: {
-                            required: 'Por favor ingrese el correo de contacto',
-                            email: 'Por favor ingrese un correo electrónico válido',
-                            remote: 'El correo de contacto ya está en uso'
-                        },
-                        telefono_contacto: { required: 'Por favor ingrese el teléfono de contacto' },
-                        direccion: { required: 'Por favor ingrese la dirección' },
-                        slug: {
-                            required: 'Por favor ingrese el slug',
-                            regex: 'El slug solo puede contener letras, números y guiones',
-                            remote: 'El slug ya está en uso'
-                        }
+                        politica_anonimato: { required: true },
+                        mostrar_tipo_denunciante_publico: { required: true }
+                        // Tipos permitidos/default no los hago required porque dependen de "mostrar"
                     }
                 });
             } else {
-                // Validación mínima para CLIENTE (permite enviar sin exigir otros campos)
+                // CLIENTE: mínimo
                 $frm.validate({
                     rules: {
-                        politica_anonimato: {
-                            required: true
-                        }
+                        politica_anonimato: { required: true },
+                        mostrar_tipo_denunciante_publico: { required: true }
                     }
                 });
             }
         }
     });
 
+    // Crear cliente
     $('#formCrearCliente').validate({
         rules: {
             nombre_empresa: {
@@ -228,36 +348,9 @@ $(function () {
             },
             politica_anonimato: { required: true }
         },
-        messages: {
-            nombre_empresa: {
-                required: 'Por favor ingrese el nombre de la empresa',
-                minlength: 'El nombre de la empresa debe tener al menos 3 caracteres',
-                remote: 'El nombre de la empresa ya está en uso'
-            },
-            numero_identificacion: {
-                required: 'Por favor ingrese el número de identificación',
-                remote: 'El número de identificación ya está en uso'
-            },
-            correo_contacto: {
-                required: 'Por favor ingrese el correo de contacto',
-                email: 'Por favor ingrese un correo electrónico válido',
-                remote: 'El correo de contacto ya está en uso'
-            },
-            telefono_contacto: { required: 'Por favor ingrese el teléfono de contacto' },
-            direccion: { required: 'Por favor ingrese la dirección' },
-            slug: {
-                required: 'Por favor ingrese el slug',
-                regex: 'El slug solo puede contener letras, números y guiones',
-                remote: 'El slug ya está en uso'
-            }
-        },
         errorPlacement: function (error, element) {
             error.addClass('invalid-feedback');
-            if (element.prop('type') === 'checkbox') {
-                error.insertAfter(element.parent('label'));
-            } else {
-                error.insertAfter(element);
-            }
+            error.insertAfter(element);
         },
         highlight: function (element) {
             $(element).addClass('is-invalid').removeClass('is-valid');
@@ -268,6 +361,11 @@ $(function () {
         submitHandler: function (form) {
             const $frm = $(form);
             const formData = $frm.serializeObject();
+
+            // Si "tipos permitidos" llega como array (select multiple), convertir a CSV
+            if (formData.tipos_denunciante_publico_permitidos !== undefined) {
+                formData.tipos_denunciante_publico_permitidos = toCsv(formData.tipos_denunciante_publico_permitidos);
+            }
 
             loadingFormXHR($frm, true);
 
@@ -294,15 +392,19 @@ $(function () {
         }
     });
 
+    // Editar cliente
     $(document).on('submit', '.formEditarCliente', function (e) {
         e.preventDefault();
 
         const $frm = $(this);
-        if (!$frm.valid()) {
-            return false;
-        }
+        if (!$frm.valid()) return false;
 
         const formData = $frm.serializeObject();
+
+        // Normalizar CSV si viene como array
+        if (formData.tipos_denunciante_publico_permitidos !== undefined) {
+            formData.tipos_denunciante_publico_permitidos = toCsv(formData.tipos_denunciante_publico_permitidos);
+        }
 
         loadingFormXHR($frm, true);
 
@@ -328,6 +430,7 @@ $(function () {
         });
     });
 
+    // Actualizar imágenes
     $(document).on('submit', '.formActualizarImagenes', function (e) {
         e.preventDefault();
 
@@ -335,7 +438,7 @@ $(function () {
         const formData = $frm.serializeObject();
         const clienteId = $frm.find('[name="id"]').val();
 
-        if ((!dropzones[clienteId] || !dropzones[clienteId]['logo'].files.length) && (!dropzones[clienteId] || !dropzones[clienteId]['banner'].files.length)) {
+        if ((!dropzones[clienteId] || !dropzones[clienteId]['logo']?.files?.length) && (!dropzones[clienteId] || !dropzones[clienteId]['banner']?.files?.length)) {
             showToast('Por favor, suba una imagen antes de enviar el formulario.', 'error');
             return false;
         }
@@ -373,9 +476,7 @@ $(function () {
 });
 
 function initializeDropzone(elementId, fieldName, clienteId = null) {
-    if (!dropzones[clienteId]) {
-        dropzones[clienteId] = {};
-    }
+    if (!dropzones[clienteId]) dropzones[clienteId] = {};
 
     dropzones[clienteId][fieldName] = new Dropzone(`#${elementId}`, {
         url: `${Server}clientes/subirImagen`,
@@ -384,53 +485,57 @@ function initializeDropzone(elementId, fieldName, clienteId = null) {
         addRemoveLinks: true,
         dictDefaultMessage: 'Arrastra una imagen aquí para subirla',
         dictRemoveFile: 'Eliminar imagen',
+        autoProcessQueue: true,
         init: function () {
             this.on('success', function (file, response) {
-                $(`#formCrearCliente, #formActualizarImagenes-${clienteId}`).append(`<input type="hidden" name="${fieldName}" value="assets/images/clientes/${response.filename}">`);
+                const path = `assets/images/clientes/${response.filename}`;
+
+                // Alta
+                if (clienteId === null) {
+                    const $f = $('#formCrearCliente');
+                    $f.find(`input[name="${fieldName}"]`).remove();
+                    $f.append(`<input type="hidden" name="${fieldName}" value="${path}">`);
+                    return;
+                }
+
+                // Edición / imágenes
+                const $fImg = $(`#formActualizarImagenes-${clienteId}`);
+                if ($fImg.length) {
+                    $fImg.find(`input[name="${fieldName}"]`).remove();
+                    $fImg.append(`<input type="hidden" name="${fieldName}" value="${path}">`);
+                }
+
+                // También lo ponemos en el form de edición, por si guardas desde ahí
+                const $fEdit = $(`#formEditarCliente-${clienteId}`);
+                if ($fEdit.length) {
+                    $fEdit.find(`input[name="${fieldName}"]`).remove();
+                    $fEdit.append(`<input type="hidden" name="${fieldName}" value="${path}">`);
+                }
             });
+
             this.on('removedfile', function () {
-                $(`input[name="${fieldName}"]`).remove();
+                if (clienteId === null) {
+                    $('#formCrearCliente').find(`input[name="${fieldName}"]`).remove();
+                } else {
+                    $(`#formActualizarImagenes-${clienteId}`).find(`input[name="${fieldName}"]`).remove();
+                    $(`#formEditarCliente-${clienteId}`).find(`input[name="${fieldName}"]`).remove();
+                }
             });
         }
     });
 }
 
-function processDropzones(callback) {
-    const dropzoneInstances = Object.values(dropzones).flatMap(clienteDropzones => Object.values(clienteDropzones));
-
-    if (!dropzoneInstances.length) {
-        callback();
-        return;
-    }
-
-    let pendingUploads = dropzoneInstances.length;
-
-    dropzoneInstances.forEach(dropzone => {
-        dropzone.on('queuecomplete', () => {
-            pendingUploads -= 1;
-            if (pendingUploads === 0) {
-                callback();
-            }
-        });
-        dropzone.processQueue();
-    });
-}
-
 window.operateEvents = {
-    'click .edit': function (e, value, row, index) {
-        editarCliente(row.id);
-    },
-    'click .remove': function (e, value, row, index) {
+    'click .remove': function (e, value, row) {
         eliminarCliente(row.id);
     },
-    'click .view-public': function (e, value, row, index) {
+    'click .view-public': function (e, value, row) {
         window.open(`${Server}c/${row.slug}`, '_blank');
     }
 };
 
-function operateFormatter(value, row, index) {
-    const renderData = Handlebars.compile(tplAccionesTabla)(row);
-    return renderData;
+function operateFormatter(value, row) {
+    return Handlebars.compile(tplAccionesTabla)(row);
 }
 
 async function eliminarCliente(id) {
@@ -447,9 +552,7 @@ async function eliminarCliente(id) {
                 let errorMessage = 'Ocurrió un error al eliminar el cliente.';
                 if (xhr.status === 409) {
                     const response = JSON.parse(xhr.responseText);
-                    if (response.message) {
-                        errorMessage = response.message;
-                    }
+                    if (response.message) errorMessage = response.message;
                 }
                 showToast(errorMessage, 'error');
             }

@@ -49,49 +49,55 @@
     <div class="">
         <form id="formEditarCliente-{{id}}" action="<?= base_url('clientes/guardar') ?>" method="post" class="formEditarCliente card custom-card card-body mb-4">
             <input type="hidden" name="id" value="{{id}}">
+
             <div class="row g-3">
                 <!-- Datos generales -->
                 <div class="col-md-4">
-                    <label for="nombre_empresa" class="form-label">Nombre Empresa</label>
-                    <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" value="{{nombre_empresa}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
+                    <label for="nombre_empresa-{{id}}" class="form-label">Nombre Empresa</label>
+                    <input type="text" class="form-control" id="nombre_empresa-{{id}}" name="nombre_empresa" value="{{nombre_empresa}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
 
                 <?php if ($rol_slug === 'ADMIN') : ?>
                     <div class="col-md-4">
-                        <label for="numero_identificacion" class="form-label">Número de colaboradores</label>
-                        <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="{{numero_identificacion}}" required>
+                        <label for="numero_identificacion-{{id}}" class="form-label">Número de colaboradores</label>
+                        <input type="text" class="form-control" id="numero_identificacion-{{id}}" name="numero_identificacion" value="{{numero_identificacion}}" required>
                     </div>
                 <?php endif; ?>
 
                 <div class="col-md-4">
-                    <label for="correo_contacto" class="form-label">Correo Contacto</label>
-                    <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="{{correo_contacto}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
+                    <label for="correo_contacto-{{id}}" class="form-label">Correo Contacto</label>
+                    <input type="email" class="form-control" id="correo_contacto-{{id}}" name="correo_contacto" value="{{correo_contacto}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
+
                 <div class="col-md-4">
-                    <label for="telefono_contacto" class="form-label">Teléfono Contacto</label>
-                    <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="{{telefono_contacto}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
+                    <label for="telefono_contacto-{{id}}" class="form-label">Teléfono Contacto</label>
+                    <input type="text" class="form-control" id="telefono_contacto-{{id}}" name="telefono_contacto" value="{{telefono_contacto}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
+
                 <div class="col-md-4">
-                    <label for="direccion" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{direccion}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
+                    <label for="direccion-{{id}}" class="form-label">Dirección</label>
+                    <input type="text" class="form-control" id="direccion-{{id}}" name="direccion" value="{{direccion}}" <?= $rol_slug === 'ADMIN' ? 'required' : 'readonly' ?>>
                 </div>
 
                 <?php if ($rol_slug === 'ADMIN') : ?>
                     <div class="col-md-4">
-                        <label for="slug" class="form-label">Slug</label>
-                        <input type="text" class="form-control" id="slug" name="slug" value="{{slug}}" required>
+                        <label for="slug-{{id}}" class="form-label">Slug</label>
+                        <input type="text" class="form-control" id="slug-{{id}}" name="slug" value="{{slug}}" required>
                     </div>
+
                     <div class="col-md-8">
-                        <label for="saludo" class="form-label">Saludo</label>
-                        <textarea class="form-control" id="saludo" name="saludo" rows="4">{{saludo}}</textarea>
+                        <label for="saludo-{{id}}" class="form-label">Saludo</label>
+                        <textarea class="form-control" id="saludo-{{id}}" name="saludo" rows="4">{{saludo}}</textarea>
                     </div>
-                    <!-- NUEVO: Mostrar Tipo de Denunciante en formulario público -->
+
+                    <!-- Tipo de denunciante (formulario público): Mostrar/No mostrar -->
                     <div class="col-md-4">
                         <label for="mostrar_tipo_denunciante_publico-{{id}}" class="form-label">Tipo de denunciante (formulario público)</label>
                         <select
                             class="form-select"
                             name="mostrar_tipo_denunciante_publico"
                             id="mostrar_tipo_denunciante_publico-{{id}}"
+                            data-value="{{mostrar_tipo_denunciante_publico}}"
                             <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?>>
                             <option value="0">No mostrar</option>
                             <option value="1">Mostrar</option>
@@ -101,30 +107,78 @@
                         </small>
                     </div>
 
+                    <!-- NUEVO: Configuración de opciones permitidas + default -->
+                    <div class="col-md-8" id="bloque_tipo_denunciante_publico_config-{{id}}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="tipos_denunciante_publico_permitidos-{{id}}" class="form-label">Tipos permitidos (combo público)</label>
+                                <select
+                                    class="form-select"
+                                    id="tipos_denunciante_publico_permitidos-{{id}}"
+                                    name="tipos_denunciante_publico_permitidos"
+                                    multiple
+                                    data-value="{{tipos_denunciante_publico_permitidos}}"
+                                    <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?>>
+                                    <option value="Cliente">Cliente</option>
+                                    <option value="Colaborador">Colaborador</option>
+                                    <option value="Proveedor">Proveedor</option>
+                                </select>
+                                <small class="text-muted">
+                                    Selecciona qué opciones aparecerán en el combo público. Si no se muestra el combo, esta configuración no aplica.
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="tipo_denunciante_publico_default-{{id}}" class="form-label">Tipo por defecto (formulario público)</label>
+                                <select
+                                    class="form-select"
+                                    id="tipo_denunciante_publico_default-{{id}}"
+                                    name="tipo_denunciante_publico_default"
+                                    data-value="{{tipo_denunciante_publico_default}}"
+                                    <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?>>
+                                    <option value="Cliente">Cliente</option>
+                                    <option value="Colaborador">Colaborador</option>
+                                    <option value="Proveedor">Proveedor</option>
+                                </select>
+                                <small class="text-muted">
+                                    Si el combo público NO se muestra, este valor será el que se enviará automáticamente. Recomendado: <strong>Colaborador</strong>.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-12"></div>
+
                     <div class="col-md-4">
-                        <label for="primary_color" class="form-label">Primary Color</label>
-                        <input type="color" class="form-control" id="primary_color" name="primary_color" value="{{primary_color}}">
+                        <label for="primary_color-{{id}}" class="form-label">Primary Color</label>
+                        <input type="color" class="form-control" id="primary_color-{{id}}" name="primary_color" value="{{primary_color}}">
                     </div>
+
                     <div class="col-md-4">
-                        <label for="secondary_color" class="form-label">Secondary Color</label>
-                        <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="{{secondary_color}}">
+                        <label for="secondary_color-{{id}}" class="form-label">Secondary Color</label>
+                        <input type="color" class="form-control" id="secondary_color-{{id}}" name="secondary_color" value="{{secondary_color}}">
                     </div>
+
                     <div class="col-md-4">
-                        <label for="link_color" class="form-label">Link Color</label>
-                        <input type="color" class="form-control" id="link_color" name="link_color" value="{{link_color}}">
+                        <label for="link_color-{{id}}" class="form-label">Link Color</label>
+                        <input type="color" class="form-control" id="link_color-{{id}}" name="link_color" value="{{link_color}}">
                     </div>
                 <?php endif; ?>
 
                 <div class="col-md-4">
-                    <label for="whatsapp" class="form-label">WhatsApp</label>
-                    <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{whatsapp}}" <?= $rol_slug === 'ADMIN' ? '' : 'readonly' ?> pattern="\d{10}">
+                    <label for="whatsapp-{{id}}" class="form-label">WhatsApp</label>
+                    <input type="text" class="form-control" id="whatsapp-{{id}}" name="whatsapp" value="{{whatsapp}}" <?= $rol_slug === 'ADMIN' ? '' : 'readonly' ?> pattern="\d{10}">
                 </div>
 
-                <!-- NUEVO: Política de anonimato -->
+                <!-- Política de anonimato -->
                 <div class="col-md-4">
-                    <label for="politica_anonimato" class="form-label">Política de anonimato</label>
-                    <select class="form-select" name="politica_anonimato" id="politica_anonimato" <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?> data-value="{{politica_anonimato}}">
+                    <label for="politica_anonimato-{{id}}" class="form-label">Política de anonimato</label>
+                    <select
+                        class="form-select"
+                        name="politica_anonimato"
+                        id="politica_anonimato-{{id}}"
+                        data-value="{{politica_anonimato}}"
+                        <?= ($rol_slug === 'ADMIN' || $rol_slug === 'CLIENTE') ? '' : 'disabled' ?>>
                         <option value="0">Opcional (reportante decide)</option>
                         <option value="1">Forzar anónimas</option>
                         <option value="2">Forzar identificadas</option>
@@ -168,6 +222,7 @@
                             </div>
                         </div>
                     <?php endif; ?>
+
                     <div class="col-md-6">
                         <div class="card border-light mb-3">
                             <div class="card-header text-center bg-light">
@@ -186,6 +241,7 @@
                         </div>
                     </div>
                 </div>
+
                 <?php if ($rol_slug == 'ADMIN'): ?>
                     <div class="mt-4 text-center">
                         <button type="submit" class="btn btn-primary">
@@ -197,7 +253,6 @@
         </form>
     </div>
 </template>
-
 
 <?= $this->endSection() ?>
 
@@ -211,34 +266,40 @@
                     <h5 class="modal-title" id="modalCrearClienteLabel">Agregar Cliente</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="nombre_empresa" class="form-label">Nombre Empresa</label>
                             <input type="text" class="form-control" id="nombre_empresa" name="nombre_empresa" required>
                         </div>
+
                         <div class="col-md-6">
                             <label for="numero_identificacion" class="form-label">Número de colaboradores</label>
                             <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" required>
                         </div>
+
                         <div class="col-md-6">
                             <label for="correo_contacto" class="form-label">Correo Contacto</label>
                             <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" required>
                         </div>
+
                         <div class="col-md-6">
                             <label for="telefono_contacto" class="form-label">Teléfono Contacto</label>
                             <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" required>
                         </div>
+
                         <div class="col-md-6">
                             <label for="direccion" class="form-label">Dirección</label>
                             <input type="text" class="form-control" id="direccion" name="direccion" required>
                         </div>
+
                         <div class="col-md-6">
                             <label for="slug" class="form-label">Slug</label>
                             <input type="text" class="form-control" id="slug" name="slug" required>
                         </div>
 
-                        <!-- NUEVO: Política al crear -->
+                        <!-- Política al crear -->
                         <div class="col-md-6">
                             <label for="politica_anonimato" class="form-label">Política de anonimato</label>
                             <select class="form-select" name="politica_anonimato" id="politica_anonimato">
@@ -252,41 +313,69 @@
                             <label for="saludo" class="form-label">Saludo</label>
                             <textarea class="form-control" id="saludo" name="saludo" rows="4"></textarea>
                         </div>
+
                         <div class="col-md-6">
                             <label for="whatsapp" class="form-label">WhatsApp</label>
                             <input type="text" class="form-control" id="whatsapp" name="whatsapp" pattern="\d{10}">
                         </div>
-                        <!-- NUEVO: Mostrar Tipo de Denunciante en formulario público (al crear) -->
+
+                        <!-- Tipo de denunciante (formulario público) al crear -->
                         <div class="col-md-6">
                             <label for="mostrar_tipo_denunciante_publico" class="form-label">Tipo de denunciante (formulario público)</label>
                             <select class="form-select" name="mostrar_tipo_denunciante_publico" id="mostrar_tipo_denunciante_publico">
-                                <option value="0" selected>No mostrar</option>
+                                <option value="0">No mostrar</option>
                                 <option value="1">Mostrar</option>
                             </select>
+                        </div>
+
+                        <!-- NUEVO: Permisos + Default (al crear) -->
+                        <div class="col-md-6">
+                            <label for="tipos_denunciante_publico_permitidos" class="form-label">Tipos permitidos (combo público)</label>
+                            <select class="form-select" id="tipos_denunciante_publico_permitidos" name="tipos_denunciante_publico_permitidos" multiple>
+                                <option value="Cliente">Cliente</option>
+                                <option value="Colaborador" selected>Colaborador</option>
+                                <option value="Proveedor">Proveedor</option>
+                            </select>
+                            <small class="text-muted">Selecciona las opciones que aparecerán si el combo se muestra.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="tipo_denunciante_publico_default" class="form-label">Tipo por defecto (formulario público)</label>
+                            <select class="form-select" id="tipo_denunciante_publico_default" name="tipo_denunciante_publico_default">
+                                <option value="Cliente">Cliente</option>
+                                <option value="Colaborador" selected>Colaborador</option>
+                                <option value="Proveedor">Proveedor</option>
+                            </select>
+                            <small class="text-muted">Si no se muestra el combo, este valor se enviará automáticamente.</small>
                         </div>
 
                         <div class="col-md-4">
                             <label for="primary_color" class="form-label">Primary Color</label>
                             <input type="color" class="form-control" id="primary_color" name="primary_color">
                         </div>
+
                         <div class="col-md-4">
                             <label for="secondary_color" class="form-label">Secondary Color</label>
                             <input type="color" class="form-control" id="secondary_color" name="secondary_color">
                         </div>
+
                         <div class="col-md-4">
                             <label for="link_color" class="form-label">Link Color</label>
                             <input type="color" class="form-control" id="link_color" name="link_color">
                         </div>
+
                         <div class="col-md-6">
                             <label for="logo" class="form-label">Logo</label>
                             <div id="dropzoneLogo" class="dropzone"></div>
                         </div>
+
                         <div class="col-md-6">
                             <label for="banner" class="form-label">Banner</label>
                             <div id="dropzoneBanner" class="dropzone"></div>
                         </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>

@@ -24,8 +24,14 @@ class ClienteModel extends Model
         'secondary_color',
         'link_color',
         'politica_anonimato',
+
         // Configuración: mostrar/ocultar el campo "Tipo de denunciante" en formulario público
         'mostrar_tipo_denunciante_publico',
+
+        // NUEVO: configuración de tipos permitidos y default
+        'tipo_denunciante_publico_default',
+        'tipos_denunciante_publico_permitidos',
+
         'created_at'
     ];
 
