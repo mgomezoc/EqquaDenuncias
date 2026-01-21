@@ -7,7 +7,37 @@ $pol = (int)($cliente['politica_anonimato'] ?? 0);
 
 // Flag: mostrar/ocultar tipo de denunciante público
 $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_publico'] ?? 0);
+
+// --- NUEVO: Permisos y default del tipo de denunciante público ---
+$rawPermitidos = (string)($cliente['tipos_denunciante_publico_permitidos'] ?? '');
+$permitidos = array_filter(array_map('trim', explode(',', $rawPermitidos)));
+
+$mapToKey = [
+    'Cliente'      => 'cliente',
+    'Colaborador'  => 'colaborador',
+    'Proveedor'    => 'proveedor',
+];
+
+$tiposPermitidos = [];
+foreach ($permitidos as $p) {
+    if (isset($mapToKey[$p])) $tiposPermitidos[] = $mapToKey[$p];
+}
+
+// Fallback si viene vacío en BD
+if (empty($tiposPermitidos)) {
+    $tiposPermitidos = ['cliente', 'colaborador', 'proveedor'];
+}
+
+// Default (en BD viene como "Colaborador", "Cliente", "Proveedor")
+$rawDefault = trim((string)($cliente['tipo_denunciante_publico_default'] ?? 'Colaborador'));
+$tipoDefaultPublico = $mapToKey[$rawDefault] ?? 'colaborador';
+
+// Si el default NO está permitido, usa el primer permitido
+if (!in_array($tipoDefaultPublico, $tiposPermitidos, true)) {
+    $tipoDefaultPublico = $tiposPermitidos[0];
+}
 ?>
+
 <section class="container my-5">
     <div class="text-center mb-4">
         <h1 class="titulo animate__animated animate__fadeIn">Registrar una Denuncia</h1>
@@ -20,10 +50,10 @@ $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_public
 
         <!-- Tipo de denunciante (público) según configuración del cliente -->
         <?php if ($mostrarTipoDenunciantePublico === 1): ?>
-            <!-- Se renderiza como campo visible -->
+            <!-- Se renderiza como campo visible abajo -->
         <?php else: ?>
-            <!-- Si no se muestra, se manda default -->
-            <input type="hidden" name="tipo_denunciante_publico" value="colaborador">
+            <!-- Si no se muestra, se manda el default (y garantizamos que sea uno permitido) -->
+            <input type="hidden" name="tipo_denunciante_publico" value="<?= esc($tipoDefaultPublico) ?>">
         <?php endif; ?>
 
         <!-- Si la política es forzada, mandamos el valor por hidden -->
@@ -49,24 +79,28 @@ $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_public
                 </div>
             </div>
 
-            <!-- NUEVO: Tipo de denunciante (público) -->
+            <!-- NUEVO: Tipo de denunciante (público) - opciones limitadas por cliente -->
             <?php if ($mostrarTipoDenunciantePublico === 1): ?>
                 <div class="col-md-6">
-                    <label for="tipo_denunciante_publico" class="form-label">Tipo de denunciante <span class="text-danger">*</span></label>
+                    <label for="tipo_denunciante_publico" class="form-label">
+                        Tipo de denunciante <span class="text-danger">*</span>
+                    </label>
                     <select class="form-select select2" id="tipo_denunciante_publico" name="tipo_denunciante_publico" required>
-                        <option value="cliente">Cliente</option>
-                        <option value="colaborador">Colaborador</option>
-                        <option value="proveedor">Proveedor</option>
+                        <?php if (in_array('cliente', $tiposPermitidos, true)): ?>
+                            <option value="cliente" <?= $tipoDefaultPublico === 'cliente' ? 'selected' : '' ?>>Cliente</option>
+                        <?php endif; ?>
+                        <?php if (in_array('colaborador', $tiposPermitidos, true)): ?>
+                            <option value="colaborador" <?= $tipoDefaultPublico === 'colaborador' ? 'selected' : '' ?>>Colaborador</option>
+                        <?php endif; ?>
+                        <?php if (in_array('proveedor', $tiposPermitidos, true)): ?>
+                            <option value="proveedor" <?= $tipoDefaultPublico === 'proveedor' ? 'selected' : '' ?>>Proveedor</option>
+                        <?php endif; ?>
                     </select>
-
                 </div>
             <?php endif; ?>
 
             <!-- Información adicional cuando NO es anónimo -->
-            <?php
-            // Mostrar por defecto si la política es "forzar identificadas"; ocultar en los demás casos (lo maneja JS también)
-            $showIdent = ($pol === 2);
-            ?>
+            <?php $showIdent = ($pol === 2); ?>
             <div id="infoAdicional" class="row g-3" style="<?= $showIdent ? '' : 'display:none;' ?>" aria-hidden="<?= $showIdent ? 'false' : 'true' ?>">
                 <div class="col-md-6">
                     <label for="nombre_completo" class="form-label">Nombre Completo</label>
@@ -173,7 +207,6 @@ $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_public
             </div>
         </div>
 
-        <!-- Botón de envío -->
         <div class="mt-5 text-center">
             <button type="submit" class="btn btn-secondary btn-lg px-5" id="submitButton">
                 <i class="fa fa-paper-plane me-1"></i> Enviar Denuncia
@@ -200,6 +233,10 @@ $mostrarTipoDenunciantePublico = (int)($cliente['mostrar_tipo_denunciante_public
     const slug = '<?= $cliente['slug'] ?>';
     const POLITICA = <?= (int)$pol ?>; // 0=Opcional, 1=Forzar anónimas, 2=Forzar identificadas
     const MOSTRAR_TIPO_DENUNCIANTE_PUBLICO = <?= (int)$mostrarTipoDenunciantePublico ?>;
+
+    // NUEVO: configuración desde cliente
+    const TIPOS_PERMITIDOS_PUBLICO = <?= json_encode(array_values($tiposPermitidos)) ?>; // ['cliente','colaborador','proveedor']
+    const TIPO_PUBLICO_DEFAULT = '<?= esc($tipoDefaultPublico) ?>'; // 'colaborador' etc.
 </script>
 <script src="<?= base_url("assets/js/denuncias_public.js") ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

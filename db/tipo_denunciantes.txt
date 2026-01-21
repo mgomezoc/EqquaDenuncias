@@ -1,0 +1,35 @@
+/* 1) Agregar columnas de configuración al cliente */
+ALTER TABLE `clientes`
+ADD COLUMN `tipo_denunciante_publico_default` ENUM
+('Cliente','Colaborador','Proveedor')
+    NOT NULL DEFAULT 'Colaborador'
+    AFTER `mostrar_tipo_denunciante_publico`,
+ADD COLUMN `tipos_denunciante_publico_permitidos`
+SET
+('Cliente','Colaborador','Proveedor')
+    NOT NULL DEFAULT 'Cliente,Colaborador,Proveedor'
+    AFTER `tipo_denunciante_publico_default`;
+
+/* 2) Inicializar valores para clientes existentes */
+UPDATE `clientes`
+SET
+`tipo_denunciante_publico_default` = 'Colaborador',
+  `tipos_denunciante_publico_permitidos` = 'Cliente,Colaborador,Proveedor'
+WHERE 1;
+
+/* 3) (Opcional recomendado) Si el cliente NO muestra el combo,
+      puedes dejar “solo Colaborador” como permitido para que sea coherente */
+UPDATE `clientes`
+SET
+`tipos_denunciante_publico_permitidos` = 'Colaborador'
+WHERE `mostrar_tipo_denunciante_publico` = 0;
+
+/* 4) (Opcional recomendado) Si el cliente SÍ muestra el combo,
+      asegúrate de que el default esté dentro de los permitidos */
+UPDATE `clientes`
+SET
+`tipos_denunciante_publico_permitidos` = CONCAT_WS
+(',', `tipos_denunciante_publico_permitidos`, 'Colaborador')
+WHERE `mostrar_tipo_denunciante_publico` = 1
+  AND FIND_IN_SET
+('Colaborador', `tipos_denunciante_publico_permitidos`) = 0;

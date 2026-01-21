@@ -1,20 +1,22 @@
 /**
  * Script para manejar la lógica del formulario de denuncias públicas.
  * - Política de anonimato por cliente (POLITICA: 0=opcional, 1=forzar anónimas, 2=forzar identificadas)
+ * - Tipo de denunciante público configurable:
+ *      MOSTRAR_TIPO_DENUNCIANTE_PUBLICO
+ *      TIPOS_PERMITIDOS_PUBLICO (array)
+ *      TIPO_PUBLICO_DEFAULT (string)
  * - Validación con jquery-validate
- * - Carga dinámica de departamentos (y subcategorías si existen en el DOM)
+ * - Carga dinámica de departamentos
  * - Dropzone para archivos
  * - Grabación de audio con MediaRecorder
  */
 
-Dropzone.autoDiscover = false; // Deshabilitar autodetección
+Dropzone.autoDiscover = false;
 
 $(document).ready(function () {
-    // Constantes
     const MAX_FILES = 5;
-    const MAX_FILE_SIZE_MB = 10; // imágenes/pdf 10 MB
-    const MAX_VIDEO_SIZE_MB = 20; // videos 20 MB (validado por Dropzone vía acceptedFiles)
-    const MAX_AUDIO_SIZE_MB = 5; // audio 5 MB
+    const MAX_FILE_SIZE_MB = 10;
+    const MAX_AUDIO_SIZE_MB = 5;
 
     let mediaRecorder;
     let audioChunks = [];
@@ -27,28 +29,60 @@ $(document).ready(function () {
     function isForcedIdent() {
         return typeof POLITICA !== 'undefined' && POLITICA === 2;
     }
-    function isOptional() {
-        return typeof POLITICA === 'undefined' || POLITICA === 0;
-    }
 
-    // ¿Se requiere denuncia identificada?
     function needIdentificado() {
         if (isForcedIdent()) return true;
         if (isForcedAnon()) return false;
-        // Opcional: depende del radio
         return $('input[name="anonimo"]:checked').val() === '0';
+    }
+
+    /** ---------- Helpers tipo denunciante público ---------- */
+    function getPermitidosPublico() {
+        if (Array.isArray(window.TIPOS_PERMITIDOS_PUBLICO) && window.TIPOS_PERMITIDOS_PUBLICO.length) {
+            return window.TIPOS_PERMITIDOS_PUBLICO.map(x => (x || '').toString().toLowerCase().trim());
+        }
+        return ['cliente', 'colaborador', 'proveedor'];
+    }
+
+    function getDefaultPublico() {
+        const def = (window.TIPO_PUBLICO_DEFAULT || 'colaborador').toString().toLowerCase().trim();
+        const permitidos = getPermitidosPublico();
+        if (permitidos.includes(def)) return def;
+        return permitidos[0] || 'colaborador';
+    }
+
+    function ensureTipoDenuncianteValue() {
+        const permitidos = getPermitidosPublico();
+        const def = getDefaultPublico();
+
+        const $sel = $('#tipo_denunciante_publico');
+        if ($sel.length) {
+            const v = ($sel.val() || '').toString().toLowerCase().trim();
+            if (!permitidos.includes(v)) {
+                $sel.val(def).trigger('change');
+            }
+            return;
+        }
+
+        // Si NO existe el select (porque está oculto por configuración),
+        // aseguramos un hidden con el valor correcto antes de enviar.
+        let $hidden = $('#formCrearDenuncia input[name="tipo_denunciante_publico"]');
+        if (!$hidden.length) {
+            $hidden = $('<input>', { type: 'hidden', name: 'tipo_denunciante_publico' }).appendTo('#formCrearDenuncia');
+        }
+        $hidden.val(def);
     }
 
     /** ---------- Inicialización general ---------- */
     function initializeComponents() {
         initializeSelect2();
         initializeFlatpickr();
-        // Registrar validador de fecha D/M/Y ANTES de crear reglas
         registerDateDMYValidator();
         initializeDropzone();
         initializeValidation();
         initializeEventListeners();
-        applyPolicyUI(); // Ajustar UI según política
+        applyPolicyUI();
+        ensureTipoDenuncianteValue(); // <<< NUEVO
     }
 
     function initializeSelect2() {
@@ -70,7 +104,6 @@ $(document).ready(function () {
     }
 
     function initializeDropzone() {
-        // Evitar múltiples instancias
         if (Dropzone.instances.length > 0) {
             Dropzone.instances.forEach(dz => dz.destroy());
         }
@@ -98,22 +131,19 @@ $(document).ready(function () {
 
     /** ---------- Validador de fecha dd/mm/yyyy ---------- */
     function registerDateDMYValidator() {
-        // Valida 31/12/2025, sin permitir fechas imposibles
         $.validator.addMethod(
             'dateDMY',
-            function (value, element) {
+            function (value) {
                 const v = (value || '').trim();
-                if (v === '') return true; // required se controla aparte
+                if (v === '') return true;
                 const parts = v.split('/');
                 if (parts.length !== 3) return false;
                 const d = parseInt(parts[0], 10);
-                const m = parseInt(parts[1], 10) - 1; // 0..11
+                const m = parseInt(parts[1], 10) - 1;
                 const y = parseInt(parts[2], 10);
                 if (isNaN(d) || isNaN(m) || isNaN(y)) return false;
                 const dt = new Date(y, m, d);
-                // Comprobar que Date no “corrigió” una fecha inválida
                 if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return false;
-                // No permitir fechas futuras (flatpickr ya lo limita, esto es defensa adicional)
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 return dt <= today;
@@ -124,44 +154,46 @@ $(document).ready(function () {
 
     /** ---------- Validación del formulario ---------- */
     function initializeValidation() {
-        // Reglas dinámicas (solo agregamos si el campo existe)
         const rules = {
             id_sucursal: { required: true },
-            // id_departamento es opcional en el formulario público (no agregamos required)
-            fecha_incidente: { required: true, dateDMY: true }, // <<< usamos dateDMY
+            fecha_incidente: { required: true, dateDMY: true },
             como_se_entero: { required: true },
             area_incidente: { required: true, minlength: 5 },
             descripcion: { required: true, minlength: 10 },
             anonimo: { required: true },
-            // Condicionales de identificación
+
             nombre_completo: {
-                required: {
-                    depends: function () {
-                        return needIdentificado();
-                    }
-                },
-                minlength: {
-                    depends: function () {
-                        return needIdentificado();
-                    },
-                    param: 3
-                }
+                required: { depends: () => needIdentificado() },
+                minlength: { depends: () => needIdentificado(), param: 3 }
             },
-            correo_electronico: {
-                email: true // "al menos uno" (correo o teléfono) se valida en submit
-            }
+            correo_electronico: { email: true }
         };
 
-        if ($('#categoria').length) rules.categoria = { required: true };
-        if ($('#subcategoria').length) rules.subcategoria = { required: true };
+        // Tipo de denunciante público:
+        if ($('#tipo_denunciante_publico').length) {
+            rules.tipo_denunciante_publico = {
+                required: true,
+                // defensa: solo permitir valores del arreglo
+                normalizer: function (value) {
+                    return (value || '').toString().toLowerCase().trim();
+                }
+            };
 
-        // NUEVO: si existe el combo, hacerlo obligatorio
-        if ($('#tipo_denunciante_publico').length) rules.tipo_denunciante_publico = { required: true };
+            // Método custom para "permitidos"
+            $.validator.addMethod(
+                'inPermitidosPublico',
+                function (value) {
+                    const v = (value || '').toString().toLowerCase().trim();
+                    return getPermitidosPublico().includes(v);
+                },
+                'Seleccione un tipo de denunciante válido.'
+            );
+
+            rules.tipo_denunciante_publico.inPermitidosPublico = true;
+        }
 
         const messages = {
             id_sucursal: 'Seleccione una sucursal.',
-            categoria: 'Seleccione una categoría.',
-            subcategoria: 'Seleccione una subcategoría.',
             tipo_denunciante_publico: 'Seleccione el tipo de denunciante.',
             fecha_incidente: 'Ingrese una fecha válida.',
             como_se_entero: 'Seleccione cómo se enteró.',
@@ -178,7 +210,6 @@ $(document).ready(function () {
         $('#formCrearDenuncia').validate({
             errorClass: 'is-invalid',
             validClass: 'is-valid',
-            // Select2 deja el input oculto con .select2-hidden-accessible
             ignore: ':hidden:not(.select2-hidden-accessible)',
             rules,
             messages,
@@ -191,7 +222,6 @@ $(document).ready(function () {
             }
         });
 
-        // Validar cuando cambie select2
         $('.select2').on('change', function () {
             $(this).valid();
         });
@@ -199,29 +229,22 @@ $(document).ready(function () {
 
     /** ---------- Listeners ---------- */
     function initializeEventListeners() {
-        // Política opcional: mostrar/ocultar info adicional según radio
         $(document).on('change', 'input[name="anonimo"]', function () {
             applyPolicyUI();
         });
 
-        // Cargar subcategorías si existe el selector #categoria
-        if ($('#categoria').length) {
-            $('#categoria').on('change', function () {
-                loadSubcategorias($(this).val());
-            });
-        }
-
-        // Cargar departamentos al cambiar sucursal
-        $('#id_sucursal').on('change', function () {
-            const sucursalId = $(this).val();
-            loadDepartamentos(sucursalId);
+        // Si existe el select, asegurar valor permitido al cambiar
+        $(document).on('change', '#tipo_denunciante_publico', function () {
+            ensureTipoDenuncianteValue();
         });
 
-        // Audio
+        $('#id_sucursal').on('change', function () {
+            loadDepartamentos($(this).val());
+        });
+
         $('#startRecording').on('click', startAudioRecording);
         $('#stopRecording').on('click', stopAudioRecording);
 
-        // Envío del formulario
         $('#formCrearDenuncia').on('submit', handleFormSubmit);
     }
 
@@ -232,18 +255,15 @@ $(document).ready(function () {
         const $inputsIdent = $('#nombre_completo, #correo_electronico, #telefono, #id_sexo');
 
         if (isForcedAnon()) {
-            // Forzar anónimas: ocultar selector, ocultar y limpiar identificación
             $grupoAnonimo.hide();
             $info.hide().attr('aria-hidden', 'true');
             $inputsIdent.val('').trigger('change');
             $inputsIdent.prop('disabled', true);
         } else if (isForcedIdent()) {
-            // Forzar identificadas: ocultar selector, mostrar identificación
             $grupoAnonimo.hide();
             $info.show().attr('aria-hidden', 'false');
             $inputsIdent.prop('disabled', false);
         } else {
-            // Opcional
             $grupoAnonimo.show();
             const anon = $('input[name="anonimo"]:checked').val();
             if (anon === '0') {
@@ -252,38 +272,18 @@ $(document).ready(function () {
             } else {
                 $info.hide().attr('aria-hidden', 'true');
                 $inputsIdent.val('').trigger('change');
-                $inputsIdent.prop('disabled', false); // se envían vacíos si están ocultos
+                $inputsIdent.prop('disabled', false);
             }
         }
     }
 
     /** ---------- Cargas dinámicas ---------- */
-    function loadSubcategorias(categoriaId) {
-        if (!categoriaId) {
-            $('#subcategoria').empty().append('<option value="">Seleccione una subcategoría</option>');
-            return;
-        }
-        $.ajax({
-            url: `${Server}categorias/listarSubcategorias`,
-            method: 'GET',
-            data: { id_categoria: categoriaId },
-            success: function (data) {
-                const $sub = $('#subcategoria');
-                $sub.empty().append('<option value="">Seleccione una subcategoría</option>');
-                data.forEach(sc => $sub.append(`<option value="${sc.id}">${sc.nombre}</option>`));
-                $sub.trigger('change');
-            },
-            error: function () {
-                $('#subcategoria').html('<option value="">Error al cargar subcategorías</option>');
-            }
-        });
-    }
-
     function loadDepartamentos(sucursalId) {
         if (!sucursalId) {
             $('#id_departamento').empty().append('<option value="">Seleccione un departamento</option>');
             return;
         }
+
         $.ajax({
             url: `${Server}departamentos/listarDepartamentosPorSucursal/${sucursalId}`,
             method: 'GET',
@@ -337,9 +337,7 @@ $(document).ready(function () {
                 $('#startRecording').attr('disabled', true);
                 $('#stopRecording').attr('disabled', false);
 
-                mediaRecorder.ondataavailable = e => {
-                    audioChunks.push(e.data);
-                };
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = handleAudioRecordingStop;
             })
             .catch(err => {
@@ -371,19 +369,20 @@ $(document).ready(function () {
         $('#audioPlayback').attr('src', audioURL).show();
 
         const file = new File([audioBlob], 'grabacion_audio.wav', { type: 'audio/wav', lastModified: Date.now() });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        document.getElementById('audio_input').files = dataTransfer.files;
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('audio_input').files = dt.files;
     }
 
     /** ---------- Submit ---------- */
     function handleFormSubmit(e) {
         e.preventDefault();
 
+        ensureTipoDenuncianteValue(); // <<< NUEVO: setea/valida antes de enviar
+
         const $form = $('#formCrearDenuncia');
         if (!$form.valid()) return;
 
-        // Si es identificada (forzada u opcional), requerir al menos correo o teléfono
         if (needIdentificado()) {
             const correo = ($('#correo_electronico').val() || '').trim();
             const tel = ($('#telefono').val() || '').trim();

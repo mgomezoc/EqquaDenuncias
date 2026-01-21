@@ -40,11 +40,30 @@ class Publico extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
+        // Opcional (recomendado): preparar configuración del combo para la vista
+        $mostrarCombo = (int)($cliente['mostrar_tipo_denunciante_publico'] ?? 0) === 1;
+
+        $permitidos = $this->normalizarTiposPermitidos($cliente['tipos_denunciante_publico_permitidos'] ?? '');
+        if (empty($permitidos)) {
+            // fallback compatible si no hay config (por seguridad)
+            $permitidos = ['Colaborador'];
+        }
+
+        $default = $this->normalizarTipo(($cliente['tipo_denunciante_publico_default'] ?? 'Colaborador'));
+        if (!in_array($default, $permitidos, true)) {
+            $default = $permitidos[0];
+        }
+
         $data = [
             'title'      => 'Registrar Denuncia - ' . esc($cliente['nombre_empresa']),
             'cliente'    => $cliente,
             'categorias' => $categoriaModel->findAll(),
-            'sucursales' => $sucursalModel->where('id_cliente', $cliente['id'])->findAll()
+            'sucursales' => $sucursalModel->where('id_cliente', $cliente['id'])->findAll(),
+
+            // Nuevos datos para la vista (si los quieres usar en el select)
+            'tipo_denunciante_publico_mostrar'   => $mostrarCombo,
+            'tipo_denunciante_publico_permitidos' => $permitidos,
+            'tipo_denunciante_publico_default'   => $default,
         ];
 
         return view('publico/formulario_denuncia', $data);
@@ -110,34 +129,48 @@ class Publico extends BaseController
                 break;
         }
 
-        // 2.5) Tipo de denunciante público (NO confundir con anonimato)
-        $tipoPublicoRaw = $this->request->getPost('tipo_denunciante_publico');
+        /**
+         * 2.5) Tipo de denunciante (gobernado por configuración del cliente)
+         *
+         * Reglas:
+         * - Si mostrar_tipo_denunciante_publico = 0 => usar default del cliente SIEMPRE (ignorar POST).
+         * - Si = 1 => validar POST contra permitidos; si falla, fallback al default si es permitido;
+         *            si no, al primer permitido.
+         */
+        $mostrarCombo = (int)($cliente['mostrar_tipo_denunciante_publico'] ?? 0) === 1;
 
-        // Fallback por compatibilidad: si algún formulario manda "tipo_denunciante"
-        if (empty($tipoPublicoRaw)) {
-            $tipoPublicoRaw = $this->request->getPost('tipo_denunciante');
+        $permitidos = $this->normalizarTiposPermitidos($cliente['tipos_denunciante_publico_permitidos'] ?? '');
+        if (empty($permitidos)) {
+            $permitidos = ['Colaborador'];
         }
 
-        $tipoPublicoRaw = strtolower(trim((string)$tipoPublicoRaw));
+        $default = $this->normalizarTipo(($cliente['tipo_denunciante_publico_default'] ?? 'Colaborador'));
+        if (!in_array($default, $permitidos, true)) {
+            $default = $permitidos[0];
+        }
 
-        $tipoDenunciante = match ($tipoPublicoRaw) {
-            'colaborador' => 'Colaborador',
-            'proveedor'   => 'Proveedor',
-            'cliente'     => 'Cliente',
-            default       => 'Colaborador', // fallback seguro
-        };
+        // Lee POST (compatibilidad)
+        $tipoPublicoRaw = $this->request->getPost('tipo_denunciante_publico');
+        if (empty($tipoPublicoRaw)) {
+            $tipoPublicoRaw = $this->request->getPost('tipo_denunciante'); // legacy
+        }
+        $tipoPost = $this->normalizarTipo($tipoPublicoRaw);
 
-        // 3) Payload (NO enviamos campos vacíos para no romper NOT NULL)
+        if ($mostrarCombo) {
+            // Si muestra combo, validar contra permitidos
+            $tipoDenunciante = in_array($tipoPost, $permitidos, true) ? $tipoPost : $default;
+        } else {
+            // Si NO muestra combo, se ignora por completo lo que mande el front
+            $tipoDenunciante = $default;
+        }
+
+        // 3) Payload
         $raw = [
             'id_cliente'          => $idCliente,
             'id_sucursal'         => $this->request->getPost('id_sucursal'),
             'id_departamento'     => $this->request->getPost('id_departamento'),
-            // Si quieres defaults para categoría/subcategoría, define en .env y descomenta:
-            // 'categoria'           => getenv('DEFAULT_CATEGORIA_ID') ?: null,
-            // 'subcategoria'        => getenv('DEFAULT_SUBCATEGORIA_ID') ?: null,
 
-            // IMPORTANTE: esto debe guardar el tipo seleccionado (Cliente/Colaborador/Proveedor),
-            // NO el anonimato (eso ya se guarda en "anonimo").
+            // Guarda el tipo seleccionado (Cliente/Colaborador/Proveedor)
             'tipo_denunciante'    => $tipoDenunciante,
 
             'anonimo'             => $anonimo,
@@ -155,7 +188,7 @@ class Publico extends BaseController
             'id_creador'          => null,
         ];
 
-        // Limpia nulos/vacíos para no enviar NULL a columnas NOT NULL
+        // Limpia nulos/vacíos
         $data = array_filter($raw, static function ($v) {
             return $v !== null && $v !== '';
         });
@@ -169,7 +202,7 @@ class Publico extends BaseController
             return $this->response->setStatusCode(400)->setJSON([
                 'success' => false,
                 'message' => 'Error al guardar la denuncia',
-                'debug'   => $denunciaModel->errors() // quitar en producción si no lo necesitas
+                'debug'   => $denunciaModel->errors()
             ]);
         }
 
@@ -195,7 +228,7 @@ class Publico extends BaseController
         $audioFile = $this->request->getFile('audio_file');
         if ($audioFile && $audioFile->isValid()) {
             $mimeType = $audioFile->getMimeType();
-            if ($audioFile->getSize() <= 5 * 1024 * 1024 && in_array($mimeType, ['audio/wav', 'audio/mpeg', 'audio/ogg', 'video/webm'])) {
+            if ($audioFile->getSize() <= 5 * 1024 * 1024 && in_array($mimeType, ['audio/wav', 'audio/mpeg', 'audio/ogg', 'video/webm'], true)) {
                 $newAudioName = $audioFile->getRandomName();
                 if ($audioFile->move(WRITEPATH . '../public/uploads/denuncias', $newAudioName)) {
                     $anexoModel = new AnexoDenunciaModel();
@@ -226,7 +259,6 @@ class Publico extends BaseController
             ]);
         }
 
-        // Importante: YA NO se genera sugerencia IA aquí.
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Denuncia guardada correctamente',
@@ -246,9 +278,8 @@ class Publico extends BaseController
                     'filename' => $newName,
                     'message'  => 'Archivo subido correctamente'
                 ]);
-            } else {
-                return $this->response->setStatusCode(400)->setJSON(['message' => 'No se pudo subir el archivo']);
             }
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'No se pudo subir el archivo']);
         }
 
         return $this->response->setStatusCode(400)->setJSON(['message' => 'Archivo inválido']);
@@ -331,7 +362,7 @@ class Publico extends BaseController
         $comentarioModel = new ComentarioDenunciaModel();
         $comentarios     = $comentarioModel->getComentariosByDenuncia($denuncia['id']);
         $comentariosVisibles = array_filter($comentarios, function ($comentario) {
-            return in_array($comentario['estado_denuncia'], [4, 5, 6]);
+            return in_array($comentario['estado_denuncia'], [4, 5, 6], true);
         });
 
         $anexoModel        = new AnexoDenunciaModel();
@@ -369,6 +400,34 @@ class Publico extends BaseController
         ]);
     }
 
+    private function normalizarTiposPermitidos(string $csv): array
+    {
+        $csv = trim($csv);
+        if ($csv === '') return [];
+
+        $parts = array_map('trim', explode(',', $csv));
+        $out = [];
+        foreach ($parts as $p) {
+            $n = $this->normalizarTipo($p);
+            if ($n && !in_array($n, $out, true)) {
+                $out[] = $n;
+            }
+        }
+        return $out;
+    }
+
+    private function normalizarTipo($raw): string
+    {
+        $raw = strtolower(trim((string)$raw));
+        return match ($raw) {
+            'colaborador' => 'Colaborador',
+            'proveedor'   => 'Proveedor',
+            'cliente'     => 'Cliente',
+            default       => '',
+        };
+    }
+
+    // Se deja por compatibilidad (tu código usa convertir_fecha(), que parece helper global).
     private function convertirFecha($fecha)
     {
         if (!$fecha) return null;
