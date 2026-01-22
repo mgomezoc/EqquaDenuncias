@@ -27,6 +27,11 @@ class ComentariosController extends BaseController
         }
 
         $estado_denuncia = $denuncia['estado_actual'];
+        
+        // Si no hay sesión activa (comentario desde portal público), usar usuario genérico id=18
+        // El modelo ComentarioDenunciaModel se encarga de mostrar el nombre correcto:
+        // - Si la denuncia NO es anónima: muestra el nombre_completo del denunciante
+        // - Si la denuncia SÍ es anónima: muestra "Anónimo"
         $id_usuario = session()->get('id') ?? 18;
 
         // Si está cerrada, verificar fecha de cierre
